@@ -25,8 +25,8 @@ public class UserController {
 
     @GetMapping("/{userId}/address")
     public ResponseEntity<List<Address>> getAddresses(@PathVariable Long userId,
-                                                      @AuthenticationPrincipal LocalUser user){
-        if(!userHasPermission(user, userId)){
+                                                      @AuthenticationPrincipal LocalUser user) {
+        if (!userHasPermission(user, userId)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         return ResponseEntity.ok(addressDAO.findByUserId(userId));
@@ -35,8 +35,8 @@ public class UserController {
     @Transactional
     @PostMapping("/{userId}/address")
     public ResponseEntity<Address> addAddress(@PathVariable Long userId
-            , @AuthenticationPrincipal LocalUser user,@Valid @RequestBody Address address){
-        if(!userHasPermission(user, userId)){
+            , @AuthenticationPrincipal LocalUser user, @Valid @RequestBody Address address) {
+        if (!userHasPermission(user, userId)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
@@ -52,16 +52,16 @@ public class UserController {
     public ResponseEntity<Address> updateAddress(
             @AuthenticationPrincipal LocalUser user,
             @PathVariable Long userId, @PathVariable Long addressId,
-            @Valid @RequestBody Address address){
-        if(!userHasPermission(user, userId)){
+            @Valid @RequestBody Address address) {
+        if (!userHasPermission(user, userId)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
-        if(address.getId().equals(addressId)){
+        if (address.getId().equals(addressId)) {
             Optional<Address> optionalAddress = addressDAO.findById(addressId);
-            if(optionalAddress.isPresent()){
+            if (optionalAddress.isPresent()) {
                 LocalUser originalUser = optionalAddress.get().getUser();
-                if(originalUser.getId().equals(userId)){
+                if (originalUser.getId().equals(userId)) {
                     address.setUser(originalUser);
                     return ResponseEntity.ok(addressDAO.save(address));
                 }
@@ -70,7 +70,7 @@ public class UserController {
         return ResponseEntity.badRequest().build();
     }
 
-    private boolean userHasPermission(LocalUser user, Long id){
+    private boolean userHasPermission(LocalUser user, Long id) {
         return user.getId().equals(id);
     }
 }

@@ -17,6 +17,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 public class JWTRequestFilterTest {
 
+    private static final String AUTHENTICATED_PATH = "/auth/me";
     @Autowired
     private MockMvc mvc;
     @Autowired
@@ -24,10 +25,9 @@ public class JWTRequestFilterTest {
     @Autowired
     private LocalUserDao localUserDao;
 
-    private static final String AUTHENTICATED_PATH = "/auth/me";
-
     /**
      * Tests that unauthenticated requests are rejected.
+     *
      * @throws Exception
      */
     @Test
@@ -37,6 +37,7 @@ public class JWTRequestFilterTest {
 
     /**
      * Tests that bad tokens are rejected.
+     *
      * @throws Exception
      */
     @Test
@@ -49,25 +50,27 @@ public class JWTRequestFilterTest {
 
     /**
      * Tests unverified users who somehow get a jwt are rejected.
+     *
      * @throws Exception
      */
     @Test
     public void testUnverifiedUser() throws Exception {
         LocalUser user = localUserDao.findByUsernameIgnoreCase("UserB").get();
         String token = jwtService.generateToken(user);
-        mvc.perform(get(AUTHENTICATED_PATH).header("Authorization", "Bearer "+token))
+        mvc.perform(get(AUTHENTICATED_PATH).header("Authorization", "Bearer " + token))
                 .andExpect(status().is(HttpStatus.FORBIDDEN.value()));
     }
 
     /**
      * Tests the successful authentication.
+     *
      * @throws Exception
      */
     @Test
     public void testSuccessful() throws Exception {
         LocalUser user = localUserDao.findByUsernameIgnoreCase("UserA").get();
         String token = jwtService.generateToken(user);
-        mvc.perform(get(AUTHENTICATED_PATH).header("Authorization", "Bearer "+token))
+        mvc.perform(get(AUTHENTICATED_PATH).header("Authorization", "Bearer " + token))
                 .andExpect(status().is(HttpStatus.OK.value()));
     }
 }

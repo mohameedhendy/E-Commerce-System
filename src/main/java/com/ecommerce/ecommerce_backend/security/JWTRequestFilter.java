@@ -34,13 +34,12 @@ public class JWTRequestFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
         String tokenHeader = request.getHeader("Authorization");
-        if(tokenHeader != null && tokenHeader.startsWith("Bearer ")){
+        if (tokenHeader != null && tokenHeader.startsWith("Bearer ")) {
             String token = tokenHeader.substring(7);
-            try
-            {
+            try {
                 String username = jwtService.getUsername(token);
                 Optional<LocalUser> opUser = userDao.findByUsernameIgnoreCase(username);
-                if(opUser.isPresent()) {
+                if (opUser.isPresent()) {
                     LocalUser user = opUser.get();
                     if (user.isEmailVerified()) {
                         UsernamePasswordAuthenticationToken authentication =
@@ -49,7 +48,8 @@ public class JWTRequestFilter extends OncePerRequestFilter {
                         SecurityContextHolder.getContext().setAuthentication(authentication); // SecurityContextHolder where the authentication get stored
                     }
                 }
-            } catch (JWTDecodeException ex){}
+            } catch (JWTDecodeException ex) {
+            }
         }
 
         filterChain.doFilter(request, response);

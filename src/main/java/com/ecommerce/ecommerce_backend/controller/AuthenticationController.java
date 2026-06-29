@@ -27,11 +27,11 @@ public class AuthenticationController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity registerUser(@Valid @RequestBody RegistrationBody registrationBody){
+    public ResponseEntity registerUser(@Valid @RequestBody RegistrationBody registrationBody) {
         try {
             userService.registerUser(registrationBody);
             return ResponseEntity.ok().build();
-        } catch (UserAlreadyExistException ex){
+        } catch (UserAlreadyExistException ex) {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         } catch (EmailFailureException e) {
             System.out.println("error");
@@ -40,7 +40,7 @@ public class AuthenticationController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> loginUser(@Valid @RequestBody LoginBody loginBody){
+    public ResponseEntity<LoginResponse> loginUser(@Valid @RequestBody LoginBody loginBody) {
         String jwt = null;
         try {
             jwt = userService.loginUser(loginBody);
@@ -67,8 +67,8 @@ public class AuthenticationController {
     }
 
     @PostMapping("/verify")
-    public ResponseEntity verifyEmail(@RequestParam String token){
-        if(userService.verifyUser(token)){
+    public ResponseEntity verifyEmail(@RequestParam String token) {
+        if (userService.verifyUser(token)) {
             return ResponseEntity.ok().build();
         } else {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
@@ -76,12 +76,12 @@ public class AuthenticationController {
     }
 
     @GetMapping("/me")
-    public LocalUser getLoggedInUser(@AuthenticationPrincipal LocalUser user){
+    public LocalUser getLoggedInUser(@AuthenticationPrincipal LocalUser user) {
         return user;
     }
 
     @PostMapping("/forgot")
-    public ResponseEntity forgotPassword(@RequestParam String email){
+    public ResponseEntity forgotPassword(@RequestParam String email) {
         try {
             userService.forgotPassword(email);
             return ResponseEntity.ok().build();
@@ -93,7 +93,7 @@ public class AuthenticationController {
     }
 
     @PostMapping("/reset")
-    public ResponseEntity resetPassword(@Valid @RequestBody PasswordResetBody body){
+    public ResponseEntity resetPassword(@Valid @RequestBody PasswordResetBody body) {
         userService.resetPassword(body);
         return ResponseEntity.ok().build();
     }

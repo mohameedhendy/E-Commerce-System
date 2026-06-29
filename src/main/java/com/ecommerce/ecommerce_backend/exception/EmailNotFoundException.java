@@ -1,4 +1,4 @@
 package com.ecommerce.ecommerce_backend.exception;
 
-public class EmailNotFoundException extends Exception{
+public class EmailNotFoundException extends Exception {
 }

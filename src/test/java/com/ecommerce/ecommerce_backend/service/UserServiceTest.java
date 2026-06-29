@@ -30,7 +30,9 @@ import java.util.List;
 @AutoConfigureMockMvc
 public class UserServiceTest {
 
-    /** Extension for mocking email sending. */
+    /**
+     * Extension for mocking email sending.
+     */
     @RegisterExtension
     private static GreenMailExtension greenMailExtension = new GreenMailExtension(ServerSetupTest.SMTP)
             .withConfiguration(GreenMailConfiguration.aConfig().withUser("springboot", "secret"))
@@ -86,17 +88,17 @@ public class UserServiceTest {
         Assertions.assertNotNull(userService.loginUser(body), "The user should login successfully.");
         body.setUsername("UserB");
         body.setPassword("PasswordB123");
-        try{
+        try {
             userService.loginUser(body);
             Assertions.assertTrue(false, "User should not have email verified.");
-        } catch (UserNotVerifiedException ex){
+        } catch (UserNotVerifiedException ex) {
             Assertions.assertTrue(ex.isNewEmailSend(), "Email verification should be sent.");
             Assertions.assertEquals(1, greenMailExtension.getReceivedMessages().length);
         }
-        try{
+        try {
             userService.loginUser(body);
             Assertions.assertTrue(false, "User should not have email verified.");
-        } catch (UserNotVerifiedException ex){
+        } catch (UserNotVerifiedException ex) {
             Assertions.assertFalse(ex.isNewEmailSend(), "Email verification should not be resent.");
             Assertions.assertEquals(1, greenMailExtension.getReceivedMessages().length);
         }
@@ -129,12 +131,12 @@ public class UserServiceTest {
                 "Non existing email should be rejected.");
         Assertions.assertEquals("UserA@junit.com",
                 greenMailExtension.getReceivedMessages()[0]
-                .getRecipients(Message.RecipientType.TO)[0].toString(), "Password " +
-                "reset email should be sent.");
+                        .getRecipients(Message.RecipientType.TO)[0].toString(), "Password " +
+                        "reset email should be sent.");
     }
 
     @Test
-    public void testResetPassword(){
+    public void testResetPassword() {
         LocalUser user = localUserDao.findByUsernameIgnoreCase("UserA").get();
         String token = jwtService.generatePasswordResetJWT(user);
         PasswordResetBody body = new PasswordResetBody();

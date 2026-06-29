@@ -1,6 +1,6 @@
 package com.ecommerce.ecommerce_backend.exception;
 
-public class UserNotVerifiedException extends Exception{
+public class UserNotVerifiedException extends Exception {
 
     private boolean NewEmailSend;
 

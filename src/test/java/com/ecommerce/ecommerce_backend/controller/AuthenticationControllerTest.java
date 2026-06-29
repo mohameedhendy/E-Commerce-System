@@ -22,7 +22,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 public class AuthenticationControllerTest {
 
-    /** Extension for mocking email sending. */
+    /**
+     * Extension for mocking email sending.
+     */
     @RegisterExtension
     private static GreenMailExtension greenMailExtension = new GreenMailExtension(ServerSetupTest.SMTP)
             .withConfiguration(GreenMailConfiguration.aConfig().withUser("springboot", "secret"))
@@ -43,8 +45,8 @@ public class AuthenticationControllerTest {
         // Null or blank username.
         body.setUsername(null);
         mvc.perform(post("/auth/register")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(body)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(body)))
                 .andExpect(status().is(HttpStatus.BAD_REQUEST.value()));
         body.setUsername("");
         mvc.perform(post("/auth/register")

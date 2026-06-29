@@ -66,6 +66,10 @@ public class LocalUser implements UserDetails {
         return username;
     }
 
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
     @JsonIgnore
     public boolean isAccountNonExpired() {
         return true;
@@ -84,10 +88,6 @@ public class LocalUser implements UserDetails {
     @JsonIgnore
     public boolean isEnabled() {
         return true;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
     }
 
     public String getFirstName() {

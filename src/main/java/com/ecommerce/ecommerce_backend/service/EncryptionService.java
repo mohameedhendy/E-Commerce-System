@@ -13,26 +13,28 @@ public class EncryptionService {
     private String salt;
 
     @PostConstruct
-    public void postConstruct(){
+    public void postConstruct() {
         salt = BCrypt.gensalt(saltRounds);
     }
 
     /**
      * Encrypts the given password.
+     *
      * @param password The plain text password.
      * @return The encrypted password.
      */
-    public String encryptPassword(String password){
+    public String encryptPassword(String password) {
         return BCrypt.hashpw(password, salt);
     }
 
     /**
      * Verifies that a password is correct.
+     *
      * @param password The plain text password.
-     * @param hash The encrypted password.
+     * @param hash     The encrypted password.
      * @return True if the password is correct, false otherwise.
      */
-    public boolean verifyPassword(String password, String hash){
+    public boolean verifyPassword(String password, String hash) {
         return BCrypt.checkpw(password, hash);
     }
 }

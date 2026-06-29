@@ -21,7 +21,7 @@ public class OrderController {
     }
 
     @GetMapping
-    public List<Order> getUserOrders(@AuthenticationPrincipal LocalUser user){
+    public List<Order> getUserOrders(@AuthenticationPrincipal LocalUser user) {
         return orderService.getAllUserOrders(user);
     }
 }

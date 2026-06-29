@@ -48,9 +48,9 @@ public class EmailService {
         message.setText("You requested a password reset on our website. Please " +
                 "find the link below to be able to reset your password.\n" + url +
                 "/auth/reset?token=" + token);
-        try{
+        try {
             javaMailSender.send(message);
-        } catch (MailException ex){
+        } catch (MailException ex) {
             throw new EmailFailureException();
         }
     }

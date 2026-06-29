@@ -8,8 +8,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 @AutoConfigureMockMvc
 class EcommerceBackendApplicationTests {
 
-	@Test
-	void contextLoads() {
-	}
+    @Test
+    void contextLoads() {
+    }
 
 }

@@ -11,11 +11,10 @@ import com.ecommerce.ecommerce_backend.exception.UserAlreadyExistException;
 import com.ecommerce.ecommerce_backend.exception.UserNotVerifiedException;
 import com.ecommerce.ecommerce_backend.model.LocalUser;
 import com.ecommerce.ecommerce_backend.model.VerificationToken;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.beans.factory.annotation.Value;
 
-import javax.swing.text.html.Option;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
@@ -101,12 +100,12 @@ public class UserService {
     }
 
     @Transactional
-    public boolean verifyUser(String token){
+    public boolean verifyUser(String token) {
         Optional<VerificationToken> opToken = verificationTokenDAO.findByToken(token);
-        if(opToken.isPresent()){
+        if (opToken.isPresent()) {
             VerificationToken verificationToken = opToken.get();
             LocalUser user = verificationToken.getUser();
-            if(!user.isEmailVerified()){
+            if (!user.isEmailVerified()) {
                 user.setEmailVerified(true);
                 userDao.save(user);
                 verificationTokenDAO.deleteByUser(user);
@@ -119,7 +118,7 @@ public class UserService {
 
     public void forgotPassword(String email) throws EmailNotFoundException, EmailFailureException {
         Optional<LocalUser> opUser = userDao.findByEmailIgnoreCase(email);
-        if(opUser.isPresent()){
+        if (opUser.isPresent()) {
             LocalUser user = opUser.get();
             String token = jwtService.generatePasswordResetJWT(user);
             emailService.sendPasswordResetEmail(user, token);
@@ -128,10 +127,10 @@ public class UserService {
         }
     }
 
-    public void resetPassword(PasswordResetBody body){
+    public void resetPassword(PasswordResetBody body) {
         String email = jwtService.getResetPasswordEmail(body.getToken());
         Optional<LocalUser> opUser = userDao.findByEmailIgnoreCase(email);
-        if(opUser.isPresent()){
+        if (opUser.isPresent()) {
             LocalUser user = opUser.get();
             user.setPassword(encryptionService.encryptPassword(body.getPassword()));
             userDao.save(user);

@@ -21,7 +21,7 @@ public class JUnitUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         Optional<LocalUser> opUser = localUserDao.findByUsernameIgnoreCase(username);
-        if(opUser.isPresent()){
+        if (opUser.isPresent()) {
             return opUser.get();
         }
         return null;
