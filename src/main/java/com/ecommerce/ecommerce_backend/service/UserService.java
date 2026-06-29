@@ -13,6 +13,7 @@ import com.ecommerce.ecommerce_backend.model.LocalUser;
 import com.ecommerce.ecommerce_backend.model.VerificationToken;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.beans.factory.annotation.Value;
 
 import javax.swing.text.html.Option;
 import java.sql.Timestamp;
@@ -32,6 +33,9 @@ public class UserService {
 
     private VerificationTokenDAO verificationTokenDAO;
 
+    @Value("${app.email.verification.enabled:false}")
+    private boolean emailVerificationEnabled;
+
     public UserService(LocalUserDao localUserDao, EncryptionService encryptionService, JWTService jwtService
             , EmailService emailService, VerificationTokenDAO verificationTokenDAO) {
         this.userDao = localUserDao;
@@ -46,14 +50,21 @@ public class UserService {
                 || userDao.findByUsernameIgnoreCase(registrationBody.getUsername()).isPresent()) {
             throw new UserAlreadyExistException();
         }
+
         LocalUser user = new LocalUser();
         user.setEmail(registrationBody.getEmail());
         user.setUsername(registrationBody.getUsername());
         user.setFirstName(registrationBody.getFirstName());
         user.setLastName(registrationBody.getLastName());
         user.setPassword(encryptionService.encryptPassword(registrationBody.getPassword()));
-        VerificationToken verificationToken = createVerificationToken(user);
-        emailService.sendVerificationEmail(verificationToken);
+
+        if (emailVerificationEnabled) {
+            VerificationToken verificationToken = createVerificationToken(user);
+            emailService.sendVerificationEmail(verificationToken);
+        } else {
+            user.setEmailVerified(true);
+        }
+
         return userDao.save(user);
     }
 
