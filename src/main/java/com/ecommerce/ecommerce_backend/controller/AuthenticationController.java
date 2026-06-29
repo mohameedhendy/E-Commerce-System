@@ -15,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import com.ecommerce.ecommerce_backend.dto.UserResponse;
 
 @RestController
 @RequestMapping("/auth")
@@ -76,8 +77,8 @@ public class AuthenticationController {
     }
 
     @GetMapping("/me")
-    public LocalUser getLoggedInUser(@AuthenticationPrincipal LocalUser user) {
-        return user;
+    public ResponseEntity<UserResponse> getLoggedInUser(@AuthenticationPrincipal LocalUser user) {
+        return ResponseEntity.ok(new UserResponse(user));
     }
 
     @PostMapping("/forgot")
