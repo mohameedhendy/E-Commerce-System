@@ -1,12 +1,10 @@
 package com.ecommerce.ecommerce_backend.controller;
 
+import com.ecommerce.ecommerce_backend.dto.OrderResponse;
 import com.ecommerce.ecommerce_backend.model.LocalUser;
-import com.ecommerce.ecommerce_backend.model.Order;
 import com.ecommerce.ecommerce_backend.service.OrderService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -14,14 +12,17 @@ import java.util.List;
 @RequestMapping("/order")
 public class OrderController {
 
-    private OrderService orderService;
+    private final OrderService orderService;
 
     public OrderController(OrderService orderService) {
         this.orderService = orderService;
     }
 
     @GetMapping
-    public List<Order> getUserOrders(@AuthenticationPrincipal LocalUser user) {
-        return orderService.getAllUserOrders(user);
+    public List<OrderResponse> getUserOrders(@AuthenticationPrincipal LocalUser user) {
+        return orderService.getAllUserOrders(user)
+                .stream()
+                .map(OrderResponse::new)
+                .toList();
     }
 }
