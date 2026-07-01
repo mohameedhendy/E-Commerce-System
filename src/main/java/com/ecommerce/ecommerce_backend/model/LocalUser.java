@@ -2,9 +2,13 @@ package com.ecommerce.ecommerce_backend.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-
+import jakarta.persistence.Column;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -12,6 +16,8 @@ import java.util.Set;
 
 @Entity
 @Table(name = "local_user")
+@Getter
+@Setter
 public class LocalUser implements UserDetails {
 
     @Id
@@ -45,6 +51,10 @@ public class LocalUser implements UserDetails {
 
     @Column(name = "email_verified", nullable = false)
     private boolean emailVerified = false;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role = Role.USER;
 
     public boolean isEmailVerified() {
         return emailVerified;

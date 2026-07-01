@@ -1,0 +1,14 @@
+package com.ecommerce.ecommerce_backend.controller;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/admin")
+public class AdminController {
+
+    @GetMapping("/test")
+    public ResponseEntity<String> adminTest() {
+        return ResponseEntity.ok("Admin access granted");
+    }
+}

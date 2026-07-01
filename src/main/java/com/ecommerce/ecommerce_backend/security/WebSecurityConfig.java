@@ -46,6 +46,7 @@ public class WebSecurityConfig {
                                         "/auth/verify",
                                         "/error"
                                 ).permitAll()
+                                .requestMatchers("/admin/**").hasRole("ADMIN")
                                 .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);

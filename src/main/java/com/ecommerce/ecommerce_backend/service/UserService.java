@@ -10,6 +10,7 @@ import com.ecommerce.ecommerce_backend.exception.EmailNotFoundException;
 import com.ecommerce.ecommerce_backend.exception.UserAlreadyExistException;
 import com.ecommerce.ecommerce_backend.exception.UserNotVerifiedException;
 import com.ecommerce.ecommerce_backend.model.LocalUser;
+import com.ecommerce.ecommerce_backend.model.Role;
 import com.ecommerce.ecommerce_backend.model.VerificationToken;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -52,6 +53,7 @@ public class UserService {
         }
 
         LocalUser user = new LocalUser();
+        user.setRole(Role.USER);
         user.setEmail(registrationBody.getEmail());
         user.setUsername(registrationBody.getUsername());
         user.setFirstName(registrationBody.getFirstName());
