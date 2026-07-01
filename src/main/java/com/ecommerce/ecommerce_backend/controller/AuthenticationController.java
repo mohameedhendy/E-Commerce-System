@@ -1,9 +1,6 @@
 package com.ecommerce.ecommerce_backend.controller;
 
-import com.ecommerce.ecommerce_backend.dto.LoginBody;
-import com.ecommerce.ecommerce_backend.dto.LoginResponse;
-import com.ecommerce.ecommerce_backend.dto.PasswordResetBody;
-import com.ecommerce.ecommerce_backend.dto.RegistrationBody;
+import com.ecommerce.ecommerce_backend.dto.*;
 import com.ecommerce.ecommerce_backend.exception.EmailFailureException;
 import com.ecommerce.ecommerce_backend.exception.EmailNotFoundException;
 import com.ecommerce.ecommerce_backend.exception.UserAlreadyExistException;
@@ -15,7 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import com.ecommerce.ecommerce_backend.dto.UserResponse;
+import com.ecommerce.ecommerce_backend.exception.InvalidCredentialsException;
 
 @RestController
 @RequestMapping("/auth")
@@ -28,43 +25,27 @@ public class AuthenticationController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity registerUser(@Valid @RequestBody RegistrationBody registrationBody) {
-        try {
-            userService.registerUser(registrationBody);
-            return ResponseEntity.ok().build();
-        } catch (UserAlreadyExistException ex) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).build();
-        } catch (EmailFailureException e) {
-            System.out.println("error");
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    public ResponseEntity<Void> registerUser(@Valid @RequestBody RegistrationBody registrationBody)
+            throws UserAlreadyExistException, EmailFailureException {
+        userService.registerUser(registrationBody);
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> loginUser(@Valid @RequestBody LoginBody loginBody) {
-        String jwt = null;
-        try {
-            jwt = userService.loginUser(loginBody);
-        } catch (UserNotVerifiedException ex) {
-            LoginResponse response = new LoginResponse();
-            response.setSuccess(false);
-            String reason = "USER_NOT_VERIFIED";
-            if (ex.isNewEmailSend()) {
-                reason += "_EMAIL_RESENT";
-            }
-            response.setFailureReason(reason);
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
-        } catch (EmailFailureException ex) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    public ResponseEntity<LoginResponse> loginUser(@Valid @RequestBody LoginBody loginBody)
+            throws UserNotVerifiedException, EmailFailureException, InvalidCredentialsException {
+
+        String jwt = userService.loginUser(loginBody);
+
         if (jwt == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        } else {
-            LoginResponse response = new LoginResponse();
-            response.setJwt(jwt);
-            response.setSuccess(true);
-            return ResponseEntity.ok(response);
+            throw new InvalidCredentialsException();
         }
+
+        LoginResponse response = new LoginResponse();
+        response.setJwt(jwt);
+        response.setSuccess(true);
+
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/verify")
@@ -82,15 +63,10 @@ public class AuthenticationController {
     }
 
     @PostMapping("/forgot")
-    public ResponseEntity forgotPassword(@RequestParam String email) {
-        try {
-            userService.forgotPassword(email);
-            return ResponseEntity.ok().build();
-        } catch (EmailNotFoundException ex) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        } catch (EmailFailureException ex) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    public ResponseEntity<Void> forgotPassword(@RequestParam String email)
+            throws EmailNotFoundException, EmailFailureException {
+        userService.forgotPassword(email);
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/reset")

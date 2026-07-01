@@ -75,14 +75,23 @@ public class UserService {
                 if (user.isEmailVerified()) {
                     return jwtService.generateToken(user);
                 } else {
-                    List<VerificationToken> verificationTokens = user.getVerificationTokens();
+                    if (!emailVerificationEnabled) {
+                        throw new UserNotVerifiedException(false);
+                    }
+
+                    List<VerificationToken> verificationTokens =
+                            verificationTokenDAO.findByUser_IdOrderByIdDesc(user.getId());
+
                     boolean resend = verificationTokens.isEmpty() ||
-                            verificationTokens.getFirst().getCreatedTimeStamp().before(new Timestamp(System.currentTimeMillis() - (60 * 60 * 1000)));
+                            verificationTokens.get(0).getCreatedTimeStamp()
+                                    .before(new Timestamp(System.currentTimeMillis() - (60 * 60 * 1000)));
+
                     if (resend) {
                         VerificationToken verificationToken = createVerificationToken(user);
                         verificationTokenDAO.save(verificationToken);
                         emailService.sendVerificationEmail(verificationToken);
                     }
+
                     throw new UserNotVerifiedException(resend);
                 }
             }
