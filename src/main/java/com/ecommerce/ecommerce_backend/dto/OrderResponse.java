@@ -2,6 +2,8 @@ package com.ecommerce.ecommerce_backend.dto;
 
 import com.ecommerce.ecommerce_backend.model.Order;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 
 public class OrderResponse {
@@ -9,6 +11,7 @@ public class OrderResponse {
     private Long id;
     private AddressResponse address;
     private List<OrderItemResponse> items;
+    private BigDecimal orderTotal;
 
     public OrderResponse(Order order) {
         this.id = order.getId();
@@ -17,6 +20,11 @@ public class OrderResponse {
                 .stream()
                 .map(OrderItemResponse::new)
                 .toList();
+
+        this.orderTotal = this.items.stream()
+                .map(OrderItemResponse::getItemTotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .setScale(2, RoundingMode.HALF_UP);
     }
 
     public Long getId() {
@@ -29,5 +37,9 @@ public class OrderResponse {
 
     public List<OrderItemResponse> getItems() {
         return items;
+    }
+
+    public BigDecimal getOrderTotal() {
+        return orderTotal;
     }
 }
