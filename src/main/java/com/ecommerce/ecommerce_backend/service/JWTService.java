@@ -63,4 +63,13 @@ public class JWTService {
         DecodedJWT jwt = JWT.require(algorithm).withIssuer(issuer).build().verify(token);
         return jwt.getClaim(USERNAME_KEY).asString();
     }
+
+    public String getVerificationEmail(String token) {
+        DecodedJWT jwt = JWT.require(algorithm)
+                .withIssuer(issuer)
+                .build()
+                .verify(token);
+
+        return jwt.getClaim(VERIFICATION_EMAIL_KEY).asString();
+    }
 }

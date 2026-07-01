@@ -1,24 +1,28 @@
 package com.ecommerce.ecommerce_backend.controller;
 
-import com.ecommerce.ecommerce_backend.dto.*;
+import com.ecommerce.ecommerce_backend.dto.LoginBody;
+import com.ecommerce.ecommerce_backend.dto.LoginResponse;
+import com.ecommerce.ecommerce_backend.dto.PasswordResetBody;
+import com.ecommerce.ecommerce_backend.dto.RegistrationBody;
+import com.ecommerce.ecommerce_backend.dto.UserResponse;
 import com.ecommerce.ecommerce_backend.exception.EmailFailureException;
 import com.ecommerce.ecommerce_backend.exception.EmailNotFoundException;
+import com.ecommerce.ecommerce_backend.exception.InvalidCredentialsException;
 import com.ecommerce.ecommerce_backend.exception.UserAlreadyExistException;
 import com.ecommerce.ecommerce_backend.exception.UserNotVerifiedException;
 import com.ecommerce.ecommerce_backend.model.LocalUser;
 import com.ecommerce.ecommerce_backend.service.UserService;
 import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import com.ecommerce.ecommerce_backend.exception.InvalidCredentialsException;
+import com.ecommerce.ecommerce_backend.exception.InvalidTokenException;
 
 @RestController
 @RequestMapping("/auth")
 public class AuthenticationController {
 
-    private UserService userService;
+    private final UserService userService;
 
     public AuthenticationController(UserService userService) {
         this.userService = userService;
@@ -27,6 +31,7 @@ public class AuthenticationController {
     @PostMapping("/register")
     public ResponseEntity<Void> registerUser(@Valid @RequestBody RegistrationBody registrationBody)
             throws UserAlreadyExistException, EmailFailureException {
+
         userService.registerUser(registrationBody);
         return ResponseEntity.ok().build();
     }
@@ -41,20 +46,18 @@ public class AuthenticationController {
             throw new InvalidCredentialsException();
         }
 
-        LoginResponse response = new LoginResponse();
-        response.setJwt(jwt);
-        response.setSuccess(true);
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(new LoginResponse(jwt));
     }
 
     @PostMapping("/verify")
-    public ResponseEntity verifyEmail(@RequestParam String token) {
-        if (userService.verifyUser(token)) {
-            return ResponseEntity.ok().build();
-        } else {
-            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+    public ResponseEntity<Void> verifyEmail(@RequestParam String token) throws InvalidTokenException {
+        boolean verified = userService.verifyUser(token);
+
+        if (!verified) {
+            throw new InvalidTokenException("Invalid or expired verification token");
         }
+
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/me")
@@ -65,12 +68,15 @@ public class AuthenticationController {
     @PostMapping("/forgot")
     public ResponseEntity<Void> forgotPassword(@RequestParam String email)
             throws EmailNotFoundException, EmailFailureException {
+
         userService.forgotPassword(email);
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/reset")
-    public ResponseEntity resetPassword(@Valid @RequestBody PasswordResetBody body) {
+    public ResponseEntity<Void> resetPassword(@Valid @RequestBody PasswordResetBody body)
+            throws InvalidTokenException {
+
         userService.resetPassword(body);
         return ResponseEntity.ok().build();
     }

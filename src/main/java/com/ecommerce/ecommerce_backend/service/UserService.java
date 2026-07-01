@@ -14,7 +14,8 @@ import com.ecommerce.ecommerce_backend.model.VerificationToken;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.ecommerce.ecommerce_backend.exception.InvalidTokenException;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
@@ -110,10 +111,24 @@ public class UserService {
 
     @Transactional
     public boolean verifyUser(String token) {
+        String email;
+
+        try {
+            email = jwtService.getVerificationEmail(token);
+        } catch (JWTVerificationException ex) {
+            return false;
+        }
+
         Optional<VerificationToken> opToken = verificationTokenDAO.findByToken(token);
+
         if (opToken.isPresent()) {
             VerificationToken verificationToken = opToken.get();
             LocalUser user = verificationToken.getUser();
+
+            if (!user.getEmail().equalsIgnoreCase(email)) {
+                return false;
+            }
+
             if (!user.isEmailVerified()) {
                 user.setEmailVerified(true);
                 userDao.save(user);
@@ -136,13 +151,23 @@ public class UserService {
         }
     }
 
-    public void resetPassword(PasswordResetBody body) {
-        String email = jwtService.getResetPasswordEmail(body.getToken());
-        Optional<LocalUser> opUser = userDao.findByEmailIgnoreCase(email);
-        if (opUser.isPresent()) {
-            LocalUser user = opUser.get();
-            user.setPassword(encryptionService.encryptPassword(body.getPassword()));
-            userDao.save(user);
+    public void resetPassword(PasswordResetBody body) throws InvalidTokenException {
+        String email;
+
+        try {
+            email = jwtService.getResetPasswordEmail(body.getToken());
+        } catch (JWTVerificationException ex) {
+            throw new InvalidTokenException("Invalid or expired password reset token");
         }
+
+        Optional<LocalUser> opUser = userDao.findByEmailIgnoreCase(email);
+
+        if (opUser.isEmpty()) {
+            throw new InvalidTokenException("Invalid or expired password reset token");
+        }
+
+        LocalUser user = opUser.get();
+        user.setPassword(encryptionService.encryptPassword(body.getPassword()));
+        userDao.save(user);
     }
 }
