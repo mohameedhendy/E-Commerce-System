@@ -9,11 +9,16 @@ import org.springframework.data.repository.query.Param;
 
 public interface ProductDao extends JpaRepository<Product, Long> {
 
+    Page<Product> findAllByActiveTrue(Pageable pageable);
+
     @Query("""
             SELECT p FROM Product p
-            WHERE LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
-               OR LOWER(p.shortDescription) LIKE LOWER(CONCAT('%', :keyword, '%'))
-               OR LOWER(p.longDescription) LIKE LOWER(CONCAT('%', :keyword, '%'))
+            WHERE p.active = true
+              AND (
+                    LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                 OR LOWER(p.shortDescription) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                 OR LOWER(p.longDescription) LIKE LOWER(CONCAT('%', :keyword, '%'))
+              )
             """)
     Page<Product> searchProducts(@Param("keyword") String keyword, Pageable pageable);
 }
