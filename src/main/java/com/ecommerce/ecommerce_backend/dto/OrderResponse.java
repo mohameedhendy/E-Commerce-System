@@ -5,13 +5,21 @@ import com.ecommerce.ecommerce_backend.model.Order;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
+import java.time.LocalDateTime;
+import lombok.Getter;
+import lombok.Setter;
 
+
+@Getter
+@Setter
 public class OrderResponse {
 
     private Long id;
     private AddressResponse address;
     private List<OrderItemResponse> items;
     private BigDecimal orderTotal;
+    private String status;
+    private LocalDateTime createdAt;
 
     public OrderResponse(Order order) {
         this.id = order.getId();
@@ -25,6 +33,8 @@ public class OrderResponse {
                 .map(OrderItemResponse::getItemTotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add)
                 .setScale(2, RoundingMode.HALF_UP);
+        this.status = order.getStatus() != null ? order.getStatus().name() : null;
+        this.createdAt = order.getCreatedAt();
     }
 
     public Long getId() {

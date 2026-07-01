@@ -1,11 +1,18 @@
 package com.ecommerce.ecommerce_backend.model;
 
 import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.PrePersist;
+import lombok.Getter;
+import lombok.Setter;
 
+import java.time.LocalDateTime;
 import java.util.Set;
 
-//@Setter
-//@Getter
+@Setter
+@Getter
 @Entity
 @Table(name = "web_order")
 public class Order {
@@ -25,6 +32,13 @@ public class Order {
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ProductOrderQuantity> quantities;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status")
+    private OrderStatus status;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
 
     public Long getId() {
         return id;
@@ -56,5 +70,16 @@ public class Order {
 
     public void setQuantities(Set<ProductOrderQuantity> quantities) {
         this.quantities = quantities;
+    }
+
+    @PrePersist
+    public void onCreate() {
+        if (this.status == null) {
+            this.status = OrderStatus.PENDING;
+        }
+
+        if (this.createdAt == null) {
+            this.createdAt = LocalDateTime.now();
+        }
     }
 }
