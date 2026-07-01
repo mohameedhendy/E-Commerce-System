@@ -16,8 +16,15 @@ public class ProductService {
         this.productDao = productDao;
     }
 
-    public Page<ProductResponse> getAllProducts(Pageable pageable) {
-        Page<Product> products = productDao.findAll(pageable);
+    public Page<ProductResponse> getAllProducts(String keyword, Pageable pageable) {
+        Page<Product> products;
+
+        if (keyword == null || keyword.isBlank()) {
+            products = productDao.findAll(pageable);
+        } else {
+            products = productDao.searchProducts(keyword.trim(), pageable);
+        }
+
         return products.map(ProductResponse::new);
     }
 }

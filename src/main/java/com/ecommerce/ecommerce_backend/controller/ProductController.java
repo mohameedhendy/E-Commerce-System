@@ -5,14 +5,13 @@ import com.ecommerce.ecommerce_backend.dto.ProductResponse;
 import com.ecommerce.ecommerce_backend.service.ProductService;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Pattern;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/product")
@@ -27,6 +26,8 @@ public class ProductController {
 
     @GetMapping
     public PagedResponse<ProductResponse> getAllProducts(
+            @RequestParam(required = false) String keyword,
+
             @RequestParam(defaultValue = "0")
             @Min(value = 0, message = "Page number must be 0 or greater")
             int page,
@@ -34,10 +35,20 @@ public class ProductController {
             @RequestParam(defaultValue = "10")
             @Min(value = 1, message = "Page size must be at least 1")
             @Max(value = 50, message = "Page size must not exceed 50")
-            int size
+            int size,
+
+            @RequestParam(defaultValue = "id")
+            @Pattern(regexp = "id|name|price", message = "Sort field must be one of: id, name, price")
+            String sortBy,
+
+            @RequestParam(defaultValue = "asc")
+            @Pattern(regexp = "asc|desc|ASC|DESC", message = "Sort direction must be asc or desc")
+            String sortDir
     ) {
-        Pageable pageable = PageRequest.of(page, size);
-        Page<ProductResponse> products = productService.getAllProducts(pageable);
+        Sort.Direction direction = Sort.Direction.fromString(sortDir);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+
+        Page<ProductResponse> products = productService.getAllProducts(keyword, pageable);
 
         return new PagedResponse<>(products);
     }
