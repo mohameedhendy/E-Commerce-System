@@ -2,11 +2,14 @@ package com.ecommerce.ecommerce_backend.dao;
 
 import com.ecommerce.ecommerce_backend.model.LocalUser;
 import com.ecommerce.ecommerce_backend.model.Order;
+import com.ecommerce.ecommerce_backend.model.OrderStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-
-import java.util.List;
 
 public interface OrderDao extends JpaRepository<Order, Long> {
 
-    List<Order> findAllByUser(LocalUser user);
+    Page<Order> findAllByUser(LocalUser user, Pageable pageable);
+
+    Page<Order> findAllByUserAndStatus(LocalUser user, OrderStatus status, Pageable pageable);
 }

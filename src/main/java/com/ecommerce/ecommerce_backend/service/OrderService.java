@@ -17,6 +17,10 @@ import com.ecommerce.ecommerce_backend.model.OrderStatus;
 import java.util.HashSet;
 import java.util.List;
 import com.ecommerce.ecommerce_backend.model.Stock;
+import com.ecommerce.ecommerce_backend.model.OrderStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class OrderService {
@@ -31,11 +35,25 @@ public class OrderService {
         this.productDao = productDao;
     }
 
-    public List<OrderResponse> getAllUserOrders(LocalUser user) {
-        return orderDao.findAllByUser(user)
-                .stream()
-                .map(OrderResponse::new)
-                .toList();
+    @Transactional(readOnly = true)
+    public Page<OrderResponse> getAllUserOrders(LocalUser user, String status, Pageable pageable) {
+        Page<Order> orders;
+
+        if (status == null || status.isBlank()) {
+            orders = orderDao.findAllByUser(user, pageable);
+        } else {
+            OrderStatus orderStatus;
+
+            try {
+                orderStatus = OrderStatus.valueOf(status.toUpperCase());
+            } catch (IllegalArgumentException ex) {
+                throw new InvalidOrderStatusException("Order status must be one of: PENDING, CONFIRMED, CANCELLED");
+            }
+
+            orders = orderDao.findAllByUserAndStatus(user, orderStatus, pageable);
+        }
+
+        return orders.map(OrderResponse::new);
     }
 
     @Transactional

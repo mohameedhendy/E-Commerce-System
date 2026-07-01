@@ -10,6 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -51,5 +52,10 @@ public class ProductController {
         Page<ProductResponse> products = productService.getAllProducts(keyword, pageable);
 
         return new PagedResponse<>(products);
+    }
+
+    @GetMapping("/{productId}")
+    public ResponseEntity<ProductResponse> getProductById(@PathVariable Long productId) {
+        return ResponseEntity.ok(productService.getProductById(productId));
     }
 }

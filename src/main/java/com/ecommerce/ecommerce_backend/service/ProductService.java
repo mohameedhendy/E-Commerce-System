@@ -2,6 +2,7 @@ package com.ecommerce.ecommerce_backend.service;
 
 import com.ecommerce.ecommerce_backend.dao.ProductDao;
 import com.ecommerce.ecommerce_backend.dto.ProductResponse;
+import com.ecommerce.ecommerce_backend.exception.ResourceNotFoundException;
 import com.ecommerce.ecommerce_backend.model.Product;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -26,5 +27,12 @@ public class ProductService {
         }
 
         return products.map(ProductResponse::new);
+    }
+
+    public ProductResponse getProductById(Long productId) {
+        Product product = productDao.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product was not found"));
+
+        return new ProductResponse(product);
     }
 }

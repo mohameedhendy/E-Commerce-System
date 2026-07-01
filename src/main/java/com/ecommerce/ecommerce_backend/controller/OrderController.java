@@ -7,12 +7,21 @@ import com.ecommerce.ecommerce_backend.service.OrderService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.HttpStatus;
 import java.util.List;
+import com.ecommerce.ecommerce_backend.dto.PagedResponse;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 @RestController
 @RequestMapping("/order")
+@Validated
 public class OrderController {
 
     private final OrderService orderService;
@@ -22,8 +31,25 @@ public class OrderController {
     }
 
     @GetMapping
-    public ResponseEntity<List<OrderResponse>> getUserOrders(@AuthenticationPrincipal LocalUser user) {
-        return ResponseEntity.ok(orderService.getAllUserOrders(user));
+    public ResponseEntity<PagedResponse<OrderResponse>> getUserOrders(
+            @AuthenticationPrincipal LocalUser user,
+
+            @RequestParam(required = false) String status,
+
+            @RequestParam(defaultValue = "0")
+            @Min(value = 0, message = "Page number must be 0 or greater")
+            int page,
+
+            @RequestParam(defaultValue = "10")
+            @Min(value = 1, message = "Page size must be at least 1")
+            @Max(value = 50, message = "Page size must not exceed 50")
+            int size
+    ) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+
+        Page<OrderResponse> orders = orderService.getAllUserOrders(user, status, pageable);
+
+        return ResponseEntity.ok(new PagedResponse<>(orders));
     }
 
     @PostMapping
