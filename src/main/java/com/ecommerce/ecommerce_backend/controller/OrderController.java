@@ -31,4 +31,16 @@ public class OrderController {
                                                      @Valid @RequestBody OrderRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(orderService.createOrder(user, request));
     }
+
+    @PatchMapping("/{orderId}/cancel")
+    public ResponseEntity<OrderResponse> cancelOrder(@AuthenticationPrincipal LocalUser user,
+                                                     @PathVariable Long orderId) {
+        return ResponseEntity.ok(orderService.cancelOrder(user, orderId));
+    }
+
+    @GetMapping("/{orderId}")
+    public ResponseEntity<OrderResponse> getOrderById(@AuthenticationPrincipal LocalUser user,
+                                                      @PathVariable Long orderId) {
+        return ResponseEntity.ok(orderService.getOrderById(user, orderId));
+    }
 }

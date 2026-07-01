@@ -12,9 +12,11 @@ import com.ecommerce.ecommerce_backend.exception.ResourceNotFoundException;
 import com.ecommerce.ecommerce_backend.model.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import com.ecommerce.ecommerce_backend.exception.InvalidOrderStatusException;
+import com.ecommerce.ecommerce_backend.model.OrderStatus;
 import java.util.HashSet;
 import java.util.List;
+import com.ecommerce.ecommerce_backend.model.Stock;
 
 @Service
 public class OrderService {
@@ -79,5 +81,49 @@ public class OrderService {
         Order savedOrder = orderDao.save(order);
 
         return new OrderResponse(savedOrder);
+    }
+
+    @Transactional
+    public OrderResponse cancelOrder(LocalUser user, Long orderId) {
+        Order order = orderDao.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order was not found"));
+
+        if (!order.getUser().getId().equals(user.getId())) {
+            throw new ForbiddenActionException("You are not allowed to cancel this order");
+        }
+
+        if (order.getStatus() == OrderStatus.CANCELLED) {
+            throw new InvalidOrderStatusException("Order is already cancelled");
+        }
+
+        if (order.getStatus() != null && order.getStatus() != OrderStatus.PENDING) {
+            throw new InvalidOrderStatusException("Only pending orders can be cancelled");
+        }
+
+        order.getQuantities().forEach(item -> {
+            Stock stock = item.getProduct().getStock();
+
+            if (stock != null) {
+                stock.setQuantity(stock.getQuantity() + item.getQuantity());
+            }
+        });
+
+        order.setStatus(OrderStatus.CANCELLED);
+
+        Order savedOrder = orderDao.save(order);
+
+        return new OrderResponse(savedOrder);
+    }
+
+    @Transactional(readOnly = true)
+    public OrderResponse getOrderById(LocalUser user, Long orderId) {
+        Order order = orderDao.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order was not found"));
+
+        if (!order.getUser().getId().equals(user.getId())) {
+            throw new ForbiddenActionException("You are not allowed to access this order");
+        }
+
+        return new OrderResponse(order);
     }
 }
