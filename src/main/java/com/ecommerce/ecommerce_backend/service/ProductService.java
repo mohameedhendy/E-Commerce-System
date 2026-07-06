@@ -14,7 +14,7 @@ import com.ecommerce.ecommerce_backend.exception.InvalidProductStatusException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
-
+import com.ecommerce.ecommerce_backend.dto.AdminProductStockRequest;
 
 @Service
 public class ProductService {
@@ -142,5 +142,25 @@ public class ProductService {
                 .orElseThrow(() -> new ResourceNotFoundException("Product was not found"));
 
         return new ProductResponse(product);
+    }
+
+    @Transactional
+    public ProductResponse updateProductStock(Long productId, AdminProductStockRequest request) {
+        Product product = productDao.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product was not found"));
+
+        Stock stock = product.getStock();
+
+        if (stock == null) {
+            stock = new Stock();
+            stock.setProduct(product);
+            product.setStock(stock);
+        }
+
+        stock.setQuantity(request.getStockQuantity());
+
+        Product savedProduct = productDao.save(product);
+
+        return new ProductResponse(savedProduct);
     }
 }

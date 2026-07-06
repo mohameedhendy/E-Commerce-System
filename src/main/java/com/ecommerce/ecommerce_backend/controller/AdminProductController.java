@@ -15,6 +15,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.validation.annotation.Validated;
+import com.ecommerce.ecommerce_backend.dto.AdminProductStockRequest;
+
 
 
 @RestController
@@ -74,5 +76,11 @@ public class AdminProductController {
     @GetMapping("/{productId}")
     public ResponseEntity<ProductResponse> getProductByIdForAdmin(@PathVariable Long productId) {
         return ResponseEntity.ok(productService.getProductByIdForAdmin(productId));
+    }
+
+    @PatchMapping("/{productId}/stock")
+    public ResponseEntity<ProductResponse> updateProductStock(@PathVariable Long productId,
+                                                              @Valid @RequestBody AdminProductStockRequest request) {
+        return ResponseEntity.ok(productService.updateProductStock(productId, request));
     }
 }
