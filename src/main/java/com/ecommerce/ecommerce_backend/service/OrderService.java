@@ -21,6 +21,10 @@ import com.ecommerce.ecommerce_backend.model.OrderStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
+import com.ecommerce.ecommerce_backend.dto.AdminOrderStatusRequest;
+import com.ecommerce.ecommerce_backend.exception.InvalidOrderStatusException;
+import com.ecommerce.ecommerce_backend.model.OrderStatus;
+import com.ecommerce.ecommerce_backend.model.Stock;
 
 @Service
 public class OrderService {
@@ -143,5 +147,37 @@ public class OrderService {
         }
 
         return new OrderResponse(order);
+    }
+
+    @Transactional
+    public OrderResponse updateOrderStatus(Long orderId, AdminOrderStatusRequest request) {
+        Order order = orderDao.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order was not found"));
+
+        OrderStatus newStatus = OrderStatus.valueOf(request.getStatus());
+
+        if (order.getStatus() == OrderStatus.CANCELLED) {
+            throw new InvalidOrderStatusException("Cancelled order cannot be updated");
+        }
+
+        if (order.getStatus() == newStatus) {
+            throw new InvalidOrderStatusException("Order already has this status");
+        }
+
+        if (newStatus == OrderStatus.CANCELLED) {
+            order.getQuantities().forEach(item -> {
+                Stock stock = item.getProduct().getStock();
+
+                if (stock != null) {
+                    stock.setQuantity(stock.getQuantity() + item.getQuantity());
+                }
+            });
+        }
+
+        order.setStatus(newStatus);
+
+        Order savedOrder = orderDao.save(order);
+
+        return new OrderResponse(savedOrder);
     }
 }
