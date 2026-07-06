@@ -10,6 +10,8 @@ public class ProductResponse {
     private String longDescription;
     private Double price;
     private Integer stockQuantity;
+    private Boolean active;
+
 
     public ProductResponse(Product product) {
         this.id = product.getId();
@@ -17,6 +19,7 @@ public class ProductResponse {
         this.shortDescription = product.getShortDescription();
         this.longDescription = product.getLongDescription();
         this.price = product.getPrice();
+        this.active = product.getActive();
 
         if (product.getStock() != null) {
             this.stockQuantity = product.getStock().getQuantity();
@@ -45,5 +48,9 @@ public class ProductResponse {
 
     public Integer getStockQuantity() {
         return stockQuantity;
+    }
+
+    public Boolean getActive() {
+        return active;
     }
 }

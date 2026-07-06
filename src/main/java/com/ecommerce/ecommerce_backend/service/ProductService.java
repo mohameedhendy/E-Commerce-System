@@ -10,6 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.ecommerce.ecommerce_backend.exception.InvalidProductStatusException;
 
 @Service
 public class ProductService {
@@ -100,5 +101,21 @@ public class ProductService {
         product.setActive(false);
 
         productDao.save(product);
+    }
+
+    @Transactional
+    public ProductResponse restoreProduct(Long productId) {
+        Product product = productDao.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product was not found"));
+
+        if (Boolean.TRUE.equals(product.getActive())) {
+            throw new InvalidProductStatusException("Product is already active");
+        }
+
+        product.setActive(true);
+
+        Product savedProduct = productDao.save(product);
+
+        return new ProductResponse(savedProduct);
     }
 }

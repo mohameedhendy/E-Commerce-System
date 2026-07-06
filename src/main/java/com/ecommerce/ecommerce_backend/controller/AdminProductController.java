@@ -35,4 +35,9 @@ public class AdminProductController {
         productService.deleteProduct(productId);
         return ResponseEntity.noContent().build();
     }
+
+    @PatchMapping("/{productId}/restore")
+    public ResponseEntity<ProductResponse> restoreProduct(@PathVariable Long productId) {
+        return ResponseEntity.ok(productService.restoreProduct(productId));
+    }
 }
