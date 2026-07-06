@@ -135,4 +135,12 @@ public class ProductService {
 
         return products.map(ProductResponse::new);
     }
+
+    @Transactional(readOnly = true)
+    public ProductResponse getProductByIdForAdmin(Long productId) {
+        Product product = productDao.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product was not found"));
+
+        return new ProductResponse(product);
+    }
 }

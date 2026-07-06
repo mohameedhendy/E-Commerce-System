@@ -70,4 +70,9 @@ public class AdminProductController {
 
         return ResponseEntity.ok(new PagedResponse<>(products));
     }
+
+    @GetMapping("/{productId}")
+    public ResponseEntity<ProductResponse> getProductByIdForAdmin(@PathVariable Long productId) {
+        return ResponseEntity.ok(productService.getProductByIdForAdmin(productId));
+    }
 }
