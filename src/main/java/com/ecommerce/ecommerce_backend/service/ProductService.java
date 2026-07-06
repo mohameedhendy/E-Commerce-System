@@ -11,6 +11,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.ecommerce.ecommerce_backend.exception.InvalidProductStatusException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.transaction.annotation.Transactional;
+
 
 @Service
 public class ProductService {
@@ -117,5 +121,18 @@ public class ProductService {
         Product savedProduct = productDao.save(product);
 
         return new ProductResponse(savedProduct);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ProductResponse> getAllProductsForAdmin(Boolean active, Pageable pageable) {
+        Page<Product> products;
+
+        if (active == null) {
+            products = productDao.findAll(pageable);
+        } else {
+            products = productDao.findAllByActive(active, pageable);
+        }
+
+        return products.map(ProductResponse::new);
     }
 }

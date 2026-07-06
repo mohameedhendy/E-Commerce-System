@@ -21,4 +21,7 @@ public interface ProductDao extends JpaRepository<Product, Long> {
               )
             """)
     Page<Product> searchProducts(@Param("keyword") String keyword, Pageable pageable);
+
+    Page<Product> findAllByActive(Boolean active, Pageable pageable);
 }
+
