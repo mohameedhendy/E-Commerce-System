@@ -12,4 +12,6 @@ public interface OrderDao extends JpaRepository<Order, Long> {
     Page<Order> findAllByUser(LocalUser user, Pageable pageable);
 
     Page<Order> findAllByUserAndStatus(LocalUser user, OrderStatus status, Pageable pageable);
+
+    Page<Order> findAllByStatus(OrderStatus status, Pageable pageable);
 }

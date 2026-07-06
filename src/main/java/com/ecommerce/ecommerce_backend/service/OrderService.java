@@ -25,6 +25,9 @@ import com.ecommerce.ecommerce_backend.dto.AdminOrderStatusRequest;
 import com.ecommerce.ecommerce_backend.exception.InvalidOrderStatusException;
 import com.ecommerce.ecommerce_backend.model.OrderStatus;
 import com.ecommerce.ecommerce_backend.model.Stock;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class OrderService {
@@ -179,5 +182,28 @@ public class OrderService {
         Order savedOrder = orderDao.save(order);
 
         return new OrderResponse(savedOrder);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<OrderResponse> getAllOrdersForAdmin(String status, Pageable pageable) {
+        Page<Order> orders;
+
+        if (status == null || status.isBlank()) {
+            orders = orderDao.findAll(pageable);
+        } else {
+            OrderStatus orderStatus;
+
+            try {
+                orderStatus = OrderStatus.valueOf(status.toUpperCase());
+            } catch (IllegalArgumentException ex) {
+                throw new InvalidOrderStatusException(
+                        "Order status must be one of: PENDING, CONFIRMED, CANCELLED"
+                );
+            }
+
+            orders = orderDao.findAllByStatus(orderStatus, pageable);
+        }
+
+        return orders.map(OrderResponse::new);
     }
 }
