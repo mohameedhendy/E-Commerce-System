@@ -1,22 +1,21 @@
 package com.ecommerce.ecommerce_backend.controller;
 
 import com.ecommerce.ecommerce_backend.dto.AdminProductRequest;
+import com.ecommerce.ecommerce_backend.dto.AdminProductStockRequest;
+import com.ecommerce.ecommerce_backend.dto.PagedResponse;
 import com.ecommerce.ecommerce_backend.dto.ProductResponse;
 import com.ecommerce.ecommerce_backend.service.ProductService;
 import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import com.ecommerce.ecommerce_backend.dto.PagedResponse;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
-import com.ecommerce.ecommerce_backend.dto.AdminProductStockRequest;
-
+import org.springframework.web.bind.annotation.*;
 
 
 @RestController

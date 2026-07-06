@@ -1,10 +1,6 @@
 package com.ecommerce.ecommerce_backend.model;
 
 import jakarta.persistence.*;
-import jakarta.persistence.Column;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.PrePersist;
 import lombok.Getter;
 import lombok.Setter;
 

@@ -1,22 +1,13 @@
 package com.ecommerce.ecommerce_backend.controller;
 
-import com.ecommerce.ecommerce_backend.dto.LoginBody;
-import com.ecommerce.ecommerce_backend.dto.LoginResponse;
-import com.ecommerce.ecommerce_backend.dto.PasswordResetBody;
-import com.ecommerce.ecommerce_backend.dto.RegistrationBody;
-import com.ecommerce.ecommerce_backend.dto.UserResponse;
-import com.ecommerce.ecommerce_backend.exception.EmailFailureException;
-import com.ecommerce.ecommerce_backend.exception.EmailNotFoundException;
-import com.ecommerce.ecommerce_backend.exception.InvalidCredentialsException;
-import com.ecommerce.ecommerce_backend.exception.UserAlreadyExistException;
-import com.ecommerce.ecommerce_backend.exception.UserNotVerifiedException;
+import com.ecommerce.ecommerce_backend.dto.*;
+import com.ecommerce.ecommerce_backend.exception.*;
 import com.ecommerce.ecommerce_backend.model.LocalUser;
 import com.ecommerce.ecommerce_backend.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import com.ecommerce.ecommerce_backend.exception.InvalidTokenException;
 
 @RestController
 @RequestMapping("/auth")

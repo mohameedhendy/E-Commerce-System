@@ -1,22 +1,19 @@
 package com.ecommerce.ecommerce_backend.service;
 
+import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.ecommerce.ecommerce_backend.dao.LocalUserDao;
 import com.ecommerce.ecommerce_backend.dao.VerificationTokenDAO;
 import com.ecommerce.ecommerce_backend.dto.LoginBody;
 import com.ecommerce.ecommerce_backend.dto.PasswordResetBody;
 import com.ecommerce.ecommerce_backend.dto.RegistrationBody;
-import com.ecommerce.ecommerce_backend.exception.EmailFailureException;
-import com.ecommerce.ecommerce_backend.exception.EmailNotFoundException;
-import com.ecommerce.ecommerce_backend.exception.UserAlreadyExistException;
-import com.ecommerce.ecommerce_backend.exception.UserNotVerifiedException;
+import com.ecommerce.ecommerce_backend.exception.*;
 import com.ecommerce.ecommerce_backend.model.LocalUser;
 import com.ecommerce.ecommerce_backend.model.Role;
 import com.ecommerce.ecommerce_backend.model.VerificationToken;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.auth0.jwt.exceptions.JWTVerificationException;
-import com.ecommerce.ecommerce_backend.exception.InvalidTokenException;
+
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;

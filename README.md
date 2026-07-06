@@ -1,8 +1,10 @@
 # E-Commerce Backend System
 
-A RESTful backend system for an E-Commerce application built with **Java**, **Spring Boot**, **Spring Security**, **JWT**, and **PostgreSQL**.
+A RESTful backend system for an E-Commerce application built with **Java**, **Spring Boot**, **Spring Security**, **JWT
+**, and **PostgreSQL**.
 
-The project focuses on building clean and practical backend APIs for authentication, products, addresses, and order management.
+The project focuses on building clean and practical backend APIs for authentication, products, addresses, and order
+management.
 
 ---
 
@@ -151,44 +153,44 @@ Example response:
 
 ### Authentication
 
-| Method | Endpoint | Description |
-|---|---|---|
-| POST | `/auth/register` | Register new user |
-| POST | `/auth/login` | Login and get JWT token |
-| GET | `/auth/me` | Get authenticated user |
-| POST | `/auth/forgot` | Request password reset |
-| POST | `/auth/reset` | Reset password |
-| POST | `/auth/verify` | Verify email |
+| Method | Endpoint         | Description             |
+|--------|------------------|-------------------------|
+| POST   | `/auth/register` | Register new user       |
+| POST   | `/auth/login`    | Login and get JWT token |
+| GET    | `/auth/me`       | Get authenticated user  |
+| POST   | `/auth/forgot`   | Request password reset  |
+| POST   | `/auth/reset`    | Reset password          |
+| POST   | `/auth/verify`   | Verify email            |
 
 ---
 
 ### Products
 
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/product` | Get products with pagination, search, and sorting |
-| GET | `/product/{productId}` | Get product details by ID |
+| Method | Endpoint               | Description                                       |
+|--------|------------------------|---------------------------------------------------|
+| GET    | `/product`             | Get products with pagination, search, and sorting |
+| GET    | `/product/{productId}` | Get product details by ID                         |
 
 ---
 
 ### Addresses
 
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/user/{userId}/address` | Get user addresses |
-| POST | `/user/{userId}/address` | Add new address |
-| PUT | `/user/{userId}/address/{addressId}` | Update address |
+| Method | Endpoint                             | Description        |
+|--------|--------------------------------------|--------------------|
+| GET    | `/user/{userId}/address`             | Get user addresses |
+| POST   | `/user/{userId}/address`             | Add new address    |
+| PUT    | `/user/{userId}/address/{addressId}` | Update address     |
 
 ---
 
 ### Orders
 
-| Method | Endpoint | Description |
-|---|---|---|
-| POST | `/order` | Create new order |
-| GET | `/order` | Get authenticated user orders with pagination and status filter |
-| GET | `/order/{orderId}` | Get single order details |
-| PATCH | `/order/{orderId}/cancel` | Cancel order and restore stock |
+| Method | Endpoint                  | Description                                                     |
+|--------|---------------------------|-----------------------------------------------------------------|
+| POST   | `/order`                  | Create new order                                                |
+| GET    | `/order`                  | Get authenticated user orders with pagination and status filter |
+| GET    | `/order/{orderId}`        | Get single order details                                        |
+| PATCH  | `/order/{orderId}/cancel` | Cancel order and restore stock                                  |
 
 ---
 

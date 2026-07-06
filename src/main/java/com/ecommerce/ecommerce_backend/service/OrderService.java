@@ -3,31 +3,21 @@ package com.ecommerce.ecommerce_backend.service;
 import com.ecommerce.ecommerce_backend.dao.AddressDAO;
 import com.ecommerce.ecommerce_backend.dao.OrderDao;
 import com.ecommerce.ecommerce_backend.dao.ProductDao;
+import com.ecommerce.ecommerce_backend.dto.AdminOrderStatusRequest;
 import com.ecommerce.ecommerce_backend.dto.OrderItemRequest;
 import com.ecommerce.ecommerce_backend.dto.OrderRequest;
 import com.ecommerce.ecommerce_backend.dto.OrderResponse;
 import com.ecommerce.ecommerce_backend.exception.ForbiddenActionException;
 import com.ecommerce.ecommerce_backend.exception.InsufficientStockException;
+import com.ecommerce.ecommerce_backend.exception.InvalidOrderStatusException;
 import com.ecommerce.ecommerce_backend.exception.ResourceNotFoundException;
 import com.ecommerce.ecommerce_backend.model.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.ecommerce.ecommerce_backend.exception.InvalidOrderStatusException;
-import com.ecommerce.ecommerce_backend.model.OrderStatus;
+
 import java.util.HashSet;
-import java.util.List;
-import com.ecommerce.ecommerce_backend.model.Stock;
-import com.ecommerce.ecommerce_backend.model.OrderStatus;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.transaction.annotation.Transactional;
-import com.ecommerce.ecommerce_backend.dto.AdminOrderStatusRequest;
-import com.ecommerce.ecommerce_backend.exception.InvalidOrderStatusException;
-import com.ecommerce.ecommerce_backend.model.OrderStatus;
-import com.ecommerce.ecommerce_backend.model.Stock;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class OrderService {

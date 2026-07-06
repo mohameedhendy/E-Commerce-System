@@ -1,13 +1,13 @@
 package com.ecommerce.ecommerce_backend.dto;
 
 import com.ecommerce.ecommerce_backend.model.Order;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.List;
 import java.time.LocalDateTime;
-import lombok.Getter;
-import lombok.Setter;
+import java.util.List;
 
 
 @Getter

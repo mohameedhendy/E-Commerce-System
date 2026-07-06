@@ -2,7 +2,9 @@ package com.ecommerce.ecommerce_backend.service;
 
 import com.ecommerce.ecommerce_backend.dao.ProductDao;
 import com.ecommerce.ecommerce_backend.dto.AdminProductRequest;
+import com.ecommerce.ecommerce_backend.dto.AdminProductStockRequest;
 import com.ecommerce.ecommerce_backend.dto.ProductResponse;
+import com.ecommerce.ecommerce_backend.exception.InvalidProductStatusException;
 import com.ecommerce.ecommerce_backend.exception.ResourceNotFoundException;
 import com.ecommerce.ecommerce_backend.model.Product;
 import com.ecommerce.ecommerce_backend.model.Stock;
@@ -10,11 +12,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.ecommerce.ecommerce_backend.exception.InvalidProductStatusException;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.transaction.annotation.Transactional;
-import com.ecommerce.ecommerce_backend.dto.AdminProductStockRequest;
 
 @Service
 public class ProductService {
