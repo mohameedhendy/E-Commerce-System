@@ -55,4 +55,17 @@ public class ReviewService {
 
         return reviewDao.findAllByProduct(product, pageable).map(ReviewResponse::new);
     }
+
+    @Transactional
+    public ReviewResponse updateMyReview(LocalUser user, Long reviewId, ReviewRequest request) {
+        Review review = reviewDao.findByIdAndUser(reviewId, user)
+                .orElseThrow(() -> new ResourceNotFoundException("Review was not found"));
+
+        review.setRating(request.getRating());
+        review.setComment(request.getComment());
+
+        Review savedReview = reviewDao.save(review);
+
+        return new ReviewResponse(savedReview);
+    }
 }
