@@ -2,7 +2,12 @@ package com.ecommerce.ecommerce_backend.controller;
 
 import com.ecommerce.ecommerce_backend.dto.PagedResponse;
 import com.ecommerce.ecommerce_backend.dto.ProductResponse;
+import com.ecommerce.ecommerce_backend.dto.ReviewRequest;
+import com.ecommerce.ecommerce_backend.dto.ReviewResponse;
+import com.ecommerce.ecommerce_backend.model.LocalUser;
 import com.ecommerce.ecommerce_backend.service.ProductService;
+import com.ecommerce.ecommerce_backend.service.ReviewService;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Pattern;
@@ -10,7 +15,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,9 +27,11 @@ import org.springframework.web.bind.annotation.*;
 public class ProductController {
 
     private final ProductService productService;
+    private final ReviewService reviewService;
 
-    public ProductController(ProductService productService) {
+    public ProductController(ProductService productService, ReviewService reviewService) {
         this.productService = productService;
+        this.reviewService = reviewService;
     }
 
     @GetMapping
@@ -57,5 +66,24 @@ public class ProductController {
     @GetMapping("/{productId}")
     public ResponseEntity<ProductResponse> getProductById(@PathVariable Long productId) {
         return ResponseEntity.ok(productService.getProductById(productId));
+    }
+
+    @PostMapping("/{productId}/review")
+    public ResponseEntity<ReviewResponse> createReview(@AuthenticationPrincipal LocalUser user,
+                                                       @PathVariable Long productId,
+                                                       @Valid @RequestBody ReviewRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(reviewService.createReview(user, productId, request));
+    }
+
+    @GetMapping("/{productId}/reviews")
+    public ResponseEntity<PagedResponse<ReviewResponse>> getProductReviews(
+            @PathVariable Long productId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+
+        return ResponseEntity.ok(new PagedResponse<>(reviewService.getProductReviews(productId, pageable)));
     }
 }
