@@ -232,4 +232,12 @@ public class OrderService {
 
         return new OrderResponse(savedOrder);
     }
+
+    @Transactional(readOnly = true)
+    public OrderResponse getMyOrderById(LocalUser user, Long orderId) {
+        Order order = orderDao.findByIdAndUser(orderId, user)
+                .orElseThrow(() -> new ResourceNotFoundException("Order was not found"));
+
+        return new OrderResponse(order);
+    }
 }
