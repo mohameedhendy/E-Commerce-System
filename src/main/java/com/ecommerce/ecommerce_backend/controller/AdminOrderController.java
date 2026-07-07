@@ -56,4 +56,7 @@ public class AdminOrderController {
     public ResponseEntity<OrderResponse> getOrderByIdForAdmin(@PathVariable Long orderId) {
         return ResponseEntity.ok(orderService.getOrderByIdForAdmin(orderId));
     }
-}
+}git status
+git add .
+git commit -m "feat: add admin order details endpoint"
+git push
