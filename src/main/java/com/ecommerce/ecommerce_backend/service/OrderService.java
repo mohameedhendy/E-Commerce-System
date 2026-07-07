@@ -196,4 +196,12 @@ public class OrderService {
 
         return orders.map(OrderResponse::new);
     }
+
+    @Transactional(readOnly = true)
+    public OrderResponse getOrderByIdForAdmin(Long orderId) {
+        Order order = orderDao.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order was not found"));
+
+        return new OrderResponse(order);
+    }
 }

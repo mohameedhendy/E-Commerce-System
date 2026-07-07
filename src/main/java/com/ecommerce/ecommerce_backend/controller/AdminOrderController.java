@@ -51,4 +51,9 @@ public class AdminOrderController {
                                                            @Valid @RequestBody AdminOrderStatusRequest request) {
         return ResponseEntity.ok(orderService.updateOrderStatus(orderId, request));
     }
+
+    @GetMapping("/{orderId}")
+    public ResponseEntity<OrderResponse> getOrderByIdForAdmin(@PathVariable Long orderId) {
+        return ResponseEntity.ok(orderService.getOrderByIdForAdmin(orderId));
+    }
 }
