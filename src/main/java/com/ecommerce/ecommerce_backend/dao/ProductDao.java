@@ -23,5 +23,12 @@ public interface ProductDao extends JpaRepository<Product, Long> {
     Page<Product> searchProducts(@Param("keyword") String keyword, Pageable pageable);
 
     Page<Product> findAllByActive(Boolean active, Pageable pageable);
+
+    @Query("""
+        SELECT p FROM Product p
+        LEFT JOIN p.stock s
+        WHERE COALESCE(s.quantity, 0) <= :threshold
+        """)
+    Page<Product> findLowStockProducts(@Param("threshold") Integer threshold, Pageable pageable);
 }
 

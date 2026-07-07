@@ -72,6 +72,28 @@ public class AdminProductController {
         return ResponseEntity.ok(new PagedResponse<>(products));
     }
 
+    @GetMapping("/low-stock")
+    public ResponseEntity<PagedResponse<ProductResponse>> getLowStockProducts(
+            @RequestParam(defaultValue = "5")
+            @Min(value = 0, message = "Threshold must be 0 or greater")
+            int threshold,
+
+            @RequestParam(defaultValue = "0")
+            @Min(value = 0, message = "Page number must be 0 or greater")
+            int page,
+
+            @RequestParam(defaultValue = "10")
+            @Min(value = 1, message = "Page size must be at least 1")
+            @Max(value = 50, message = "Page size must not exceed 50")
+            int size
+    ) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "stock.quantity"));
+
+        Page<ProductResponse> products = productService.getLowStockProductsForAdmin(threshold, pageable);
+
+        return ResponseEntity.ok(new PagedResponse<>(products));
+    }
+
     @GetMapping("/{productId}")
     public ResponseEntity<ProductResponse> getProductByIdForAdmin(@PathVariable Long productId) {
         return ResponseEntity.ok(productService.getProductByIdForAdmin(productId));

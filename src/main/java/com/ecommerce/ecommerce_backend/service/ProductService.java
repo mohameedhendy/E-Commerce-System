@@ -160,4 +160,11 @@ public class ProductService {
 
         return new ProductResponse(savedProduct);
     }
+
+    @Transactional(readOnly = true)
+    public Page<ProductResponse> getLowStockProductsForAdmin(Integer threshold, Pageable pageable) {
+        Page<Product> products = productDao.findLowStockProducts(threshold, pageable);
+
+        return products.map(ProductResponse::new);
+    }
 }
