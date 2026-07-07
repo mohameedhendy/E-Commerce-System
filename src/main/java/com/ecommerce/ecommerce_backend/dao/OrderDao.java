@@ -7,6 +7,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.Optional;
+
 public interface OrderDao extends JpaRepository<Order, Long> {
 
     Page<Order> findAllByUser(LocalUser user, Pageable pageable);
@@ -16,4 +18,6 @@ public interface OrderDao extends JpaRepository<Order, Long> {
     Page<Order> findAllByStatus(OrderStatus status, Pageable pageable);
 
     long countByStatus(OrderStatus status);
+
+    Optional<Order> findByIdAndUser(Long id, LocalUser user);
 }

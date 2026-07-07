@@ -204,4 +204,32 @@ public class OrderService {
 
         return new OrderResponse(order);
     }
+
+    @Transactional
+    public OrderResponse cancelMyOrder(LocalUser user, Long orderId) {
+        Order order = orderDao.findByIdAndUser(orderId, user)
+                .orElseThrow(() -> new ResourceNotFoundException("Order was not found"));
+
+        if (order.getStatus() == OrderStatus.CANCELLED) {
+            throw new InvalidOrderStatusException("Order is already cancelled");
+        }
+
+        if (order.getStatus() != OrderStatus.PENDING) {
+            throw new InvalidOrderStatusException("Only pending orders can be cancelled by customer");
+        }
+
+        order.getQuantities().forEach(item -> {
+            Stock stock = item.getProduct().getStock();
+
+            if (stock != null) {
+                stock.setQuantity(stock.getQuantity() + item.getQuantity());
+            }
+        });
+
+        order.setStatus(OrderStatus.CANCELLED);
+
+        Order savedOrder = orderDao.save(order);
+
+        return new OrderResponse(savedOrder);
+    }
 }

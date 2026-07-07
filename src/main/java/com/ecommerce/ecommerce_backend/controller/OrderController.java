@@ -68,4 +68,10 @@ public class OrderController {
                                                       @PathVariable Long orderId) {
         return ResponseEntity.ok(orderService.getOrderById(user, orderId));
     }
+
+    @PatchMapping("/{orderId}/cancel")
+    public ResponseEntity<OrderResponse> cancelMyOrder(@AuthenticationPrincipal LocalUser user,
+                                                       @PathVariable Long orderId) {
+        return ResponseEntity.ok(orderService.cancelMyOrder(user, orderId));
+    }
 }
