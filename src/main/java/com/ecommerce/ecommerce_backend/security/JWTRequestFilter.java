@@ -22,58 +22,107 @@ import java.util.Optional;
 @Component
 public class JWTRequestFilter extends OncePerRequestFilter {
 
+    private static final String AUTHORIZATION_HEADER = "Authorization";
+    private static final String BEARER_PREFIX = "Bearer ";
+
     private final JWTService jwtService;
     private final LocalUserDao userDao;
 
-    public JWTRequestFilter(JWTService jwtService, LocalUserDao userDao) {
+    public JWTRequestFilter(
+            JWTService jwtService,
+            LocalUserDao userDao) {
+
         this.jwtService = jwtService;
         this.userDao = userDao;
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain)
+            throws ServletException, IOException {
 
-        String tokenHeader = request.getHeader("Authorization");
+        Optional<String> tokenOptional =
+                extractBearerToken(request);
 
-        if (tokenHeader == null || !tokenHeader.startsWith("Bearer ")) {
+        if (tokenOptional.isEmpty()
+                || SecurityContextHolder.getContext()
+                .getAuthentication() != null) {
+
             filterChain.doFilter(request, response);
             return;
         }
 
-        String token = tokenHeader.substring(7);
-
         try {
-            String username = jwtService.getUsername(token);
+            authenticateRequest(
+                    tokenOptional.get(),
+                    request
+            );
+        } catch (JWTVerificationException
+                 | IllegalArgumentException exception) {
 
-            Optional<LocalUser> opUser = userDao.findByUsernameIgnoreCase(username);
-
-            if (opUser.isPresent() && SecurityContextHolder.getContext().getAuthentication() == null) {
-                LocalUser user = opUser.get();
-
-                if (user.isEmailVerified()) {
-                    String authority = "ROLE_" + user.getRole().name();
-
-                    UsernamePasswordAuthenticationToken authentication =
-                            new UsernamePasswordAuthenticationToken(
-                                    user,
-                                    null,
-                                    List.of(new SimpleGrantedAuthority(authority))
-                            );
-
-                    authentication.setDetails(
-                            new WebAuthenticationDetailsSource().buildDetails(request)
-                    );
-
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
-                }
-            }
-
-        } catch (JWTVerificationException ex) {
             SecurityContextHolder.clearContext();
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private Optional<String> extractBearerToken(
+            HttpServletRequest request) {
+
+        String authorizationHeader =
+                request.getHeader(AUTHORIZATION_HEADER);
+
+        if (authorizationHeader == null
+                || !authorizationHeader.startsWith(BEARER_PREFIX)) {
+
+            return Optional.empty();
+        }
+
+        String token = authorizationHeader
+                .substring(BEARER_PREFIX.length())
+                .trim();
+
+        if (token.isBlank()) {
+            return Optional.empty();
+        }
+
+        return Optional.of(token);
+    }
+
+    private void authenticateRequest(
+            String token,
+            HttpServletRequest request) {
+
+        String username = jwtService.getUsername(token);
+
+        LocalUser user = userDao
+                .findByUsernameIgnoreCase(username)
+                .orElse(null);
+
+        if (user == null || !user.isEmailVerified()) {
+            return;
+        }
+
+        String authority =
+                "ROLE_" + user.getRole().name();
+
+        UsernamePasswordAuthenticationToken authentication =
+                new UsernamePasswordAuthenticationToken(
+                        user,
+                        null,
+                        List.of(
+                                new SimpleGrantedAuthority(authority)
+                        )
+                );
+
+        authentication.setDetails(
+                new WebAuthenticationDetailsSource()
+                        .buildDetails(request)
+        );
+
+        SecurityContextHolder.getContext()
+                .setAuthentication(authentication);
     }
 }
