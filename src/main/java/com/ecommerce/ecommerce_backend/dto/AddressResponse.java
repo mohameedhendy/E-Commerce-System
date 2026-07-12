@@ -18,6 +18,20 @@ public class AddressResponse {
         this.city = address.getCity();
     }
 
+    public AddressResponse(
+            Long id,
+            String addressLine1,
+            String addressLine2,
+            String country,
+            String city) {
+
+        this.id = id;
+        this.addressLine1 = addressLine1;
+        this.addressLine2 = addressLine2;
+        this.country = country;
+        this.city = city;
+    }
+
     public Long getId() {
         return id;
     }

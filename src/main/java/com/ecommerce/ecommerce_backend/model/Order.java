@@ -26,6 +26,9 @@ public class Order {
     @JoinColumn(name = "address_id", nullable = false)
     private Address address;
 
+    @Embedded
+    private ShippingAddress shippingAddress;
+
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ProductOrderQuantity> quantities;
 

@@ -3,7 +3,7 @@ package com.ecommerce.ecommerce_backend.dto;
 import com.ecommerce.ecommerce_backend.model.Order;
 import lombok.Getter;
 import lombok.Setter;
-
+import com.ecommerce.ecommerce_backend.model.ShippingAddress;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
@@ -23,7 +23,18 @@ public class OrderResponse {
 
     public OrderResponse(Order order) {
         this.id = order.getId();
-        this.address = new AddressResponse(order.getAddress());
+
+        ShippingAddress shippingAddress =
+                order.getShippingAddress();
+
+        this.address = new AddressResponse(
+                order.getAddress().getId(),
+                shippingAddress.getAddressLine1(),
+                shippingAddress.getAddressLine2(),
+                shippingAddress.getCountry(),
+                shippingAddress.getCity()
+        );
+
         this.items = order.getQuantities()
                 .stream()
                 .map(OrderItemResponse::new)
@@ -31,23 +42,11 @@ public class OrderResponse {
 
         this.orderTotal = order.getTotalAmount()
                 .setScale(2, RoundingMode.HALF_UP);
-        this.status = order.getStatus() != null ? order.getStatus().name() : null;
+
+        this.status = order.getStatus() != null
+                ? order.getStatus().name()
+                : null;
+
         this.createdAt = order.getCreatedAt();
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public AddressResponse getAddress() {
-        return address;
-    }
-
-    public List<OrderItemResponse> getItems() {
-        return items;
-    }
-
-    public BigDecimal getOrderTotal() {
-        return orderTotal;
     }
 }

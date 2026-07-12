@@ -17,15 +17,47 @@ $$
         SELECT id INTO v_product_3 FROM product WHERE name = 'Product #3';
 
 INSERT INTO web_order
-(user_id, address_id, total_amount)
-VALUES
-    (v_user_id, v_address_id, 21.56)
+(
+    user_id,
+    address_id,
+    total_amount,
+    shipping_address_line_1,
+    shipping_address_line_2,
+    shipping_country,
+    shipping_city
+)
+SELECT
+    v_user_id,
+    a.id,
+    21.56,
+    a.address_line_1,
+    a.address_line_2,
+    a.country,
+    a.city
+FROM address a
+WHERE a.id = v_address_id
     RETURNING id INTO v_order_1;
 
 INSERT INTO web_order
-(user_id, address_id, total_amount)
-VALUES
-    (v_user_id, v_address_id, 8.22)
+(
+    user_id,
+    address_id,
+    total_amount,
+    shipping_address_line_1,
+    shipping_address_line_2,
+    shipping_country,
+    shipping_city
+)
+SELECT
+    v_user_id,
+    a.id,
+    8.22,
+    a.address_line_1,
+    a.address_line_2,
+    a.country,
+    a.city
+FROM address a
+WHERE a.id = v_address_id
     RETURNING id INTO v_order_2;
 
 INSERT INTO product_order_quantity

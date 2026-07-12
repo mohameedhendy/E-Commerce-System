@@ -64,8 +64,10 @@ public class OrderService {
         }
 
         Order order = new Order();
+
         order.setUser(user);
         order.setAddress(address);
+        order.setShippingAddress(new ShippingAddress(address));
         order.setQuantities(new HashSet<>());
         BigDecimal orderTotal = BigDecimal.ZERO;
         for (OrderItemRequest itemRequest : request.getItems()) {

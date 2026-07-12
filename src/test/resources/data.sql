@@ -89,13 +89,73 @@ VALUES
 (5, 2);
 
 INSERT INTO web_order
-(address_id, user_id, status, created_at, total_amount)
+(
+    address_id,
+    user_id,
+    status,
+    created_at,
+    total_amount,
+    shipping_address_line_1,
+    shipping_address_line_2,
+    shipping_country,
+    shipping_city
+)
 VALUES
-    (1, 1, 'PENDING', CURRENT_TIMESTAMP, 80.30),
-    (1, 1, 'PENDING', CURRENT_TIMESTAMP, 279.45),
-    (1, 1, 'PENDING', CURRENT_TIMESTAMP, 13.70),
-    (2, 3, 'PENDING', CURRENT_TIMESTAMP, 131.25),
-    (2, 3, 'PENDING', CURRENT_TIMESTAMP, 41.20);
+    (
+        1,
+        1,
+        'PENDING',
+        CURRENT_TIMESTAMP,
+        80.30,
+        '123 Tester Hill',
+        NULL,
+        'England',
+        'Testerton'
+    ),
+    (
+        1,
+        1,
+        'PENDING',
+        CURRENT_TIMESTAMP,
+        279.45,
+        '123 Tester Hill',
+        NULL,
+        'England',
+        'Testerton'
+    ),
+    (
+        1,
+        1,
+        'PENDING',
+        CURRENT_TIMESTAMP,
+        13.70,
+        '123 Tester Hill',
+        NULL,
+        'England',
+        'Testerton'
+    ),
+    (
+        2,
+        3,
+        'PENDING',
+        CURRENT_TIMESTAMP,
+        131.25,
+        '312 Spring Boot',
+        NULL,
+        'England',
+        'Hibernate'
+    ),
+    (
+        2,
+        3,
+        'PENDING',
+        CURRENT_TIMESTAMP,
+        41.20,
+        '312 Spring Boot',
+        NULL,
+        'England',
+        'Hibernate'
+    );
 
 INSERT INTO product_order_quantity
 (order_id, product_id, quantity, unit_price)
