@@ -2,6 +2,7 @@ package com.ecommerce.ecommerce_backend.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import java.math.BigDecimal;
 
 //@Setter
 //@Getter
@@ -16,6 +17,14 @@ public class ProductOrderQuantity {
 
     @Column(name = "quantity", nullable = false)
     private Integer quantity;
+
+    @Column(
+            name = "unit_price",
+            nullable = false,
+            precision = 19,
+            scale = 2
+    )
+    private BigDecimal unitPrice;
 
     @ManyToOne
     @JoinColumn(name = "product_id", nullable = false)
@@ -56,5 +65,13 @@ public class ProductOrderQuantity {
 
     public void setOrder(Order order) {
         this.order = order;
+    }
+
+    public BigDecimal getUnitPrice() {
+        return unitPrice;
+    }
+
+    public void setUnitPrice(BigDecimal unitPrice) {
+        this.unitPrice = unitPrice;
     }
 }

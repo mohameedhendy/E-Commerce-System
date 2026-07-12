@@ -17,7 +17,7 @@ public class OrderItemResponse {
         this.productId = item.getProduct().getId();
         this.productName = item.getProduct().getName();
 
-        this.price = BigDecimal.valueOf(item.getProduct().getPrice())
+        this.price = item.getUnitPrice()
                 .setScale(2, RoundingMode.HALF_UP);
 
         this.quantity = item.getQuantity();

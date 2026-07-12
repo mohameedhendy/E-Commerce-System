@@ -16,7 +16,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.HashSet;
 
 @Service
@@ -86,9 +87,15 @@ public class OrderService {
             stock.setQuantity(stock.getQuantity() - itemRequest.getQuantity());
 
             ProductOrderQuantity orderQuantity = new ProductOrderQuantity();
+
             orderQuantity.setOrder(order);
             orderQuantity.setProduct(product);
             orderQuantity.setQuantity(itemRequest.getQuantity());
+
+            orderQuantity.setUnitPrice(
+                    BigDecimal.valueOf(product.getPrice())
+                            .setScale(2, RoundingMode.HALF_UP)
+            );
 
             order.getQuantities().add(orderQuantity);
         }

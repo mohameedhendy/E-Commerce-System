@@ -98,15 +98,15 @@ VALUES
 (2, 3, 'PENDING', CURRENT_TIMESTAMP);
 
 INSERT INTO product_order_quantity
-(order_id, product_id, quantity)
+(order_id, product_id, quantity, unit_price)
 VALUES
-(1, 1, 5),
-(1, 2, 5),
-(2, 3, 5),
-(2, 2, 5),
-(2, 5, 5),
-(3, 3, 5),
-(4, 4, 5),
-(4, 2, 5),
-(5, 3, 5),
-(5, 1, 5);
+    (1, 1, 5, 5.50),
+    (1, 2, 5, 10.56),
+    (2, 3, 5, 2.74),
+    (2, 2, 5, 10.56),
+    (2, 5, 5, 42.59),
+    (3, 3, 5, 2.74),
+    (4, 4, 5, 15.69),
+    (4, 2, 5, 10.56),
+    (5, 3, 5, 2.74),
+    (5, 1, 5, 5.50);
