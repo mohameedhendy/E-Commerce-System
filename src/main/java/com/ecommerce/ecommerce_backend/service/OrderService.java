@@ -67,7 +67,7 @@ public class OrderService {
         order.setUser(user);
         order.setAddress(address);
         order.setQuantities(new HashSet<>());
-
+        BigDecimal orderTotal = BigDecimal.ZERO;
         for (OrderItemRequest itemRequest : request.getItems()) {
             Product product = productDao.findById(itemRequest.getProductId())
                     .orElseThrow(() -> new ResourceNotFoundException("Product was not found"));
@@ -86,19 +86,30 @@ public class OrderService {
 
             stock.setQuantity(stock.getQuantity() - itemRequest.getQuantity());
 
-            ProductOrderQuantity orderQuantity = new ProductOrderQuantity();
+            BigDecimal unitPrice =
+                    BigDecimal.valueOf(product.getPrice())
+                            .setScale(2, RoundingMode.HALF_UP);
+
+            ProductOrderQuantity orderQuantity =
+                    new ProductOrderQuantity();
 
             orderQuantity.setOrder(order);
             orderQuantity.setProduct(product);
             orderQuantity.setQuantity(itemRequest.getQuantity());
+            orderQuantity.setUnitPrice(unitPrice);
 
-            orderQuantity.setUnitPrice(
-                    BigDecimal.valueOf(product.getPrice())
-                            .setScale(2, RoundingMode.HALF_UP)
+            BigDecimal itemTotal = unitPrice.multiply(
+                    BigDecimal.valueOf(itemRequest.getQuantity())
             );
+
+            orderTotal = orderTotal.add(itemTotal);
 
             order.getQuantities().add(orderQuantity);
         }
+
+        order.setTotalAmount(
+                orderTotal.setScale(2, RoundingMode.HALF_UP)
+        );
 
         Order savedOrder = orderDao.save(order);
 

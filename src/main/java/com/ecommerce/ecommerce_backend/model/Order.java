@@ -3,7 +3,7 @@ package com.ecommerce.ecommerce_backend.model;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Set;
 
@@ -28,6 +28,14 @@ public class Order {
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ProductOrderQuantity> quantities;
+
+    @Column(
+            name = "total_amount",
+            nullable = false,
+            precision = 19,
+            scale = 2
+    )
+    private BigDecimal totalAmount;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status")

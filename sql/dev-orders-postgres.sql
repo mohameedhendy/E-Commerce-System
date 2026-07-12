@@ -16,17 +16,23 @@ $$
         SELECT id INTO v_product_2 FROM product WHERE name = 'Product #2';
         SELECT id INTO v_product_3 FROM product WHERE name = 'Product #3';
 
-        INSERT INTO web_order (user_id, address_id)
-        VALUES (v_user_id, v_address_id)
-        RETURNING id INTO v_order_1;
+INSERT INTO web_order
+(user_id, address_id, total_amount)
+VALUES
+    (v_user_id, v_address_id, 21.56)
+    RETURNING id INTO v_order_1;
 
-        INSERT INTO web_order (user_id, address_id)
-        VALUES (v_user_id, v_address_id)
-        RETURNING id INTO v_order_2;
+INSERT INTO web_order
+(user_id, address_id, total_amount)
+VALUES
+    (v_user_id, v_address_id, 8.22)
+    RETURNING id INTO v_order_2;
 
-        INSERT INTO product_order_quantity (order_id, product_id, quantity)
-        VALUES (v_order_1, v_product_1, 2),
-               (v_order_1, v_product_2, 1),
-               (v_order_2, v_product_3, 3);
+INSERT INTO product_order_quantity
+(order_id, product_id, quantity, unit_price)
+VALUES
+    (v_order_1, v_product_1, 2, 5.50),
+    (v_order_1, v_product_2, 1, 10.56),
+    (v_order_2, v_product_3, 3, 2.74);
     END
 $$;

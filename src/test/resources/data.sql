@@ -89,13 +89,13 @@ VALUES
 (5, 2);
 
 INSERT INTO web_order
-(address_id, user_id, status, created_at)
+(address_id, user_id, status, created_at, total_amount)
 VALUES
-(1, 1, 'PENDING', CURRENT_TIMESTAMP),
-(1, 1, 'PENDING', CURRENT_TIMESTAMP),
-(1, 1, 'PENDING', CURRENT_TIMESTAMP),
-(2, 3, 'PENDING', CURRENT_TIMESTAMP),
-(2, 3, 'PENDING', CURRENT_TIMESTAMP);
+    (1, 1, 'PENDING', CURRENT_TIMESTAMP, 80.30),
+    (1, 1, 'PENDING', CURRENT_TIMESTAMP, 279.45),
+    (1, 1, 'PENDING', CURRENT_TIMESTAMP, 13.70),
+    (2, 3, 'PENDING', CURRENT_TIMESTAMP, 131.25),
+    (2, 3, 'PENDING', CURRENT_TIMESTAMP, 41.20);
 
 INSERT INTO product_order_quantity
 (order_id, product_id, quantity, unit_price)

@@ -29,9 +29,7 @@ public class OrderResponse {
                 .map(OrderItemResponse::new)
                 .toList();
 
-        this.orderTotal = this.items.stream()
-                .map(OrderItemResponse::getItemTotal)
-                .reduce(BigDecimal.ZERO, BigDecimal::add)
+        this.orderTotal = order.getTotalAmount()
                 .setScale(2, RoundingMode.HALF_UP);
         this.status = order.getStatus() != null ? order.getStatus().name() : null;
         this.createdAt = order.getCreatedAt();
