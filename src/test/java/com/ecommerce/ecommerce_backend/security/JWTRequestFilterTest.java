@@ -32,7 +32,7 @@ public class JWTRequestFilterTest {
      */
     @Test
     public void testUnauthenticatedRequest() throws Exception {
-        mvc.perform(get(AUTHENTICATED_PATH)).andExpect(status().is(HttpStatus.FORBIDDEN.value()));
+        mvc.perform(get(AUTHENTICATED_PATH)).andExpect(status().is(HttpStatus.UNAUTHORIZED.value()));
     }
 
     /**
@@ -43,9 +43,9 @@ public class JWTRequestFilterTest {
     @Test
     public void testBadToken() throws Exception {
         mvc.perform(get(AUTHENTICATED_PATH).header("Authorization", "BadTokenThatIsNotValid"))
-                .andExpect(status().is(HttpStatus.FORBIDDEN.value()));
+                .andExpect(status().is(HttpStatus.UNAUTHORIZED.value()));
         mvc.perform(get(AUTHENTICATED_PATH).header("Authorization", "Bearer BadTokenThatIsNotValid"))
-                .andExpect(status().is(HttpStatus.FORBIDDEN.value()));
+                .andExpect(status().is(HttpStatus.UNAUTHORIZED.value()));
     }
 
     /**
@@ -58,7 +58,7 @@ public class JWTRequestFilterTest {
         LocalUser user = localUserDao.findByUsernameIgnoreCase("UserB").get();
         String token = jwtService.generateToken(user);
         mvc.perform(get(AUTHENTICATED_PATH).header("Authorization", "Bearer " + token))
-                .andExpect(status().is(HttpStatus.FORBIDDEN.value()));
+                .andExpect(status().is(HttpStatus.UNAUTHORIZED.value()));
     }
 
     /**

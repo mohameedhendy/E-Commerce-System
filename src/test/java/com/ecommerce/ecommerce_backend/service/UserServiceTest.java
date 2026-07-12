@@ -23,7 +23,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-
+import com.ecommerce.ecommerce_backend.exception.InvalidTokenException;
 import java.util.List;
 
 @SpringBootTest
@@ -136,7 +136,7 @@ public class UserServiceTest {
     }
 
     @Test
-    public void testResetPassword() {
+    public void testResetPassword() throws InvalidTokenException {
         LocalUser user = localUserDao.findByUsernameIgnoreCase("UserA").get();
         String token = jwtService.generatePasswordResetJWT(user);
         PasswordResetBody body = new PasswordResetBody();
