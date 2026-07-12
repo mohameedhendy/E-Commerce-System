@@ -8,6 +8,9 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.http.HttpMethod;
+
+
 
 @Configuration
 public class WebSecurityConfig {
@@ -37,8 +40,11 @@ public class WebSecurityConfig {
                 .authorizeHttpRequests(request ->
                         request
                                 .requestMatchers(
+                                        HttpMethod.GET,
                                         "/product",
-                                        "/product/**",
+                                        "/product/**"
+                                ).permitAll()
+                                .requestMatchers(
                                         "/auth/login",
                                         "/auth/register",
                                         "/auth/forgot",
