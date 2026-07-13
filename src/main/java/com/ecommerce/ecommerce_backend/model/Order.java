@@ -41,8 +41,8 @@ public class Order {
     private BigDecimal totalAmount;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status")
-    private OrderStatus status;
+    @Column(name = "status", nullable = false)
+    private OrderStatus status = OrderStatus.PENDING;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;

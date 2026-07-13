@@ -20,6 +20,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.HashSet;
 import com.ecommerce.ecommerce_backend.dao.StockDao;
+import java.util.Locale;
 
 @Service
 public class OrderService {
@@ -48,13 +49,8 @@ public class OrderService {
         if (status == null || status.isBlank()) {
             orders = orderDao.findAllByUser(user, pageable);
         } else {
-            OrderStatus orderStatus;
-
-            try {
-                orderStatus = OrderStatus.valueOf(status.toUpperCase());
-            } catch (IllegalArgumentException ex) {
-                throw new InvalidOrderStatusException("Order status must be one of: PENDING, CONFIRMED, CANCELLED");
-            }
+            OrderStatus orderStatus =
+                    parseOrderStatus(status);
 
             orders = orderDao.findAllByUserAndStatus(user, orderStatus, pageable);
         }
@@ -133,16 +129,21 @@ public class OrderService {
         }
 
         if (order.getStatus() == OrderStatus.CANCELLED) {
-            throw new InvalidOrderStatusException("Order is already cancelled");
+            throw new InvalidOrderStatusException(
+                    "Order is already cancelled"
+            );
         }
 
-        if (order.getStatus() != null && order.getStatus() != OrderStatus.PENDING) {
-            throw new InvalidOrderStatusException("Only pending orders can be cancelled");
+        if (order.getStatus() != OrderStatus.PENDING) {
+            throw new InvalidOrderStatusException(
+                    "Only pending orders can be cancelled"
+            );
         }
 
-        restoreStock(order);
-
-        order.setStatus(OrderStatus.CANCELLED);
+        transitionOrderStatus(
+                order,
+                OrderStatus.CANCELLED
+        );
 
         Order savedOrder = orderDao.save(order);
 
@@ -162,25 +163,21 @@ public class OrderService {
     }
 
     @Transactional
-    public OrderResponse updateOrderStatus(Long orderId, AdminOrderStatusRequest request) {
+    public OrderResponse updateOrderStatus(
+            Long orderId,
+            AdminOrderStatusRequest request) {
+
         Order order = orderDao.findById(orderId)
-                .orElseThrow(() -> new ResourceNotFoundException("Order was not found"));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Order was not found"
+                        )
+                );
 
-        OrderStatus newStatus = OrderStatus.valueOf(request.getStatus());
+        OrderStatus newStatus =
+                parseOrderStatus(request.getStatus());
 
-        if (order.getStatus() == OrderStatus.CANCELLED) {
-            throw new InvalidOrderStatusException("Cancelled order cannot be updated");
-        }
-
-        if (order.getStatus() == newStatus) {
-            throw new InvalidOrderStatusException("Order already has this status");
-        }
-
-        if (newStatus == OrderStatus.CANCELLED) {
-            restoreStock(order);
-        }
-
-        order.setStatus(newStatus);
+        transitionOrderStatus(order, newStatus);
 
         Order savedOrder = orderDao.save(order);
 
@@ -194,15 +191,8 @@ public class OrderService {
         if (status == null || status.isBlank()) {
             orders = orderDao.findAll(pageable);
         } else {
-            OrderStatus orderStatus;
-
-            try {
-                orderStatus = OrderStatus.valueOf(status.toUpperCase());
-            } catch (IllegalArgumentException ex) {
-                throw new InvalidOrderStatusException(
-                        "Order status must be one of: PENDING, CONFIRMED, CANCELLED"
-                );
-            }
+            OrderStatus orderStatus =
+                    parseOrderStatus(status);
 
             orders = orderDao.findAllByStatus(orderStatus, pageable);
         }
@@ -219,11 +209,72 @@ public class OrderService {
     }
 
     private void restoreStock(Order order) {
-        order.getQuantities().forEach(item ->
-                stockDao.increaseStock(
-                        item.getProduct().getId(),
-                        item.getQuantity()
-                )
-        );
+
+        order.getQuantities().forEach(item -> {
+
+            int updatedRows = stockDao.increaseStock(
+                    item.getProduct().getId(),
+                    item.getQuantity()
+            );
+
+            if (updatedRows == 0) {
+                throw new ResourceNotFoundException(
+                        "Stock was not found for product "
+                                + item.getProduct().getName()
+                );
+            }
+        });
+    }
+
+    private void transitionOrderStatus(
+            Order order,
+            OrderStatus newStatus) {
+
+        OrderStatus currentStatus =
+                order.getStatus();
+
+        if (currentStatus == newStatus) {
+            throw new InvalidOrderStatusException(
+                    "Order already has status "
+                            + newStatus.name()
+            );
+        }
+
+        if (!currentStatus.canTransitionTo(newStatus)) {
+            throw new InvalidOrderStatusException(
+                    "Order status cannot change from "
+                            + currentStatus.name()
+                            + " to "
+                            + newStatus.name()
+            );
+        }
+
+        if (newStatus == OrderStatus.CANCELLED) {
+            restoreStock(order);
+        }
+
+        order.setStatus(newStatus);
+    }
+
+    private OrderStatus parseOrderStatus(
+            String status) {
+
+        if (status == null || status.isBlank()) {
+            throw new InvalidOrderStatusException(
+                    "Order status is required"
+            );
+        }
+
+        try {
+            return OrderStatus.valueOf(
+                    status.trim()
+                            .toUpperCase(Locale.ROOT)
+            );
+        } catch (IllegalArgumentException ex) {
+            throw new InvalidOrderStatusException(
+                    "Order status must be one of: "
+                            + "PENDING, CONFIRMED, CANCELLED"
+            );
+        }
     }
 }
