@@ -4,67 +4,75 @@
 DO
 $$
     DECLARE
-        v_user_id    BIGINT := 3;
-        v_address_id BIGINT := 1;
-        v_order_1    BIGINT;
-        v_order_2    BIGINT;
-        v_product_1  BIGINT;
-        v_product_2  BIGINT;
-        v_product_3  BIGINT;
-    BEGIN
-        SELECT id INTO v_product_1 FROM product WHERE name = 'Product #1';
-        SELECT id INTO v_product_2 FROM product WHERE name = 'Product #2';
-        SELECT id INTO v_product_3 FROM product WHERE name = 'Product #3';
+v_user_id    BIGINT := 3;
+        v_address_id
+BIGINT := 1;
+        v_order_1
+BIGINT;
+        v_order_2
+BIGINT;
+        v_product_1
+BIGINT;
+        v_product_2
+BIGINT;
+        v_product_3
+BIGINT;
+BEGIN
+SELECT id
+INTO v_product_1
+FROM product
+WHERE name = 'Product #1';
+SELECT id
+INTO v_product_2
+FROM product
+WHERE name = 'Product #2';
+SELECT id
+INTO v_product_3
+FROM product
+WHERE name = 'Product #3';
 
 INSERT INTO web_order
-(
-    user_id,
-    address_id,
-    total_amount,
-    shipping_address_line_1,
-    shipping_address_line_2,
-    shipping_country,
-    shipping_city
-)
-SELECT
-    v_user_id,
-    a.id,
-    21.56,
-    a.address_line_1,
-    a.address_line_2,
-    a.country,
-    a.city
+(user_id,
+ address_id,
+ total_amount,
+ shipping_address_line_1,
+ shipping_address_line_2,
+ shipping_country,
+ shipping_city)
+SELECT v_user_id,
+       a.id,
+       21.56,
+       a.address_line_1,
+       a.address_line_2,
+       a.country,
+       a.city
 FROM address a
-WHERE a.id = v_address_id
-    RETURNING id INTO v_order_1;
+WHERE a.id = v_address_id RETURNING id
+INTO v_order_1;
 
 INSERT INTO web_order
-(
-    user_id,
-    address_id,
-    total_amount,
-    shipping_address_line_1,
-    shipping_address_line_2,
-    shipping_country,
-    shipping_city
-)
-SELECT
-    v_user_id,
-    a.id,
-    8.22,
-    a.address_line_1,
-    a.address_line_2,
-    a.country,
-    a.city
+(user_id,
+ address_id,
+ total_amount,
+ shipping_address_line_1,
+ shipping_address_line_2,
+ shipping_country,
+ shipping_city)
+SELECT v_user_id,
+       a.id,
+       8.22,
+       a.address_line_1,
+       a.address_line_2,
+       a.country,
+       a.city
 FROM address a
-WHERE a.id = v_address_id
-    RETURNING id INTO v_order_2;
+WHERE a.id = v_address_id RETURNING id
+INTO v_order_2;
 
 INSERT INTO product_order_quantity
-(order_id, product_id, quantity, unit_price)
-VALUES
-    (v_order_1, v_product_1, 2, 5.50),
-    (v_order_1, v_product_2, 1, 10.56),
-    (v_order_2, v_product_3, 3, 2.74);
-    END
+    (order_id, product_id, quantity, unit_price)
+VALUES (v_order_1, v_product_1, 2, 5.50),
+       (v_order_1, v_product_2, 1, 10.56),
+       (v_order_2, v_product_3, 3, 2.74);
+END
 $$;

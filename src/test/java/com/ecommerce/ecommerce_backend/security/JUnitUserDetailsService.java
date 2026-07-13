@@ -1,12 +1,12 @@
 package com.ecommerce.ecommerce_backend.security;
 
 import com.ecommerce.ecommerce_backend.dao.LocalUserDao;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Primary;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-import lombok.RequiredArgsConstructor;
 
 @Service
 @Primary

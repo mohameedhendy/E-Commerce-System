@@ -1,8 +1,8 @@
 package com.ecommerce.ecommerce_backend.service;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import lombok.RequiredArgsConstructor;
 
 
 @Service

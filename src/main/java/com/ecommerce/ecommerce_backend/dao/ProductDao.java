@@ -25,19 +25,19 @@ public interface ProductDao extends JpaRepository<Product, Long> {
     Page<Product> findAllByActive(Boolean active, Pageable pageable);
 
     @Query("""
-        SELECT p FROM Product p
-        LEFT JOIN p.stock s
-        WHERE COALESCE(s.quantity, 0) <= :threshold
-        """)
+            SELECT p FROM Product p
+            LEFT JOIN p.stock s
+            WHERE COALESCE(s.quantity, 0) <= :threshold
+            """)
     Page<Product> findLowStockProducts(@Param("threshold") Integer threshold, Pageable pageable);
 
     long countByActive(Boolean active);
 
     @Query("""
-        SELECT COUNT(p) FROM Product p
-        LEFT JOIN p.stock s
-        WHERE COALESCE(s.quantity, 0) <= :threshold
-        """)
+            SELECT COUNT(p) FROM Product p
+            LEFT JOIN p.stock s
+            WHERE COALESCE(s.quantity, 0) <= :threshold
+            """)
     long countLowStockProducts(@Param("threshold") Integer threshold);
 }
 

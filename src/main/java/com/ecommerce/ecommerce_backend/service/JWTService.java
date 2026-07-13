@@ -17,22 +17,12 @@ public class JWTService {
     private static final String VERIFICATION_EMAIL_KEY = "VERIFICATION_EMAIL";
     private static final String RESET_PASSWORD_EMAIL_KEY = "RESET_PASSWORD_EMAIL";
     private static final String TOKEN_TYPE_KEY = "TOKEN_TYPE";
-
-    private enum TokenType {
-        ACCESS,
-        EMAIL_VERIFICATION,
-        PASSWORD_RESET
-    }
-
     @Value("${jwt.algorithm.key}")
     private String algorithmKey;
-
     @Value("${jwt.issuer}")
     private String issuer;
-
     @Value("${jwt.expiryInSeconds}")
     private Long expiryInSeconds;
-
     private Algorithm algorithm;
 
     @PostConstruct
@@ -137,5 +127,11 @@ public class JWTService {
                 )
                 .build()
                 .verify(token);
+    }
+
+    private enum TokenType {
+        ACCESS,
+        EMAIL_VERIFICATION,
+        PASSWORD_RESET
     }
 }

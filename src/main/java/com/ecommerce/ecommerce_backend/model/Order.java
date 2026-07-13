@@ -3,6 +3,7 @@ package com.ecommerce.ecommerce_backend.model;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Set;
@@ -46,38 +47,6 @@ public class Order {
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public LocalUser getUser() {
-        return user;
-    }
-
-    public void setUser(LocalUser user) {
-        this.user = user;
-    }
-
-    public Address getAddress() {
-        return address;
-    }
-
-    public void setAddress(Address address) {
-        this.address = address;
-    }
-
-    public Set<ProductOrderQuantity> getQuantities() {
-        return quantities;
-    }
-
-    public void setQuantities(Set<ProductOrderQuantity> quantities) {
-        this.quantities = quantities;
-    }
 
     @PrePersist
     public void onCreate() {

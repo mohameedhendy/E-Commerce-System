@@ -1,9 +1,9 @@
 package com.ecommerce.ecommerce_backend.dto;
 
 import com.ecommerce.ecommerce_backend.model.Order;
-import lombok.Getter;
-import lombok.Setter;
 import com.ecommerce.ecommerce_backend.model.ShippingAddress;
+import lombok.Getter;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;

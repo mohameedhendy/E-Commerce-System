@@ -3,23 +3,23 @@ package com.ecommerce.ecommerce_backend.service;
 import com.ecommerce.ecommerce_backend.exception.EmailFailureException;
 import com.ecommerce.ecommerce_backend.model.LocalUser;
 import com.ecommerce.ecommerce_backend.model.VerificationToken;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
-import lombok.RequiredArgsConstructor;
 
 
 @Service
 @RequiredArgsConstructor
 public class EmailService {
 
+    private final JavaMailSender javaMailSender;
     @Value("${email.from}")
     private String fromAddress;
     @Value("${app.frontend.url}")
     private String url;
-    private final JavaMailSender javaMailSender;
 
     private SimpleMailMessage makeMailMessage() {
         SimpleMailMessage simpleMailMessage = new SimpleMailMessage();

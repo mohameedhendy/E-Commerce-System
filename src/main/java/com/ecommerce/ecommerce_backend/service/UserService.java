@@ -10,10 +10,11 @@ import com.ecommerce.ecommerce_backend.exception.*;
 import com.ecommerce.ecommerce_backend.model.LocalUser;
 import com.ecommerce.ecommerce_backend.model.Role;
 import com.ecommerce.ecommerce_backend.model.VerificationToken;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import lombok.RequiredArgsConstructor;
+
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;

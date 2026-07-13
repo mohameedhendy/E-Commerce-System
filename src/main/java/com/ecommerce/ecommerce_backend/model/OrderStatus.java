@@ -14,12 +14,10 @@ public enum OrderStatus {
         }
 
         return switch (this) {
-            case PENDING ->
-                    targetStatus == CONFIRMED
-                            || targetStatus == CANCELLED;
+            case PENDING -> targetStatus == CONFIRMED
+                    || targetStatus == CANCELLED;
 
-            case CONFIRMED ->
-                    targetStatus == CANCELLED;
+            case CONFIRMED -> targetStatus == CANCELLED;
 
             case CANCELLED -> false;
         };

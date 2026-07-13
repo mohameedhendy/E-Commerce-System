@@ -2,7 +2,6 @@ package com.ecommerce.ecommerce_backend.dto;
 
 import com.ecommerce.ecommerce_backend.model.Product;
 import lombok.Getter;
-import lombok.Setter;
 
 import java.math.BigDecimal;
 

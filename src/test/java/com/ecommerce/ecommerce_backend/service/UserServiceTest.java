@@ -5,10 +5,7 @@ import com.ecommerce.ecommerce_backend.dao.VerificationTokenDAO;
 import com.ecommerce.ecommerce_backend.dto.LoginBody;
 import com.ecommerce.ecommerce_backend.dto.PasswordResetBody;
 import com.ecommerce.ecommerce_backend.dto.RegistrationBody;
-import com.ecommerce.ecommerce_backend.exception.EmailFailureException;
-import com.ecommerce.ecommerce_backend.exception.EmailNotFoundException;
-import com.ecommerce.ecommerce_backend.exception.UserAlreadyExistException;
-import com.ecommerce.ecommerce_backend.exception.UserNotVerifiedException;
+import com.ecommerce.ecommerce_backend.exception.*;
 import com.ecommerce.ecommerce_backend.model.LocalUser;
 import com.ecommerce.ecommerce_backend.model.VerificationToken;
 import com.icegreen.greenmail.configuration.GreenMailConfiguration;
@@ -23,7 +20,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import com.ecommerce.ecommerce_backend.exception.InvalidTokenException;
+
 import java.util.List;
 
 @SpringBootTest

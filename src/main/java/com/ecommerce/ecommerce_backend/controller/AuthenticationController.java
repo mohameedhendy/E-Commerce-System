@@ -5,10 +5,10 @@ import com.ecommerce.ecommerce_backend.exception.*;
 import com.ecommerce.ecommerce_backend.model.LocalUser;
 import com.ecommerce.ecommerce_backend.service.UserService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/auth")

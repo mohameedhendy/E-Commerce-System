@@ -2,6 +2,7 @@ package com.ecommerce.ecommerce_backend.exception;
 
 import com.ecommerce.ecommerce_backend.dto.ApiErrorResponse;
 import jakarta.validation.ConstraintViolationException;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -9,7 +10,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.dao.OptimisticLockingFailureException;
+
 import java.util.HashMap;
 import java.util.Map;
 

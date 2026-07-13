@@ -121,7 +121,7 @@ WHERE address_id = @address2
   AND user_id = @userId2
 ORDER BY id DESC
 OFFSET 1 ROW FETCH FIRST 1 ROW ONLY
-INSERT
+    INSERT
 INTO product_order_quantity (order_id, product_id, quantity)
 VALUES (@order1, @product1, 5);
 INSERT INTO product_order_quantity (order_id, product_id, quantity)

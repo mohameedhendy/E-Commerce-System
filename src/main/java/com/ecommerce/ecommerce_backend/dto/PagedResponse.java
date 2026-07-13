@@ -1,11 +1,12 @@
 package com.ecommerce.ecommerce_backend.dto;
 
-import org.springframework.data.domain.Page;
 import lombok.Getter;
+import org.springframework.data.domain.Page;
+
 import java.util.List;
 
 @Getter
-public class    PagedResponse<T> {
+public class PagedResponse<T> {
 
     private List<T> content;
     private int page;

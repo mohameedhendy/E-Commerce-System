@@ -7,9 +7,10 @@ import com.ecommerce.ecommerce_backend.exception.ForbiddenActionException;
 import com.ecommerce.ecommerce_backend.exception.ResourceNotFoundException;
 import com.ecommerce.ecommerce_backend.model.Address;
 import com.ecommerce.ecommerce_backend.model.LocalUser;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import lombok.RequiredArgsConstructor;
+
 import java.util.List;
 
 @Service

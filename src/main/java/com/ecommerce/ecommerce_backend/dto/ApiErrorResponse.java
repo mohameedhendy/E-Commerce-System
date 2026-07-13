@@ -1,8 +1,9 @@
 package com.ecommerce.ecommerce_backend.dto;
 
+import lombok.Getter;
+
 import java.time.LocalDateTime;
 import java.util.Map;
-import lombok.Getter;
 
 @Getter
 public class ApiErrorResponse {

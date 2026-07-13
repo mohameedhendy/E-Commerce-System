@@ -1,0 +1,52 @@
+warning: in the working copy of 'src/main/java/com/ecommerce/ecommerce_backend/model/ProductOrderQuantity.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/test/resources/application.properties', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/test/resources/data.sql', LF will be replaced by CRLF the next time Git touches it
+ insertDummyDevData.sql                             |   2 [32m+[m[31m-[m
+ sql/dev-data-postgres.sql                          |  16 [32m+[m[31m-[m
+ sql/dev-orders-postgres.sql                        | 118 [32m++++++[m[31m------[m
+ .../controller/AdminDashboardController.java       |   6 [32m+[m[31m-[m
+ .../controller/AdminOrderController.java           |   2 [32m+[m[31m-[m
+ .../controller/AdminProductController.java         |   2 [32m+[m[31m-[m
+ .../controller/AuthenticationController.java       |   2 [32m+[m[31m-[m
+ .../controller/OrderController.java                |   2 [32m+[m[31m-[m
+ .../controller/ProductController.java              |   2 [32m+[m[31m-[m
+ .../controller/ReviewController.java               |   2 [32m+[m[31m-[m
+ .../controller/UserController.java                 |   3 [32m+[m[31m-[m
+ .../ecommerce_backend/dao/ProductDao.java          |  16 [32m+[m[31m-[m
+ .../ecommerce_backend/dto/AdminProductRequest.java |   7 [32m+[m[31m-[m
+ .../ecommerce_backend/dto/ApiErrorResponse.java    |   3 [32m+[m[31m-[m
+ .../ecommerce_backend/dto/OrderItemResponse.java   |   1 [32m+[m
+ .../ecommerce_backend/dto/OrderRequest.java        |   1 [32m+[m
+ .../ecommerce_backend/dto/OrderResponse.java       |   4 [32m+[m[31m-[m
+ .../ecommerce_backend/dto/PagedResponse.java       |   5 [32m+[m[31m-[m
+ .../ecommerce_backend/dto/ProductResponse.java     |   1 [31m-[m
+ .../exception/GlobalExceptionHandler.java          |   3 [32m+[m[31m-[m
+ .../ecommerce/ecommerce_backend/model/Order.java   |  33 [32m+[m[31m---[m
+ .../ecommerce_backend/model/OrderStatus.java       |   8 [32m+[m[31m-[m
+ .../ecommerce/ecommerce_backend/model/Product.java |   1 [32m+[m
+ .../model/ProductOrderQuantity.java                |   2 [32m+[m[31m-[m
+ .../ecommerce_backend/model/VerificationToken.java |   1 [32m+[m
+ .../security/JWTRequestFilter.java                 |   3 [32m+[m[31m-[m
+ .../security/WebSecurityConfig.java                |   4 [32m+[m[31m-[m
+ .../ecommerce_backend/service/AddressService.java  |   3 [32m+[m[31m-[m
+ .../service/AdminDashboardService.java             |   2 [32m+[m[31m-[m
+ .../ecommerce_backend/service/EmailService.java    |   4 [32m+[m[31m-[m
+ .../service/EncryptionService.java                 |   2 [32m+[m[31m-[m
+ .../ecommerce_backend/service/JWTService.java      |  16 [32m+[m[31m-[m
+ .../ecommerce_backend/service/OrderService.java    |   5 [32m+[m[31m-[m
+ .../ecommerce_backend/service/ProductService.java  |   2 [32m+[m[31m-[m
+ .../ecommerce_backend/service/ReviewService.java   |   2 [32m+[m[31m-[m
+ .../ecommerce_backend/service/UserService.java     |   3 [32m+[m[31m-[m
+ src/main/resources/application.properties          | Bin [31m2611[m -> [32m2645[m bytes
+ src/main/resources/db/migration/V1__baseline.sql   | 131 [32m+++++++[m[31m------[m
+ .../db/migration/V2__add_order_item_unit_price.sql |   3 [32m+[m[31m-[m
+ .../db/migration/V3__add_order_total_amount.sql    |  12 [32m+[m[31m-[m
+ .../V4__snapshot_order_shipping_address.sql        |  11 [32m+[m[31m-[m
+ .../V5__convert_product_price_to_decimal.sql       |   3 [32m+[m[31m-[m
+ .../security/JUnitUserDetailsService.java          |   2 [32m+[m[31m-[m
+ .../service/EncryptionServiceTest.java             |   4 [32m+[m[31m-[m
+ .../service/StockConcurrencyTest.java              |   7 [32m+[m[31m-[m
+ .../ecommerce_backend/service/UserServiceTest.java |   7 [32m+[m[31m-[m
+ src/test/resources/application.properties          |   8 [31m-[m
+ src/test/resources/data.sql                        | 206 [32m+++++++++[m[31m------------[m
+ 48 files changed, 316 insertions(+), 367 deletions(-)
