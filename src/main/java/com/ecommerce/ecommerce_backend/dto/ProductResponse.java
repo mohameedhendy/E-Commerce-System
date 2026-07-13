@@ -1,9 +1,12 @@
 package com.ecommerce.ecommerce_backend.dto;
 
 import com.ecommerce.ecommerce_backend.model.Product;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.math.BigDecimal;
 
+@Getter
 public class ProductResponse {
 
     private Long id;
@@ -28,31 +31,4 @@ public class ProductResponse {
         }
     }
 
-    public Long getId() {
-        return id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getShortDescription() {
-        return shortDescription;
-    }
-
-    public String getLongDescription() {
-        return longDescription;
-    }
-
-    public BigDecimal getPrice() {
-        return price;
-    }
-
-    public Integer getStockQuantity() {
-        return stockQuantity;
-    }
-
-    public Boolean getActive() {
-        return active;
-    }
 }

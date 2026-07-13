@@ -2,7 +2,9 @@ package com.ecommerce.ecommerce_backend.dto;
 
 import java.time.LocalDateTime;
 import java.util.Map;
+import lombok.Getter;
 
+@Getter
 public class ApiErrorResponse {
 
     private LocalDateTime timestamp;
@@ -26,23 +28,4 @@ public class ApiErrorResponse {
         this.validationErrors = validationErrors;
     }
 
-    public LocalDateTime getTimestamp() {
-        return timestamp;
-    }
-
-    public int getStatus() {
-        return status;
-    }
-
-    public String getError() {
-        return error;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public Map<String, String> getValidationErrors() {
-        return validationErrors;
-    }
 }

@@ -1,7 +1,9 @@
 package com.ecommerce.ecommerce_backend.dto;
 
 import com.ecommerce.ecommerce_backend.model.LocalUser;
+import lombok.Getter;
 
+@Getter
 public class UserResponse {
 
     private Long id;
@@ -20,27 +22,4 @@ public class UserResponse {
         this.emailVerified = user.isEmailVerified();
     }
 
-    public Long getId() {
-        return id;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public String getFirstName() {
-        return firstName;
-    }
-
-    public String getLastName() {
-        return lastName;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public boolean isEmailVerified() {
-        return emailVerified;
-    }
 }

@@ -5,9 +5,13 @@ import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-
+import lombok.Getter;
+import lombok.Setter;
 import java.math.BigDecimal;
 
+
+@Getter
+@Setter
 public class AdminProductRequest {
 
     @NotBlank(message = "Product name is required")
@@ -38,23 +42,4 @@ public class AdminProductRequest {
     )
     private Integer stockQuantity;
 
-    public String getName() {
-        return name;
-    }
-
-    public String getShortDescription() {
-        return shortDescription;
-    }
-
-    public String getLongDescription() {
-        return longDescription;
-    }
-
-    public BigDecimal getPrice() {
-        return price;
-    }
-
-    public Integer getStockQuantity() {
-        return stockQuantity;
-    }
 }

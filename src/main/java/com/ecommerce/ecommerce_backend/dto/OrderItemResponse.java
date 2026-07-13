@@ -1,10 +1,11 @@
 package com.ecommerce.ecommerce_backend.dto;
 
 import com.ecommerce.ecommerce_backend.model.ProductOrderQuantity;
-
+import lombok.Getter;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
+@Getter
 public class OrderItemResponse {
 
     private Long productId;
@@ -27,23 +28,4 @@ public class OrderItemResponse {
                 .setScale(2, RoundingMode.HALF_UP);
     }
 
-    public Long getProductId() {
-        return productId;
-    }
-
-    public String getProductName() {
-        return productName;
-    }
-
-    public BigDecimal getPrice() {
-        return price;
-    }
-
-    public Integer getQuantity() {
-        return quantity;
-    }
-
-    public BigDecimal getItemTotal() {
-        return itemTotal;
-    }
 }

@@ -1,10 +1,11 @@
 package com.ecommerce.ecommerce_backend.dto;
 
 import org.springframework.data.domain.Page;
-
+import lombok.Getter;
 import java.util.List;
 
-public class PagedResponse<T> {
+@Getter
+public class    PagedResponse<T> {
 
     private List<T> content;
     private int page;
@@ -22,27 +23,4 @@ public class PagedResponse<T> {
         this.last = pageData.isLast();
     }
 
-    public List<T> getContent() {
-        return content;
-    }
-
-    public int getPage() {
-        return page;
-    }
-
-    public int getSize() {
-        return size;
-    }
-
-    public long getTotalElements() {
-        return totalElements;
-    }
-
-    public int getTotalPages() {
-        return totalPages;
-    }
-
-    public boolean isLast() {
-        return last;
-    }
 }

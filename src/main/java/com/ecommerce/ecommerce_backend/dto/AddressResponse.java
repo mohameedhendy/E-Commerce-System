@@ -1,7 +1,9 @@
 package com.ecommerce.ecommerce_backend.dto;
 
 import com.ecommerce.ecommerce_backend.model.Address;
+import lombok.Getter;
 
+@Getter
 public class AddressResponse {
 
     private Long id;
@@ -32,23 +34,4 @@ public class AddressResponse {
         this.city = city;
     }
 
-    public Long getId() {
-        return id;
-    }
-
-    public String getAddressLine1() {
-        return addressLine1;
-    }
-
-    public String getAddressLine2() {
-        return addressLine2;
-    }
-
-    public String getCountry() {
-        return country;
-    }
-
-    public String getCity() {
-        return city;
-    }
 }

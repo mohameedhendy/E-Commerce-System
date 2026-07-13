@@ -1,5 +1,8 @@
 package com.ecommerce.ecommerce_backend.dto;
 
+import lombok.Getter;
+
+@Getter
 public class LoginResponse {
 
     private String token;
@@ -8,7 +11,4 @@ public class LoginResponse {
         this.token = token;
     }
 
-    public String getToken() {
-        return token;
-    }
 }

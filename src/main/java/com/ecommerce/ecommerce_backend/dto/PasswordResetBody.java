@@ -3,7 +3,11 @@ package com.ecommerce.ecommerce_backend.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import lombok.Getter;
+import lombok.Setter;
 
+@Getter
+@Setter
 public class PasswordResetBody {
 
     @NotBlank(message = "Reset token is required")
@@ -17,19 +21,4 @@ public class PasswordResetBody {
     )
     private String password;
 
-    public String getToken() {
-        return token;
-    }
-
-    public void setToken(String token) {
-        this.token = token;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
 }
