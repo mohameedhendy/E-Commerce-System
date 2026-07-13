@@ -2,8 +2,8 @@ package com.ecommerce.ecommerce_backend.model;
 
 import jakarta.persistence.*;
 
-//@Setter
-//@Getter
+import java.math.BigDecimal;
+
 @Entity
 @Table(name = "product")
 public class Product {
@@ -22,10 +22,19 @@ public class Product {
     @Column(name = "long_description")
     private String longDescription;
 
-    @Column(name = "price", nullable = false)
-    private Double price;
+    @Column(
+            name = "price",
+            nullable = false,
+            precision = 19,
+            scale = 2
+    )
+    private BigDecimal price;
 
-    @OneToOne(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToOne(
+            mappedBy = "product",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
     private Stock stock;
 
     @Column(name = "active")
@@ -63,11 +72,11 @@ public class Product {
         this.longDescription = longDescription;
     }
 
-    public Double getPrice() {
+    public BigDecimal getPrice() {
         return price;
     }
 
-    public void setPrice(Double price) {
+    public void setPrice(BigDecimal price) {
         this.price = price;
     }
 

@@ -2,16 +2,17 @@ package com.ecommerce.ecommerce_backend.dto;
 
 import com.ecommerce.ecommerce_backend.model.Product;
 
+import java.math.BigDecimal;
+
 public class ProductResponse {
 
     private Long id;
     private String name;
     private String shortDescription;
     private String longDescription;
-    private Double price;
+    private BigDecimal price;
     private Integer stockQuantity;
     private Boolean active;
-
 
     public ProductResponse(Product product) {
         this.id = product.getId();
@@ -22,7 +23,8 @@ public class ProductResponse {
         this.active = product.getActive();
 
         if (product.getStock() != null) {
-            this.stockQuantity = product.getStock().getQuantity();
+            this.stockQuantity =
+                    product.getStock().getQuantity();
         }
     }
 
@@ -42,7 +44,7 @@ public class ProductResponse {
         return longDescription;
     }
 
-    public Double getPrice() {
+    public BigDecimal getPrice() {
         return price;
     }
 

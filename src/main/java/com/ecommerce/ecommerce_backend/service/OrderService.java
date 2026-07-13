@@ -89,7 +89,7 @@ public class OrderService {
             stock.setQuantity(stock.getQuantity() - itemRequest.getQuantity());
 
             BigDecimal unitPrice =
-                    BigDecimal.valueOf(product.getPrice())
+                    product.getPrice()
                             .setScale(2, RoundingMode.HALF_UP);
 
             ProductOrderQuantity orderQuantity =

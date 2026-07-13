@@ -1,9 +1,12 @@
 package com.ecommerce.ecommerce_backend.dto;
 
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
+
+import java.math.BigDecimal;
 
 public class AdminProductRequest {
 
@@ -17,11 +20,22 @@ public class AdminProductRequest {
     private String longDescription;
 
     @NotNull(message = "Price is required")
-    @Positive(message = "Price must be greater than 0")
-    private Double price;
+    @DecimalMin(
+            value = "0.01",
+            message = "Price must be at least 0.01"
+    )
+    @Digits(
+            integer = 17,
+            fraction = 2,
+            message = "Price must have at most 2 decimal places"
+    )
+    private BigDecimal price;
 
     @NotNull(message = "Stock quantity is required")
-    @Min(value = 0, message = "Stock quantity must be 0 or greater")
+    @Min(
+            value = 0,
+            message = "Stock quantity must be 0 or greater"
+    )
     private Integer stockQuantity;
 
     public String getName() {
@@ -36,7 +50,7 @@ public class AdminProductRequest {
         return longDescription;
     }
 
-    public Double getPrice() {
+    public BigDecimal getPrice() {
         return price;
     }
 

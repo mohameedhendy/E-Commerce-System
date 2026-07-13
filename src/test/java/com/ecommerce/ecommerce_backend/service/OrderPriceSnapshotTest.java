@@ -56,7 +56,7 @@ public class OrderPriceSnapshotTest {
                 .findById(1L)
                 .orElseThrow();
 
-        product.setPrice(99.99);
+        product.setPrice(new BigDecimal("99.99"));
         productDao.saveAndFlush(product);
 
         OrderResponse storedOrder =
