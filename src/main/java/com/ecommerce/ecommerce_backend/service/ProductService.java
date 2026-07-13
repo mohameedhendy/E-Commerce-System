@@ -21,6 +21,7 @@ public class ProductService {
 
     private final ProductDao productDao;
 
+    @Transactional(readOnly = true)
     public Page<ProductResponse> getAllProducts(String keyword, Pageable pageable) {
         Page<Product> products;
 
@@ -33,6 +34,7 @@ public class ProductService {
         return products.map(ProductResponse::new);
     }
 
+    @Transactional(readOnly = true)
     public ProductResponse getProductById(Long productId) {
         Product product = productDao.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product was not found"));
