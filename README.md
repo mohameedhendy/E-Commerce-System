@@ -223,7 +223,7 @@ For Windows PowerShell:
 $env:DB_URL="jdbc:postgresql://localhost:5432/ecommerce_db"
 $env:DB_USERNAME="ecommerce_user"
 $env:DB_PASSWORD="ecommerce123"
-$env:JWT_SECRET="SuperSecureSecretKeyForLocalDevelopmentOnly123456789"
+$env:JWT_SECRET="<replace-with-a-long-random-secret>"
 ```
 
 ---
