@@ -80,13 +80,13 @@ VALUES
 );
 
 INSERT INTO stock
-(product_id, quantity)
+(product_id, quantity, version)
 VALUES
-(1, 5),
-(2, 8),
-(3, 12),
-(4, 73),
-(5, 2);
+    (1, 5, 0),
+    (2, 8, 0),
+    (3, 12, 0),
+    (4, 73, 0),
+    (5, 2, 0);
 
 INSERT INTO web_order
 (

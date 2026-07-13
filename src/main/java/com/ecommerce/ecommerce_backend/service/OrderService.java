@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.HashSet;
+import com.ecommerce.ecommerce_backend.dao.StockDao;
 
 @Service
 public class OrderService {
@@ -26,11 +27,18 @@ public class OrderService {
     private final OrderDao orderDao;
     private final AddressDAO addressDAO;
     private final ProductDao productDao;
+    private final StockDao stockDao;
 
-    public OrderService(OrderDao orderDao, AddressDAO addressDAO, ProductDao productDao) {
+    public OrderService(
+            OrderDao orderDao,
+            AddressDAO addressDAO,
+            ProductDao productDao,
+            StockDao stockDao) {
+
         this.orderDao = orderDao;
         this.addressDAO = addressDAO;
         this.productDao = productDao;
+        this.stockDao = stockDao;
     }
 
     @Transactional(readOnly = true)
@@ -74,19 +82,16 @@ public class OrderService {
             Product product = productDao.findById(itemRequest.getProductId())
                     .orElseThrow(() -> new ResourceNotFoundException("Product was not found"));
 
-            Stock stock = product.getStock();
+            int updatedRows = stockDao.decreaseStock(
+                    product.getId(),
+                    itemRequest.getQuantity()
+            );
 
-            if (stock == null) {
-                throw new InsufficientStockException("Product " + product.getName() + " is out of stock");
-            }
-
-            if (stock.getQuantity() < itemRequest.getQuantity()) {
+            if (updatedRows == 0) {
                 throw new InsufficientStockException(
                         "Not enough stock for product " + product.getName()
                 );
             }
-
-            stock.setQuantity(stock.getQuantity() - itemRequest.getQuantity());
 
             BigDecimal unitPrice =
                     product.getPrice()
@@ -135,13 +140,7 @@ public class OrderService {
             throw new InvalidOrderStatusException("Only pending orders can be cancelled");
         }
 
-        order.getQuantities().forEach(item -> {
-            Stock stock = item.getProduct().getStock();
-
-            if (stock != null) {
-                stock.setQuantity(stock.getQuantity() + item.getQuantity());
-            }
-        });
+        restoreStock(order);
 
         order.setStatus(OrderStatus.CANCELLED);
 
@@ -178,13 +177,7 @@ public class OrderService {
         }
 
         if (newStatus == OrderStatus.CANCELLED) {
-            order.getQuantities().forEach(item -> {
-                Stock stock = item.getProduct().getStock();
-
-                if (stock != null) {
-                    stock.setQuantity(stock.getQuantity() + item.getQuantity());
-                }
-            });
+            restoreStock(order);
         }
 
         order.setStatus(newStatus);
@@ -223,5 +216,14 @@ public class OrderService {
                 .orElseThrow(() -> new ResourceNotFoundException("Order was not found"));
 
         return new OrderResponse(order);
+    }
+
+    private void restoreStock(Order order) {
+        order.getQuantities().forEach(item ->
+                stockDao.increaseStock(
+                        item.getProduct().getId(),
+                        item.getQuantity()
+                )
+        );
     }
 }
