@@ -11,10 +11,9 @@ import com.ecommerce.ecommerce_backend.model.LocalUser;
 import com.ecommerce.ecommerce_backend.model.Role;
 import com.ecommerce.ecommerce_backend.model.VerificationToken;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import com.ecommerce.ecommerce_backend.config.ApplicationProperties;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
@@ -28,9 +27,7 @@ public class UserService {
     private final JWTService jwtService;
     private final EmailService emailService;
     private final VerificationTokenDAO verificationTokenDAO;
-
-    @Value("${app.email.verification.enabled:false}")
-    private boolean emailVerificationEnabled;
+    private final ApplicationProperties applicationProperties;
 
     public LocalUser registerUser(RegistrationBody registrationBody) throws UserAlreadyExistException, EmailFailureException {
         if (userDao.findByEmailIgnoreCase(registrationBody.getEmail()).isPresent()
@@ -46,7 +43,9 @@ public class UserService {
         user.setLastName(registrationBody.getLastName());
         user.setPassword(encryptionService.encryptPassword(registrationBody.getPassword()));
 
-        if (emailVerificationEnabled) {
+        if (applicationProperties.email()
+        .verification()
+        .enabled()) {
             VerificationToken verificationToken = createVerificationToken(user);
             emailService.sendVerificationEmail(verificationToken);
         } else {
@@ -64,7 +63,9 @@ public class UserService {
                 if (user.isEmailVerified()) {
                     return jwtService.generateToken(user);
                 } else {
-                    if (!emailVerificationEnabled) {
+                    if (!applicationProperties.email()
+        .verification()
+        .enabled()) {
                         throw new UserNotVerifiedException(false);
                     }
 
