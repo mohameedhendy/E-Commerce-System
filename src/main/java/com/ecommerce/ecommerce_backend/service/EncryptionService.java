@@ -2,15 +2,14 @@ package com.ecommerce.ecommerce_backend.service;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import lombok.RequiredArgsConstructor;
+
 
 @Service
+@RequiredArgsConstructor
 public class EncryptionService {
 
     private final PasswordEncoder passwordEncoder;
-
-    public EncryptionService(PasswordEncoder passwordEncoder) {
-        this.passwordEncoder = passwordEncoder;
-    }
 
     public String encryptPassword(String password) {
         return passwordEncoder.encode(password);

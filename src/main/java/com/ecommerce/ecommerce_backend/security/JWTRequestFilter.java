@@ -14,12 +14,13 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-
+import lombok.RequiredArgsConstructor;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
 @Component
+@RequiredArgsConstructor
 public class JWTRequestFilter extends OncePerRequestFilter {
 
     private static final String AUTHORIZATION_HEADER = "Authorization";
@@ -27,14 +28,6 @@ public class JWTRequestFilter extends OncePerRequestFilter {
 
     private final JWTService jwtService;
     private final LocalUserDao userDao;
-
-    public JWTRequestFilter(
-            JWTService jwtService,
-            LocalUserDao userDao) {
-
-        this.jwtService = jwtService;
-        this.userDao = userDao;
-    }
 
     @Override
     protected void doFilterInternal(

@@ -20,19 +20,16 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/product")
 @Validated
+@RequiredArgsConstructor
 public class ProductController {
 
     private final ProductService productService;
     private final ReviewService reviewService;
-
-    public ProductController(ProductService productService, ReviewService reviewService) {
-        this.productService = productService;
-        this.reviewService = reviewService;
-    }
 
     @GetMapping
     public PagedResponse<ProductResponse> getAllProducts(

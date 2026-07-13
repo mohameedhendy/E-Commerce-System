@@ -9,17 +9,14 @@ import com.ecommerce.ecommerce_backend.model.Address;
 import com.ecommerce.ecommerce_backend.model.LocalUser;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import lombok.RequiredArgsConstructor;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class AddressService {
 
     private final AddressDAO addressDAO;
-
-    public AddressService(AddressDAO addressDAO) {
-        this.addressDAO = addressDAO;
-    }
 
     public List<AddressResponse> getUserAddresses(Long userId, LocalUser currentUser) {
         validateUserPermission(currentUser, userId);

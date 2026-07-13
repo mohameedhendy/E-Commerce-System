@@ -8,19 +8,18 @@ import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
+import lombok.RequiredArgsConstructor;
+
 
 @Service
+@RequiredArgsConstructor
 public class EmailService {
 
     @Value("${email.from}")
     private String fromAddress;
     @Value("${app.frontend.url}")
     private String url;
-    private JavaMailSender javaMailSender;
-
-    public EmailService(JavaMailSender javaMailSender) {
-        this.javaMailSender = javaMailSender;
-    }
+    private final JavaMailSender javaMailSender;
 
     private SimpleMailMessage makeMailMessage() {
         SimpleMailMessage simpleMailMessage = new SimpleMailMessage();

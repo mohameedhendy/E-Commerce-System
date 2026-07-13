@@ -13,35 +13,23 @@ import com.ecommerce.ecommerce_backend.model.VerificationToken;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import lombok.RequiredArgsConstructor;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class UserService {
 
-    private LocalUserDao userDao;
-
-    private EncryptionService encryptionService;
-
-    private JWTService jwtService;
-
-    private EmailService emailService;
-
-    private VerificationTokenDAO verificationTokenDAO;
+    private final LocalUserDao userDao;
+    private final EncryptionService encryptionService;
+    private final JWTService jwtService;
+    private final EmailService emailService;
+    private final VerificationTokenDAO verificationTokenDAO;
 
     @Value("${app.email.verification.enabled:false}")
     private boolean emailVerificationEnabled;
-
-    public UserService(LocalUserDao localUserDao, EncryptionService encryptionService, JWTService jwtService
-            , EmailService emailService, VerificationTokenDAO verificationTokenDAO) {
-        this.userDao = localUserDao;
-        this.encryptionService = encryptionService;
-        this.jwtService = jwtService;
-        this.emailService = emailService;
-        this.verificationTokenDAO = verificationTokenDAO;
-    }
 
     public LocalUser registerUser(RegistrationBody registrationBody) throws UserAlreadyExistException, EmailFailureException {
         if (userDao.findByEmailIgnoreCase(registrationBody.getEmail()).isPresent()

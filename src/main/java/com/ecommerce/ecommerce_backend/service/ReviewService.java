@@ -12,17 +12,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import lombok.RequiredArgsConstructor;
 
 @Service
+@RequiredArgsConstructor
 public class ReviewService {
 
     private final ReviewDao reviewDao;
     private final ProductDao productDao;
-
-    public ReviewService(ReviewDao reviewDao, ProductDao productDao) {
-        this.reviewDao = reviewDao;
-        this.productDao = productDao;
-    }
 
     @Transactional
     public ReviewResponse createReview(LocalUser user, Long productId, ReviewRequest request) {

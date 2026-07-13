@@ -21,26 +21,17 @@ import java.math.RoundingMode;
 import java.util.HashSet;
 import com.ecommerce.ecommerce_backend.dao.StockDao;
 import java.util.Locale;
+import lombok.RequiredArgsConstructor;
+
 
 @Service
+@RequiredArgsConstructor
 public class OrderService {
 
     private final OrderDao orderDao;
     private final AddressDAO addressDAO;
     private final ProductDao productDao;
     private final StockDao stockDao;
-
-    public OrderService(
-            OrderDao orderDao,
-            AddressDAO addressDAO,
-            ProductDao productDao,
-            StockDao stockDao) {
-
-        this.orderDao = orderDao;
-        this.addressDAO = addressDAO;
-        this.productDao = productDao;
-        this.stockDao = stockDao;
-    }
 
     @Transactional(readOnly = true)
     public Page<OrderResponse> getAllUserOrders(LocalUser user, String status, Pageable pageable) {

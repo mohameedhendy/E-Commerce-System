@@ -8,18 +8,15 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
+import lombok.RequiredArgsConstructor;
 import java.util.List;
 
 @RestController
 @RequestMapping("/user")
+@RequiredArgsConstructor
 public class UserController {
 
     private final AddressService addressService;
-
-    public UserController(AddressService addressService) {
-        this.addressService = addressService;
-    }
 
     @GetMapping("/{userId}/address")
     public ResponseEntity<List<AddressResponse>> getAddresses(@PathVariable Long userId,

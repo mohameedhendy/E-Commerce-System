@@ -12,15 +12,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import lombok.RequiredArgsConstructor;
+
 
 @Service
+@RequiredArgsConstructor
 public class ProductService {
 
     private final ProductDao productDao;
-
-    public ProductService(ProductDao productDao) {
-        this.productDao = productDao;
-    }
 
     public Page<ProductResponse> getAllProducts(String keyword, Pageable pageable) {
         Page<Product> products;

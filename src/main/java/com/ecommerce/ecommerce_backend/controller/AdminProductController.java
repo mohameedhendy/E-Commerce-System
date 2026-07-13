@@ -16,18 +16,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/admin/product")
 @Validated
+@RequiredArgsConstructor
 public class AdminProductController {
 
     private final ProductService productService;
-
-    public AdminProductController(ProductService productService) {
-        this.productService = productService;
-    }
 
     @PostMapping
     public ResponseEntity<ProductResponse> createProduct(@Valid @RequestBody AdminProductRequest request) {

@@ -6,17 +6,15 @@ import com.ecommerce.ecommerce_backend.dto.AdminDashboardSummaryResponse;
 import com.ecommerce.ecommerce_backend.model.OrderStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import lombok.RequiredArgsConstructor;
+
 
 @Service
+@RequiredArgsConstructor
 public class AdminDashboardService {
 
     private final ProductDao productDao;
     private final OrderDao orderDao;
-
-    public AdminDashboardService(ProductDao productDao, OrderDao orderDao) {
-        this.productDao = productDao;
-        this.orderDao = orderDao;
-    }
 
     @Transactional(readOnly = true)
     public AdminDashboardSummaryResponse getSummary() {

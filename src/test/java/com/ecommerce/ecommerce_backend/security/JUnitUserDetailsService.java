@@ -6,16 +6,14 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @Primary
+@RequiredArgsConstructor
 public class JUnitUserDetailsService implements UserDetailsService {
 
     private final LocalUserDao localUserDao;
-
-    public JUnitUserDetailsService(LocalUserDao localUserDao) {
-        this.localUserDao = localUserDao;
-    }
 
     @Override
     public UserDetails loadUserByUsername(String username)

@@ -14,17 +14,16 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import lombok.RequiredArgsConstructor;
+
 
 @RestController
 @RequestMapping("/admin/order")
 @Validated
+@RequiredArgsConstructor
 public class AdminOrderController {
 
     private final OrderService orderService;
-
-    public AdminOrderController(OrderService orderService) {
-        this.orderService = orderService;
-    }
 
     @GetMapping
     public ResponseEntity<PagedResponse<OrderResponse>> getAllOrders(
