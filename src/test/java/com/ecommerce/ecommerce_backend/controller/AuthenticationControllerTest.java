@@ -5,15 +5,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.icegreen.greenmail.configuration.GreenMailConfiguration;
 import com.icegreen.greenmail.junit5.GreenMailExtension;
 import com.icegreen.greenmail.util.ServerSetupTest;
-import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.transaction.annotation.Transactional;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -22,112 +22,239 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 public class AuthenticationControllerTest {
 
-    /**
-     * Extension for mocking email sending.
-     */
     @RegisterExtension
-    private static GreenMailExtension greenMailExtension = new GreenMailExtension(ServerSetupTest.SMTP)
-            .withConfiguration(GreenMailConfiguration.aConfig().withUser("springboot", "secret"))
-            .withPerMethodLifecycle(true);
+    private static final GreenMailExtension greenMailExtension =
+            new GreenMailExtension(ServerSetupTest.SMTP)
+                    .withConfiguration(
+                            GreenMailConfiguration
+                                    .aConfig()
+                                    .withUser("springboot", "secret")
+                    )
+                    .withPerMethodLifecycle(true);
 
     @Autowired
     private MockMvc mvc;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     @Test
     @Transactional
-    public void testRegisterUser() throws Exception {
-        ObjectMapper objectMapper = new ObjectMapper();
-        RegistrationBody body = new RegistrationBody();
-        body.setEmail("AuthenticationControllerTest$testRegister@junit.com");
-        body.setFirstName("FirstName");
-        body.setLastName("LastName");
-        body.setPassword("Password123");
-        // Null or blank username.
+    public void validRegistrationReturnsOk() throws Exception {
+
+        RegistrationBody body = createValidRegistrationBody();
+
+        performRegistration(body)
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    public void missingRegistrationFieldsReturnBadRequest()
+            throws Exception {
+
+        RegistrationBody body = createValidRegistrationBody();
         body.setUsername(null);
-        mvc.perform(post("/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(body)))
-                .andExpect(status().is(HttpStatus.BAD_REQUEST.value()));
+
+        performRegistration(body)
+                .andExpect(status().isBadRequest());
+
+        body = createValidRegistrationBody();
         body.setUsername("");
-        mvc.perform(post("/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(body)))
-                .andExpect(status().is(HttpStatus.BAD_REQUEST.value()));
-        body.setUsername("AuthenticationControllerTest$testRegister");
-        // Null or blank email.
+
+        performRegistration(body)
+                .andExpect(status().isBadRequest());
+
+        body = createValidRegistrationBody();
         body.setEmail(null);
-        mvc.perform(post("/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(body)))
-                .andExpect(status().is(HttpStatus.BAD_REQUEST.value()));
+
+        performRegistration(body)
+                .andExpect(status().isBadRequest());
+
+        body = createValidRegistrationBody();
         body.setEmail("");
-        mvc.perform(post("/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(body)))
-                .andExpect(status().is(HttpStatus.BAD_REQUEST.value()));
-        body.setEmail("AuthenticationControllerTest$testRegister@junit.com");
-        // Null or blank password.
+
+        performRegistration(body)
+                .andExpect(status().isBadRequest());
+
+        body = createValidRegistrationBody();
         body.setPassword(null);
-        mvc.perform(post("/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(body)))
-                .andExpect(status().is(HttpStatus.BAD_REQUEST.value()));
+
+        performRegistration(body)
+                .andExpect(status().isBadRequest());
+
+        body = createValidRegistrationBody();
         body.setPassword("");
-        mvc.perform(post("/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(body)))
-                .andExpect(status().is(HttpStatus.BAD_REQUEST.value()));
-        body.setPassword("Password123");
-        // Null or blank first name.
+
+        performRegistration(body)
+                .andExpect(status().isBadRequest());
+
+        body = createValidRegistrationBody();
         body.setFirstName(null);
-        mvc.perform(post("/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(body)))
-                .andExpect(status().is(HttpStatus.BAD_REQUEST.value()));
+
+        performRegistration(body)
+                .andExpect(status().isBadRequest());
+
+        body = createValidRegistrationBody();
         body.setFirstName("");
-        mvc.perform(post("/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(body)))
-                .andExpect(status().is(HttpStatus.BAD_REQUEST.value()));
-        body.setFirstName("FirstName");
-        // Null or blank last name.
+
+        performRegistration(body)
+                .andExpect(status().isBadRequest());
+
+        body = createValidRegistrationBody();
         body.setLastName(null);
-        mvc.perform(post("/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(body)))
-                .andExpect(status().is(HttpStatus.BAD_REQUEST.value()));
+
+        performRegistration(body)
+                .andExpect(status().isBadRequest());
+
+        body = createValidRegistrationBody();
         body.setLastName("");
-        mvc.perform(post("/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(body)))
-                .andExpect(status().is(HttpStatus.BAD_REQUEST.value()));
-        body.setLastName("LastName");
-        //TODO: Test password characters, username length & email validity.
-        // Valid registration.
-        mvc.perform(post("/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(body)))
-                .andExpect(status().is(HttpStatus.OK.value()));
+
+        performRegistration(body)
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void shortUsernameReturnsBadRequest()
+            throws Exception {
+
+        RegistrationBody body = createValidRegistrationBody();
+        body.setUsername("ab");
+
+        performRegistration(body)
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void longUsernameReturnsBadRequest()
+            throws Exception {
+
+        RegistrationBody body = createValidRegistrationBody();
+        body.setUsername("a".repeat(256));
+
+        performRegistration(body)
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void invalidEmailReturnsBadRequest()
+            throws Exception {
+
+        RegistrationBody body = createValidRegistrationBody();
+        body.setEmail("not-a-valid-email");
+
+        performRegistration(body)
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void shortPasswordReturnsBadRequest()
+            throws Exception {
+
+        RegistrationBody body = createValidRegistrationBody();
+        body.setPassword("Pass123");
+
+        performRegistration(body)
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void passwordWithoutNumberReturnsBadRequest()
+            throws Exception {
+
+        RegistrationBody body = createValidRegistrationBody();
+        body.setPassword("Password");
+
+        performRegistration(body)
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void passwordWithoutLetterReturnsBadRequest()
+            throws Exception {
+
+        RegistrationBody body = createValidRegistrationBody();
+        body.setPassword("12345678");
+
+        performRegistration(body)
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void passwordWithUnsupportedCharactersReturnsBadRequest()
+            throws Exception {
+
+        RegistrationBody body = createValidRegistrationBody();
+        body.setPassword("Password123!");
+
+        performRegistration(body)
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void loginWithInvalidPasswordFormatReturnsBadRequest()
+            throws Exception {
+
+        mvc.perform(
+                        post("/auth/login")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                        {
+                                          "username": "UserA",
+                                          "password": "password"
+                                        }
+                                        """)
+                )
+                .andExpect(status().isBadRequest());
     }
 
     @Test
     public void loginWithInvalidCredentialsReturnsUnauthorized()
             throws Exception {
 
+        /*
+         * The password format is valid, but the value is incorrect.
+         * Therefore validation passes and authentication returns 401.
+         */
         mvc.perform(
                         post("/auth/login")
-                                .contentType(
-                                        MediaType.APPLICATION_JSON
-                                )
+                                .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
-                                    {
-                                      "username": "UserA",
-                                      "password": "WrongPassword123"
-                                    }
-                                    """)
+                                        {
+                                          "username": "UserA",
+                                          "password": "WrongPassword123"
+                                        }
+                                        """)
                 )
-                .andExpect(
-                        status().isUnauthorized()
-                );
+                .andExpect(status().isUnauthorized());
+    }
+
+    private ResultActions performRegistration(
+            RegistrationBody body
+    ) throws Exception {
+
+        return mvc.perform(
+                post("/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(
+                                objectMapper.writeValueAsString(body)
+                        )
+        );
+    }
+
+    private RegistrationBody createValidRegistrationBody() {
+
+        RegistrationBody body = new RegistrationBody();
+
+        body.setUsername(
+                "AuthenticationControllerTestUser"
+        );
+        body.setEmail(
+                "authentication-controller-test@junit.com"
+        );
+        body.setFirstName("FirstName");
+        body.setLastName("LastName");
+        body.setPassword("Password123");
+
+        return body;
     }
 }
