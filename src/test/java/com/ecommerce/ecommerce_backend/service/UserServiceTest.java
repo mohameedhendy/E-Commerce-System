@@ -138,6 +138,7 @@ public class UserServiceTest {
                     "User should not have email verified."
             );
         } catch (UserNotVerifiedException ex) {
+
             List<VerificationToken> tokens =
                     verificationTokenDAO
                             .findByUser_IdOrderByIdDesc(2L);
@@ -151,9 +152,24 @@ public class UserServiceTest {
                     "Token should be valid."
             );
 
-            Assertions.assertNotNull(
-                    body,
+            LocalUser verifiedUser = localUserDao
+                    .findByUsernameIgnoreCase("UserB")
+                    .orElseThrow();
+
+            Assertions.assertTrue(
+                    verifiedUser.isEmailVerified(),
                     "The user should now be verified."
+            );
+
+            List<VerificationToken> remainingTokens =
+                    verificationTokenDAO
+                            .findByUser_IdOrderByIdDesc(
+                                    verifiedUser.getId()
+                            );
+
+            Assertions.assertTrue(
+                    remainingTokens.isEmpty(),
+                    "Verification tokens should be deleted after successful verification."
             );
         }
     }
