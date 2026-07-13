@@ -1,18 +1,22 @@
 package com.ecommerce.ecommerce_backend.security;
 
-import org.springframework.beans.factory.annotation.Value;
+import com.ecommerce.ecommerce_backend.config.EncryptionProperties;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
+@RequiredArgsConstructor
 public class PasswordConfig {
 
-    @Bean
-    public PasswordEncoder passwordEncoder(
-            @Value("${encryption.salt.rounds:12}") int saltRounds) {
+    private final EncryptionProperties encryptionProperties;
 
-        return new BCryptPasswordEncoder(saltRounds);
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder(
+                encryptionProperties.rounds()
+        );
     }
 }
