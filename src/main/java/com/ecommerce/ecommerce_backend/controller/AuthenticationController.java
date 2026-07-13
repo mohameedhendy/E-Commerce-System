@@ -26,16 +26,14 @@ public class AuthenticationController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> loginUser(@Valid @RequestBody LoginBody loginBody)
-            throws UserNotVerifiedException, EmailFailureException, InvalidCredentialsException {
+    public ResponseEntity<LoginResponse> loginUser(
+            @Valid @RequestBody LoginBody loginBody) throws UserNotVerifiedException, EmailFailureException {
 
-        String jwt = userService.loginUser(loginBody);
+        String token = userService.loginUser(loginBody);
 
-        if (jwt == null) {
-            throw new InvalidCredentialsException();
-        }
-
-        return ResponseEntity.ok(new LoginResponse(jwt));
+        return ResponseEntity.ok(
+                new LoginResponse(token)
+        );
     }
 
     @PostMapping("/verify")

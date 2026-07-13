@@ -1,6 +1,7 @@
 package com.ecommerce.ecommerce_backend.service;
 
 import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.ecommerce.ecommerce_backend.config.ApplicationProperties;
 import com.ecommerce.ecommerce_backend.dao.LocalUserDao;
 import com.ecommerce.ecommerce_backend.dao.VerificationTokenDAO;
 import com.ecommerce.ecommerce_backend.dto.LoginBody;
@@ -13,7 +14,7 @@ import com.ecommerce.ecommerce_backend.model.VerificationToken;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.ecommerce.ecommerce_backend.config.ApplicationProperties;
+
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
@@ -55,38 +56,71 @@ public class UserService {
         return userDao.save(user);
     }
 
-    public String loginUser(LoginBody loginBody) throws UserNotVerifiedException, EmailFailureException {
-        Optional<LocalUser> opUser = userDao.findByUsernameIgnoreCase(loginBody.getUsername());
-        if (opUser.isPresent()) {
-            LocalUser user = opUser.get();
-            if (encryptionService.verifyPassword(loginBody.getPassword(), user.getPassword())) {
-                if (user.isEmailVerified()) {
-                    return jwtService.generateToken(user);
-                } else {
-                    if (!applicationProperties.email()
-        .verification()
-        .enabled()) {
-                        throw new UserNotVerifiedException(false);
-                    }
+    @Transactional
+    public String loginUser(LoginBody loginBody)
+            throws UserNotVerifiedException, EmailFailureException {
 
-                    List<VerificationToken> verificationTokens =
-                            verificationTokenDAO.findByUser_IdOrderByIdDesc(user.getId());
+        LocalUser user = userDao
+                .findByUsernameIgnoreCase(loginBody.getUsername())
+                .orElseThrow(InvalidCredentialsException::new);
 
-                    boolean resend = verificationTokens.isEmpty() ||
-                            verificationTokens.get(0).getCreatedTimeStamp()
-                                    .before(new Timestamp(System.currentTimeMillis() - (60 * 60 * 1000)));
+        boolean passwordMatches =
+                encryptionService.verifyPassword(
+                        loginBody.getPassword(),
+                        user.getPassword()
+                );
 
-                    if (resend) {
-                        VerificationToken verificationToken = createVerificationToken(user);
-                        verificationTokenDAO.save(verificationToken);
-                        emailService.sendVerificationEmail(verificationToken);
-                    }
-
-                    throw new UserNotVerifiedException(resend);
-                }
-            }
+        if (!passwordMatches) {
+            throw new InvalidCredentialsException();
         }
-        return null;
+
+        if (user.isEmailVerified()) {
+            return jwtService.generateToken(user);
+        }
+
+        boolean emailVerificationEnabled =
+                applicationProperties.email()
+                        .verification()
+                        .enabled();
+
+        if (!emailVerificationEnabled) {
+            throw new UserNotVerifiedException(false);
+        }
+
+        List<VerificationToken> verificationTokens =
+                verificationTokenDAO
+                        .findByUser_IdOrderByIdDesc(
+                                user.getId()
+                        );
+
+        boolean resendVerificationEmail =
+                verificationTokens.isEmpty()
+                        || verificationTokens
+                        .getFirst()
+                        .getCreatedTimeStamp()
+                        .before(
+                                new Timestamp(
+                                        System.currentTimeMillis()
+                                                - (60L * 60L * 1000L)
+                                )
+                        );
+
+        if (resendVerificationEmail) {
+            VerificationToken verificationToken =
+                    createVerificationToken(user);
+
+            verificationTokenDAO.save(
+                    verificationToken
+            );
+
+            emailService.sendVerificationEmail(
+                    verificationToken
+            );
+        }
+
+        throw new UserNotVerifiedException(
+                resendVerificationEmail
+        );
     }
 
     private VerificationToken createVerificationToken(LocalUser user) {

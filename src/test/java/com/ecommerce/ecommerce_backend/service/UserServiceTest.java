@@ -20,7 +20,6 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-
 import java.util.List;
 
 @SpringBootTest
@@ -74,31 +73,55 @@ public class UserServiceTest {
 
     @Test
     @Transactional
-    public void testLoginUser() throws UserNotVerifiedException, EmailFailureException {
+    public void testLoginUser()
+            throws UserNotVerifiedException, EmailFailureException {
+
         LoginBody body = new LoginBody();
-        body.setUsername("UserA-NotExists");
-        body.setPassword("PasswordA123-BadPassword");
-        Assertions.assertNull(userService.loginUser(body), "The user should not exist.");
+
         body.setUsername("UserA");
-        Assertions.assertNull(userService.loginUser(body), "The password should be incorrect.");
         body.setPassword("PasswordA123");
-        Assertions.assertNotNull(userService.loginUser(body), "The user should login successfully.");
+
+        Assertions.assertNotNull(
+                userService.loginUser(body),
+                "The user should login successfully."
+        );
+
         body.setUsername("UserB");
         body.setPassword("PasswordB123");
-        try {
-            userService.loginUser(body);
-            Assertions.assertTrue(false, "User should not have email verified.");
-        } catch (UserNotVerifiedException ex) {
-            Assertions.assertTrue(ex.isNewEmailSend(), "Email verification should be sent.");
-            Assertions.assertEquals(1, greenMailExtension.getReceivedMessages().length);
-        }
-        try {
-            userService.loginUser(body);
-            Assertions.assertTrue(false, "User should not have email verified.");
-        } catch (UserNotVerifiedException ex) {
-            Assertions.assertFalse(ex.isNewEmailSend(), "Email verification should not be resent.");
-            Assertions.assertEquals(1, greenMailExtension.getReceivedMessages().length);
-        }
+
+        UserNotVerifiedException firstAttemptException =
+                Assertions.assertThrows(
+                        UserNotVerifiedException.class,
+                        () -> userService.loginUser(body),
+                        "User should not have email verified."
+                );
+
+        Assertions.assertTrue(
+                firstAttemptException.isNewEmailSend(),
+                "Email verification should be sent."
+        );
+
+        Assertions.assertEquals(
+                1,
+                greenMailExtension.getReceivedMessages().length
+        );
+
+        UserNotVerifiedException secondAttemptException =
+                Assertions.assertThrows(
+                        UserNotVerifiedException.class,
+                        () -> userService.loginUser(body),
+                        "User should still not have email verified."
+                );
+
+        Assertions.assertFalse(
+                secondAttemptException.isNewEmailSend(),
+                "Email verification should not be resent."
+        );
+
+        Assertions.assertEquals(
+                1,
+                greenMailExtension.getReceivedMessages().length
+        );
     }
 
     @Test
@@ -143,5 +166,39 @@ public class UserServiceTest {
         user = localUserDao.findByUsernameIgnoreCase("UserA").get();
         Assertions.assertTrue(encryptionService.verifyPassword("Password123456",
                 user.getPassword()), "Password change should be written to DB.");
+    }
+
+    @Test
+    public void invalidPasswordThrowsInvalidCredentialsException() {
+
+        LoginBody loginBody = new LoginBody();
+
+        loginBody.setUsername("UserA");
+        loginBody.setPassword("DefinitelyWrongPassword123");
+
+        InvalidCredentialsException exception =
+                Assertions.assertThrows(
+                        InvalidCredentialsException.class,
+                        () -> userService.loginUser(loginBody)
+                );
+
+        Assertions.assertEquals(
+                "Invalid username or password",
+                exception.getMessage()
+        );
+    }
+
+    @Test
+    public void unknownUsernameThrowsInvalidCredentialsException() {
+
+        LoginBody loginBody = new LoginBody();
+
+        loginBody.setUsername("UserDoesNotExist");
+        loginBody.setPassword("Password123");
+
+        Assertions.assertThrows(
+                InvalidCredentialsException.class,
+                () -> userService.loginUser(loginBody)
+        );
     }
 }

@@ -109,4 +109,25 @@ public class AuthenticationControllerTest {
                         .content(objectMapper.writeValueAsString(body)))
                 .andExpect(status().is(HttpStatus.OK.value()));
     }
+
+    @Test
+    public void loginWithInvalidCredentialsReturnsUnauthorized()
+            throws Exception {
+
+        mvc.perform(
+                        post("/auth/login")
+                                .contentType(
+                                        MediaType.APPLICATION_JSON
+                                )
+                                .content("""
+                                    {
+                                      "username": "UserA",
+                                      "password": "WrongPassword123"
+                                    }
+                                    """)
+                )
+                .andExpect(
+                        status().isUnauthorized()
+                );
+    }
 }
