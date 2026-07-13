@@ -10,7 +10,7 @@ import com.ecommerce.ecommerce_backend.model.LocalUser;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import com.ecommerce.ecommerce_backend.config.JwtProperties;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
@@ -22,8 +22,8 @@ public class JWTServiceTest {
     @Autowired
     private LocalUserDao localUserDao;
 
-    @Value("${jwt.algorithm.key}")
-    private String algorithmKey;
+    @Autowired
+    private JwtProperties jwtProperties;
 
     @Test
     public void testAuthTokenReturnsUsername() {
@@ -123,7 +123,9 @@ public class JWTServiceTest {
         String token = JWT.create()
                 .withClaim("USERNAME", "UserA")
                 .withClaim("TOKEN_TYPE", "ACCESS")
-                .sign(Algorithm.HMAC256(algorithmKey));
+                .sign(Algorithm.HMAC256(
+        jwtProperties.algorithm().key()
+));
 
         Assertions.assertThrows(
                 MissingClaimException.class,
@@ -165,7 +167,9 @@ public class JWTServiceTest {
                         "TOKEN_TYPE",
                         "PASSWORD_RESET"
                 )
-                .sign(Algorithm.HMAC256(algorithmKey));
+                .sign(Algorithm.HMAC256(
+        jwtProperties.algorithm().key()
+));
 
         Assertions.assertThrows(
                 MissingClaimException.class,
