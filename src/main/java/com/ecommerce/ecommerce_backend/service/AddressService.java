@@ -19,6 +19,7 @@ public class AddressService {
 
     private final AddressDAO addressDAO;
 
+    @Transactional(readOnly = true)
     public List<AddressResponse> getUserAddresses(Long userId, LocalUser currentUser) {
         validateUserPermission(currentUser, userId);
 
