@@ -30,6 +30,7 @@ public class UserService {
     private final VerificationTokenDAO verificationTokenDAO;
     private final ApplicationProperties applicationProperties;
 
+    @Transactional(rollbackFor = EmailFailureException.class)
     public LocalUser registerUser(RegistrationBody registrationBody) throws UserAlreadyExistException, EmailFailureException {
         if (userDao.findByEmailIgnoreCase(registrationBody.getEmail()).isPresent()
                 || userDao.findByUsernameIgnoreCase(registrationBody.getUsername()).isPresent()) {
@@ -56,7 +57,7 @@ public class UserService {
         return userDao.save(user);
     }
 
-    @Transactional
+    @Transactional(rollbackFor = EmailFailureException.class)
     public String loginUser(LoginBody loginBody)
             throws UserNotVerifiedException, EmailFailureException {
 
@@ -174,6 +175,7 @@ public class UserService {
         }
     }
 
+    @Transactional
     public void resetPassword(PasswordResetBody body) throws InvalidTokenException {
         String email;
 
