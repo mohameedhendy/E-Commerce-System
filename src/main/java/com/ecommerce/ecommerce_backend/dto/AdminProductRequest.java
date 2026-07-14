@@ -1,23 +1,39 @@
 package com.ecommerce.ecommerce_backend.dto;
 
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Digits;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
-
 
 @Getter
 @Setter
 public class AdminProductRequest {
 
     @NotBlank(message = "Product name is required")
+    @Size(
+            max = 255,
+            message = "Product name must not exceed 255 characters"
+    )
     private String name;
 
     @NotBlank(message = "Short description is required")
+    @Size(
+            max = 255,
+            message = "Short description must not exceed 255 characters"
+    )
     private String shortDescription;
 
     @NotBlank(message = "Long description is required")
+    @Size(
+            max = 255,
+            message = "Long description must not exceed 255 characters"
+    )
     private String longDescription;
 
     @NotNull(message = "Price is required")
@@ -38,5 +54,4 @@ public class AdminProductRequest {
             message = "Stock quantity must be 0 or greater"
     )
     private Integer stockQuantity;
-
 }
