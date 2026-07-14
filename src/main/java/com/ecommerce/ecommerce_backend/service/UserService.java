@@ -18,16 +18,21 @@ import com.ecommerce.ecommerce_backend.model.VerificationToken;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.util.Locale;
+
 import java.sql.Timestamp;
-import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class UserService {
+
     private static final String INVALID_PASSWORD_RESET_TOKEN =
             "Invalid or expired password reset token";
+
+    private static final long
+            VERIFICATION_EMAIL_RESEND_INTERVAL_MILLIS =
+            60L * 60L * 1000L;
 
     private final LocalUserDao userDao;
     private final EncryptionService encryptionService;
@@ -36,9 +41,13 @@ public class UserService {
     private final VerificationTokenDAO verificationTokenDAO;
     private final ApplicationProperties applicationProperties;
 
-    @Transactional(rollbackFor = EmailFailureException.class)
-    public LocalUser registerUser(RegistrationBody registrationBody)
-            throws UserAlreadyExistException, EmailFailureException {
+    @Transactional(
+            rollbackFor = EmailFailureException.class
+    )
+    public LocalUser registerUser(
+            RegistrationBody registrationBody
+    ) throws UserAlreadyExistException,
+            EmailFailureException {
 
         String normalizedUsername =
                 normalizeUsername(
@@ -67,23 +76,34 @@ public class UserService {
         LocalUser user = new LocalUser();
 
         user.setRole(Role.USER);
-        user.setEmail(normalizedEmail);
         user.setUsername(normalizedUsername);
+        user.setEmail(normalizedEmail);
+
         user.setFirstName(
-                registrationBody.getFirstName().trim()
+                registrationBody
+                        .getFirstName()
+                        .trim()
         );
+
         user.setLastName(
-                registrationBody.getLastName().trim()
+                registrationBody
+                        .getLastName()
+                        .trim()
         );
+
         user.setPassword(
                 encryptionService.encryptPassword(
                         registrationBody.getPassword()
                 )
         );
 
-        if (applicationProperties.email()
-                .verification()
-                .enabled()) {
+        boolean emailVerificationEnabled =
+                applicationProperties
+                        .email()
+                        .verification()
+                        .enabled();
+
+        if (emailVerificationEnabled) {
 
             VerificationToken verificationToken =
                     createVerificationToken(user);
@@ -91,6 +111,7 @@ public class UserService {
             emailService.sendVerificationEmail(
                     verificationToken
             );
+
         } else {
             user.setEmailVerified(true);
         }
@@ -98,9 +119,13 @@ public class UserService {
         return userDao.save(user);
     }
 
-    @Transactional(rollbackFor = EmailFailureException.class)
-    public String loginUser(LoginBody loginBody)
-            throws UserNotVerifiedException, EmailFailureException {
+    @Transactional(
+            rollbackFor = EmailFailureException.class
+    )
+    public String loginUser(
+            LoginBody loginBody
+    ) throws UserNotVerifiedException,
+            EmailFailureException {
 
         String normalizedUsername =
                 normalizeUsername(
@@ -130,7 +155,8 @@ public class UserService {
         }
 
         boolean emailVerificationEnabled =
-                applicationProperties.email()
+                applicationProperties
+                        .email()
                         .verification()
                         .enabled();
 
@@ -138,25 +164,13 @@ public class UserService {
             throw new UserNotVerifiedException(false);
         }
 
-        List<VerificationToken> verificationTokens =
-                verificationTokenDAO
-                        .findByUser_IdOrderByIdDesc(
-                                user.getId()
-                        );
-
         boolean resendVerificationEmail =
-                verificationTokens.isEmpty()
-                        || verificationTokens
-                        .getFirst()
-                        .getCreatedTimeStamp()
-                        .before(
-                                new Timestamp(
-                                        System.currentTimeMillis()
-                                                - (60L * 60L * 1000L)
-                                )
-                        );
+                shouldResendVerificationEmail(
+                        user.getId()
+                );
 
         if (resendVerificationEmail) {
+
             VerificationToken verificationToken =
                     createVerificationToken(user);
 
@@ -174,65 +188,77 @@ public class UserService {
         );
     }
 
-    private VerificationToken createVerificationToken(LocalUser user) {
-        VerificationToken verificationToken = new VerificationToken();
-        verificationToken.setToken(jwtService.generateVerificationJWT(user));
-        verificationToken.setCreatedTimeStamp(new Timestamp(System.currentTimeMillis()));
-        verificationToken.setUser(user);
-        user.getVerificationTokens().add(verificationToken);
-        return verificationToken;
-    }
-
     @Transactional
-    public boolean verifyUser(String token) {
+    public boolean verifyUser(
+            String token
+    ) {
+
         String email;
 
         try {
-            email = jwtService.getVerificationEmail(token);
+            email = jwtService
+                    .getVerificationEmail(token);
+
         } catch (JWTVerificationException ex) {
             return false;
         }
 
-        Optional<VerificationToken> opToken = verificationTokenDAO.findByToken(token);
+        Optional<VerificationToken> optionalToken =
+                verificationTokenDAO
+                        .findByToken(token);
 
-        if (opToken.isPresent()) {
-            VerificationToken verificationToken = opToken.get();
-            LocalUser user = verificationToken.getUser();
-
-            if (!user.getEmail().equalsIgnoreCase(email)) {
-                return false;
-            }
-
-            if (!user.isEmailVerified()) {
-                user.setEmailVerified(true);
-                userDao.save(user);
-                verificationTokenDAO.deleteByUser(user);
-                return true;
-            }
+        if (optionalToken.isEmpty()) {
+            return false;
         }
 
-        return false;
+        VerificationToken verificationToken =
+                optionalToken.get();
+
+        LocalUser user =
+                verificationToken.getUser();
+
+        if (!user.getEmail()
+                .equalsIgnoreCase(email)) {
+
+            return false;
+        }
+
+        if (user.isEmailVerified()) {
+            return false;
+        }
+
+        user.setEmailVerified(true);
+
+        userDao.save(user);
+
+        verificationTokenDAO.deleteByUser(user);
+
+        return true;
     }
 
-    public void forgotPassword(String email)
-            throws EmailFailureException {
+    public void forgotPassword(
+            String email
+    ) throws EmailFailureException {
 
         String normalizedEmail =
                 normalizeEmail(email);
 
-        Optional<LocalUser> opUser =
+        Optional<LocalUser> optionalUser =
                 userDao.findByEmailIgnoreCase(
                         normalizedEmail
                 );
 
-        if (opUser.isEmpty()) {
+        if (optionalUser.isEmpty()) {
             return;
         }
 
-        LocalUser user = opUser.get();
+        LocalUser user =
+                optionalUser.get();
 
         String token =
-                jwtService.generatePasswordResetJWT(user);
+                jwtService.generatePasswordResetJWT(
+                        user
+                );
 
         emailService.sendPasswordResetEmail(
                 user,
@@ -241,16 +267,20 @@ public class UserService {
     }
 
     @Transactional
-    public void resetPassword(PasswordResetBody body)
-            throws InvalidTokenException {
+    public void resetPassword(
+            PasswordResetBody body
+    ) throws InvalidTokenException {
 
         JWTService.PasswordResetTokenData tokenData;
 
         try {
-            tokenData = jwtService.getPasswordResetData(
-                    body.getToken()
-            );
+            tokenData =
+                    jwtService.getPasswordResetData(
+                            body.getToken()
+                    );
+
         } catch (JWTVerificationException ex) {
+
             throw new InvalidTokenException(
                     INVALID_PASSWORD_RESET_TOKEN
             );
@@ -265,7 +295,9 @@ public class UserService {
         }
 
         LocalUser user = userDao
-                .findByEmailIgnoreCase(tokenData.email())
+                .findByEmailIgnoreCase(
+                        tokenData.email()
+                )
                 .orElseThrow(() ->
                         new InvalidTokenException(
                                 INVALID_PASSWORD_RESET_TOKEN
@@ -291,11 +323,66 @@ public class UserService {
         }
     }
 
-    private String normalizeUsername(String username) {
+    private boolean shouldResendVerificationEmail(
+            Long userId
+    ) {
+
+        Timestamp resendCutoff =
+                new Timestamp(
+                        System.currentTimeMillis()
+                                - VERIFICATION_EMAIL_RESEND_INTERVAL_MILLIS
+                );
+
+        return verificationTokenDAO
+                .findFirstByUser_IdOrderByIdDesc(
+                        userId
+                )
+                .map(verificationToken ->
+                        verificationToken
+                                .getCreatedTimeStamp()
+                                .before(resendCutoff)
+                )
+                .orElse(true);
+    }
+
+    private VerificationToken createVerificationToken(
+            LocalUser user
+    ) {
+
+        VerificationToken verificationToken =
+                new VerificationToken();
+
+        verificationToken.setToken(
+                jwtService.generateVerificationJWT(
+                        user
+                )
+        );
+
+        verificationToken.setCreatedTimeStamp(
+                new Timestamp(
+                        System.currentTimeMillis()
+                )
+        );
+
+        verificationToken.setUser(user);
+
+        user.getVerificationTokens()
+                .add(verificationToken);
+
+        return verificationToken;
+    }
+
+    private String normalizeUsername(
+            String username
+    ) {
+
         return username.trim();
     }
 
-    private String normalizeEmail(String email) {
+    private String normalizeEmail(
+            String email
+    ) {
+
         return email
                 .trim()
                 .toLowerCase(Locale.ROOT);
