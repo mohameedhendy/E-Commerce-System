@@ -4,6 +4,7 @@ import com.ecommerce.ecommerce_backend.dao.CartDao;
 import com.ecommerce.ecommerce_backend.dao.LocalUserDao;
 import com.ecommerce.ecommerce_backend.dao.ProductDao;
 import com.ecommerce.ecommerce_backend.dto.CartResponse;
+import com.ecommerce.ecommerce_backend.dto.UpdateCartItemQuantityRequest;
 import com.ecommerce.ecommerce_backend.model.Cart;
 import com.ecommerce.ecommerce_backend.model.CartItem;
 import com.ecommerce.ecommerce_backend.model.LocalUser;
@@ -471,6 +472,264 @@ public class CartServiceTest {
 
         Assertions.assertFalse(
                 cartDao.existsByUser_Id(user.getId())
+        );
+    }
+
+    @Test
+    public void cartItemQuantityCanBeUpdated() {
+
+        LocalUser user = localUserDao
+                .findByUsernameIgnoreCase("UserC")
+                .orElseThrow();
+
+        Product product = productDao
+                .findById(1L)
+                .orElseThrow();
+
+        AddCartItemRequest addRequest =
+                new AddCartItemRequest();
+
+        addRequest.setProductId(product.getId());
+        addRequest.setQuantity(1);
+
+        CartResponse createdCart =
+                cartService.addItem(user, addRequest);
+
+        Long itemId = createdCart
+                .getItems()
+                .getFirst()
+                .getId();
+
+        UpdateCartItemQuantityRequest updateRequest =
+                new UpdateCartItemQuantityRequest();
+
+        updateRequest.setQuantity(3);
+
+        CartResponse updatedCart =
+                cartService.updateItemQuantity(
+                        user,
+                        itemId,
+                        updateRequest
+                );
+
+        Assertions.assertEquals(
+                1,
+                updatedCart.getTotalItems()
+        );
+
+        Assertions.assertEquals(
+                3,
+                updatedCart.getTotalQuantity()
+        );
+
+        Assertions.assertEquals(
+                3,
+                updatedCart.getItems()
+                        .getFirst()
+                        .getQuantity()
+        );
+    }
+
+    @Test
+    public void updatedQuantityGreaterThanStockIsRejected() {
+
+        LocalUser user = localUserDao
+                .findByUsernameIgnoreCase("UserC")
+                .orElseThrow();
+
+        Product product = productDao
+                .findById(1L)
+                .orElseThrow();
+
+        AddCartItemRequest addRequest =
+                new AddCartItemRequest();
+
+        addRequest.setProductId(product.getId());
+        addRequest.setQuantity(1);
+
+        CartResponse createdCart =
+                cartService.addItem(user, addRequest);
+
+        Long itemId = createdCart
+                .getItems()
+                .getFirst()
+                .getId();
+
+        UpdateCartItemQuantityRequest updateRequest =
+                new UpdateCartItemQuantityRequest();
+
+        updateRequest.setQuantity(
+                product.getStock().getQuantity() + 1
+        );
+
+        Assertions.assertThrows(
+                InsufficientStockException.class,
+                () -> cartService.updateItemQuantity(
+                        user,
+                        itemId,
+                        updateRequest
+                )
+        );
+    }
+
+    @Test
+    public void cartItemCanBeRemoved() {
+
+        LocalUser user = localUserDao
+                .findByUsernameIgnoreCase("UserC")
+                .orElseThrow();
+
+        Product product = productDao
+                .findById(1L)
+                .orElseThrow();
+
+        AddCartItemRequest request =
+                new AddCartItemRequest();
+
+        request.setProductId(product.getId());
+        request.setQuantity(2);
+
+        CartResponse createdCart =
+                cartService.addItem(user, request);
+
+        Long cartId = createdCart.getId();
+
+        Long itemId = createdCart
+                .getItems()
+                .getFirst()
+                .getId();
+
+        CartResponse updatedCart =
+                cartService.removeItem(
+                        user,
+                        itemId
+                );
+
+        Assertions.assertEquals(
+                cartId,
+                updatedCart.getId(),
+                "Removing the last item should keep the cart."
+        );
+
+        Assertions.assertTrue(
+                updatedCart.getItems().isEmpty()
+        );
+
+        Assertions.assertEquals(
+                0,
+                updatedCart.getTotalItems()
+        );
+
+        Assertions.assertEquals(
+                0,
+                updatedCart.getTotalQuantity()
+        );
+
+        Assertions.assertEquals(
+                new BigDecimal("0.00"),
+                updatedCart.getSubtotal()
+        );
+
+        Cart storedCart = cartDao
+                .findDetailedByUserId(user.getId())
+                .orElseThrow();
+
+        Assertions.assertTrue(
+                storedCart.getItems().isEmpty()
+        );
+    }
+
+    @Test
+    public void userCannotUpdateAnotherUsersCartItem() {
+
+        LocalUser owner = localUserDao
+                .findByUsernameIgnoreCase("UserA")
+                .orElseThrow();
+
+        LocalUser otherUser = localUserDao
+                .findByUsernameIgnoreCase("UserC")
+                .orElseThrow();
+
+        Product product = productDao
+                .findById(1L)
+                .orElseThrow();
+
+        AddCartItemRequest addRequest =
+                new AddCartItemRequest();
+
+        addRequest.setProductId(product.getId());
+        addRequest.setQuantity(1);
+
+        CartResponse ownerCart =
+                cartService.addItem(owner, addRequest);
+
+        Long itemId = ownerCart
+                .getItems()
+                .getFirst()
+                .getId();
+
+        UpdateCartItemQuantityRequest updateRequest =
+                new UpdateCartItemQuantityRequest();
+
+        updateRequest.setQuantity(2);
+
+        ResourceNotFoundException exception =
+                Assertions.assertThrows(
+                        ResourceNotFoundException.class,
+                        () -> cartService.updateItemQuantity(
+                                otherUser,
+                                itemId,
+                                updateRequest
+                        )
+                );
+
+        Assertions.assertEquals(
+                "Cart item was not found",
+                exception.getMessage()
+        );
+    }
+
+    @Test
+    public void userCannotRemoveAnotherUsersCartItem() {
+
+        LocalUser owner = localUserDao
+                .findByUsernameIgnoreCase("UserA")
+                .orElseThrow();
+
+        LocalUser otherUser = localUserDao
+                .findByUsernameIgnoreCase("UserC")
+                .orElseThrow();
+
+        Product product = productDao
+                .findById(1L)
+                .orElseThrow();
+
+        AddCartItemRequest request =
+                new AddCartItemRequest();
+
+        request.setProductId(product.getId());
+        request.setQuantity(1);
+
+        CartResponse ownerCart =
+                cartService.addItem(owner, request);
+
+        Long itemId = ownerCart
+                .getItems()
+                .getFirst()
+                .getId();
+
+        ResourceNotFoundException exception =
+                Assertions.assertThrows(
+                        ResourceNotFoundException.class,
+                        () -> cartService.removeItem(
+                                otherUser,
+                                itemId
+                        )
+                );
+
+        Assertions.assertEquals(
+                "Cart item was not found",
+                exception.getMessage()
         );
     }
 }
