@@ -275,4 +275,52 @@ public class CartControllerTest {
                 )
                 .andExpect(status().isOk());
     }
+
+    @Test
+    @WithUserDetails("UserA")
+    public void authenticatedUserCanCheckoutCart()
+            throws Exception {
+
+        addProductToCart(1L, 2);
+
+        mvc.perform(
+                        post("/cart/checkout")
+                                .contentType(
+                                        MediaType.APPLICATION_JSON
+                                )
+                                .content("""
+                                    {
+                                      "addressId": 1
+                                    }
+                                    """)
+                )
+                .andExpect(status().isCreated())
+                .andExpect(
+                        jsonPath("$.id").isNumber()
+                )
+                .andExpect(
+                        jsonPath("$.status")
+                                .value("PENDING")
+                )
+                .andExpect(
+                        jsonPath("$.items[0].productId")
+                                .value(1)
+                )
+                .andExpect(
+                        jsonPath("$.items[0].quantity")
+                                .value(2)
+                );
+
+        mvc.perform(get("/cart"))
+                .andExpect(status().isOk())
+                .andExpect(
+                        jsonPath("$.items").isEmpty()
+                )
+                .andExpect(
+                        jsonPath("$.totalItems").value(0)
+                )
+                .andExpect(
+                        jsonPath("$.totalQuantity").value(0)
+                );
+    }
 }

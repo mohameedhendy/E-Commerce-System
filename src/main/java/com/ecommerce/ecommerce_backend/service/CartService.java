@@ -15,6 +15,11 @@ import com.ecommerce.ecommerce_backend.model.Product;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.ecommerce.ecommerce_backend.dto.CartCheckoutRequest;
+import com.ecommerce.ecommerce_backend.dto.OrderItemRequest;
+import com.ecommerce.ecommerce_backend.dto.OrderRequest;
+import com.ecommerce.ecommerce_backend.dto.OrderResponse;
+import com.ecommerce.ecommerce_backend.exception.InvalidOrderStatusException;
 
 @Service
 @RequiredArgsConstructor
@@ -26,6 +31,7 @@ public class CartService {
     private final CartDao cartDao;
     private final LocalUserDao localUserDao;
     private final ProductDao productDao;
+    private final OrderService orderService;
 
     @Transactional(readOnly = true)
     public CartResponse getCart(LocalUser currentUser) {
@@ -175,6 +181,95 @@ public class CartService {
                     return new CartResponse(savedCart);
                 })
                 .orElseGet(CartResponse::empty);
+    }
+
+    @Transactional
+    public OrderResponse checkout(
+            LocalUser currentUser,
+            CartCheckoutRequest request
+    ) {
+
+        LocalUser user = lockUser(
+                currentUser.getId()
+        );
+
+        Cart cart = cartDao
+                .findDetailedByUserId(user.getId())
+                .orElseThrow(() ->
+                        new InvalidOrderStatusException(
+                                "Cart is empty"
+                        )
+                );
+
+        if (cart.getItems().isEmpty()) {
+            throw new InvalidOrderStatusException(
+                    "Cart is empty"
+            );
+        }
+
+        OrderRequest orderRequest =
+                createOrderRequest(
+                        cart,
+                        request.getAddressId()
+                );
+
+        OrderResponse orderResponse =
+                orderService.createOrder(
+                        user,
+                        orderRequest
+                );
+
+        /*
+         * StockDao uses database update queries while creating
+         * the order, so we reload the cart before clearing it.
+         */
+        Cart cartToClear = cartDao
+                .findDetailedByUserId(user.getId())
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Cart was not found"
+                        )
+                );
+
+        cartToClear.clearItems();
+
+        cartDao.saveAndFlush(cartToClear);
+
+        return orderResponse;
+    }
+
+    private OrderRequest createOrderRequest(
+            Cart cart,
+            Long addressId
+    ) {
+
+        OrderRequest orderRequest =
+                new OrderRequest();
+
+        orderRequest.setAddressId(addressId);
+
+        orderRequest.setItems(
+                cart.getItems()
+                        .stream()
+                        .map(item -> {
+
+                            OrderItemRequest itemRequest =
+                                    new OrderItemRequest();
+
+                            itemRequest.setProductId(
+                                    item.getProduct().getId()
+                            );
+
+                            itemRequest.setQuantity(
+                                    item.getQuantity()
+                            );
+
+                            return itemRequest;
+                        })
+                        .toList()
+        );
+
+        return orderRequest;
     }
 
     private LocalUser lockUser(Long userId) {

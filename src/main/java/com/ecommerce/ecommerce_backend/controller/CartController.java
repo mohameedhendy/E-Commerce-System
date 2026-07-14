@@ -17,6 +17,9 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import com.ecommerce.ecommerce_backend.dto.CartCheckoutRequest;
+import com.ecommerce.ecommerce_backend.dto.OrderResponse;
+import org.springframework.http.HttpStatus;
 
 @RestController
 @RequestMapping("/cart")
@@ -80,5 +83,22 @@ public class CartController {
         return ResponseEntity.ok(
                 cartService.clearCart(user)
         );
+    }
+
+    @PostMapping("/checkout")
+    public ResponseEntity<OrderResponse> checkout(
+            @AuthenticationPrincipal LocalUser user,
+            @Valid @RequestBody
+            CartCheckoutRequest request
+    ) {
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(
+                        cartService.checkout(
+                                user,
+                                request
+                        )
+                );
     }
 }
