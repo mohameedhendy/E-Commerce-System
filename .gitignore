@@ -23,3 +23,9 @@ application-local.properties
 
 # Build files
 *.class
+
+# Local runtime and review artifacts
+run-log.txt
+*-audit.txt
+*-current.txt
+current-refactor-review.patch
