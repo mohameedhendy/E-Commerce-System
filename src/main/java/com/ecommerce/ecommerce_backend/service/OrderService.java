@@ -68,7 +68,17 @@ public class OrderService {
         BigDecimal orderTotal = BigDecimal.ZERO;
         for (OrderItemRequest itemRequest : request.getItems()) {
             Product product = productDao.findById(itemRequest.getProductId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Product was not found"));
+                    .orElseThrow(() ->
+                            new ResourceNotFoundException(
+                                    "Product was not found"
+                            )
+                    );
+
+            if (!Boolean.TRUE.equals(product.getActive())) {
+                throw new ResourceNotFoundException(
+                        "Product was not found"
+                );
+            }
 
             int updatedRows = stockDao.decreaseStock(
                     product.getId(),
