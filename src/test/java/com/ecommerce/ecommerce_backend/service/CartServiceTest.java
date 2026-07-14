@@ -732,4 +732,140 @@ public class CartServiceTest {
                 exception.getMessage()
         );
     }
+
+    @Test
+    public void cartCanBeClearedWithoutDeletingTheCart() {
+
+        LocalUser user = localUserDao
+                .findByUsernameIgnoreCase("UserC")
+                .orElseThrow();
+
+        Product firstProduct = productDao
+                .findById(1L)
+                .orElseThrow();
+
+        Product secondProduct = productDao
+                .findById(2L)
+                .orElseThrow();
+
+        AddCartItemRequest firstRequest =
+                new AddCartItemRequest();
+
+        firstRequest.setProductId(
+                firstProduct.getId()
+        );
+        firstRequest.setQuantity(2);
+
+        CartResponse createdCart =
+                cartService.addItem(
+                        user,
+                        firstRequest
+                );
+
+        AddCartItemRequest secondRequest =
+                new AddCartItemRequest();
+
+        secondRequest.setProductId(
+                secondProduct.getId()
+        );
+        secondRequest.setQuantity(1);
+
+        createdCart = cartService.addItem(
+                user,
+                secondRequest
+        );
+
+        Long cartId = createdCart.getId();
+
+        Assertions.assertEquals(
+                2,
+                createdCart.getTotalItems()
+        );
+
+        CartResponse clearedCart =
+                cartService.clearCart(user);
+
+        Assertions.assertEquals(
+                cartId,
+                clearedCart.getId(),
+                "Clearing items should not delete the cart."
+        );
+
+        Assertions.assertTrue(
+                clearedCart.getItems().isEmpty()
+        );
+
+        Assertions.assertEquals(
+                0,
+                clearedCart.getTotalItems()
+        );
+
+        Assertions.assertEquals(
+                0,
+                clearedCart.getTotalQuantity()
+        );
+
+        Assertions.assertEquals(
+                new BigDecimal("0.00"),
+                clearedCart.getSubtotal()
+        );
+
+        Cart storedCart = cartDao
+                .findDetailedByUserId(user.getId())
+                .orElseThrow();
+
+        Assertions.assertEquals(
+                cartId,
+                storedCart.getId()
+        );
+
+        Assertions.assertTrue(
+                storedCart.getItems().isEmpty(),
+                "Cart items should be deleted from the database."
+        );
+    }
+
+    @Test
+    public void clearingMissingCartReturnsEmptyResponseWithoutCreatingCart() {
+
+        LocalUser user = localUserDao
+                .findByUsernameIgnoreCase("UserC")
+                .orElseThrow();
+
+        Assertions.assertFalse(
+                cartDao.existsByUser_Id(user.getId()),
+                "Test user should not already have a cart."
+        );
+
+        CartResponse response =
+                cartService.clearCart(user);
+
+        Assertions.assertNull(
+                response.getId()
+        );
+
+        Assertions.assertTrue(
+                response.getItems().isEmpty()
+        );
+
+        Assertions.assertEquals(
+                0,
+                response.getTotalItems()
+        );
+
+        Assertions.assertEquals(
+                0,
+                response.getTotalQuantity()
+        );
+
+        Assertions.assertEquals(
+                new BigDecimal("0.00"),
+                response.getSubtotal()
+        );
+
+        Assertions.assertFalse(
+                cartDao.existsByUser_Id(user.getId()),
+                "Clearing a missing cart should not create one."
+        );
+    }
 }

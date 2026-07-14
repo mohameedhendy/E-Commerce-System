@@ -156,6 +156,27 @@ public class CartService {
         return new CartResponse(savedCart);
     }
 
+    @Transactional
+    public CartResponse clearCart(LocalUser currentUser) {
+
+        LocalUser user = lockUser(
+                currentUser.getId()
+        );
+
+        return cartDao
+                .findDetailedByUserId(user.getId())
+                .map(cart -> {
+
+                    cart.clearItems();
+
+                    Cart savedCart =
+                            cartDao.saveAndFlush(cart);
+
+                    return new CartResponse(savedCart);
+                })
+                .orElseGet(CartResponse::empty);
+    }
+
     private LocalUser lockUser(Long userId) {
 
         return localUserDao
