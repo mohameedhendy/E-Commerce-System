@@ -14,91 +14,103 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-
 @Service
 @RequiredArgsConstructor
 public class ProductService {
 
+    private static final String PRODUCT_NOT_FOUND =
+            "Product was not found";
+
     private final ProductDao productDao;
 
     @Transactional(readOnly = true)
-    public Page<ProductResponse> getAllProducts(String keyword, Pageable pageable) {
+    public Page<ProductResponse> getAllProducts(
+            String keyword,
+            Pageable pageable
+    ) {
+
         Page<Product> products;
 
-        if (keyword == null || keyword.isBlank()) {
-            products = productDao.findAllByActiveTrue(pageable);
+        if (hasKeyword(keyword)) {
+            products = productDao.searchProducts(
+                    keyword.trim(),
+                    pageable
+            );
         } else {
-            products = productDao.searchProducts(keyword.trim(), pageable);
+            products = productDao.findAllByActiveTrue(
+                    pageable
+            );
         }
 
-        return products.map(ProductResponse::new);
+        return toProductResponses(products);
     }
 
     @Transactional(readOnly = true)
-    public ProductResponse getProductById(Long productId) {
-        Product product = productDao.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException("Product was not found"));
+    public ProductResponse getProductById(
+            Long productId
+    ) {
 
-        if (!Boolean.TRUE.equals(product.getActive())) {
-            throw new ResourceNotFoundException("Product was not found");
-        }
+        Product product =
+                getActiveProductOrThrow(productId);
 
         return new ProductResponse(product);
     }
 
     @Transactional
-    public ProductResponse createProduct(AdminProductRequest request) {
+    public ProductResponse createProduct(
+            AdminProductRequest request
+    ) {
+
         Product product = new Product();
 
-        product.setName(request.getName());
-        product.setShortDescription(request.getShortDescription());
-        product.setLongDescription(request.getLongDescription());
-        product.setPrice(request.getPrice());
+        applyProductDetails(
+                product,
+                request
+        );
 
-        Stock stock = new Stock();
-        stock.setQuantity(request.getStockQuantity());
-        stock.setProduct(product);
+        Stock stock =
+                getOrCreateStock(product);
 
-        product.setStock(stock);
+        stock.setQuantity(
+                request.getStockQuantity()
+        );
+
         product.setActive(true);
-        Product savedProduct = productDao.save(product);
 
-        return new ProductResponse(savedProduct);
+        return saveAndConvert(product);
     }
 
     @Transactional
-    public ProductResponse updateProduct(Long productId, AdminProductRequest request) {
-        Product product = productDao.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException("Product was not found"));
+    public ProductResponse updateProduct(
+            Long productId,
+            AdminProductRequest request
+    ) {
 
-        product.setName(request.getName());
-        product.setShortDescription(request.getShortDescription());
-        product.setLongDescription(request.getLongDescription());
-        product.setPrice(request.getPrice());
+        Product product =
+                getProductOrThrow(productId);
 
-        Stock stock = product.getStock();
+        applyProductDetails(
+                product,
+                request
+        );
 
-        if (stock == null) {
-            stock = new Stock();
-            stock.setProduct(product);
-            product.setStock(stock);
-        }
+        Stock stock =
+                getOrCreateStock(product);
 
-        stock.setQuantity(request.getStockQuantity());
+        stock.setQuantity(
+                request.getStockQuantity()
+        );
 
-        Product savedProduct = productDao.save(product);
-
-        return new ProductResponse(savedProduct);
+        return saveAndConvert(product);
     }
 
     @Transactional
-    public void deleteProduct(Long productId) {
-        Product product = productDao.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException("Product was not found"));
+    public void deleteProduct(
+            Long productId
+    ) {
 
-        if (!Boolean.TRUE.equals(product.getActive())) {
-            throw new ResourceNotFoundException("Product was not found");
-        }
+        Product product =
+                getActiveProductOrThrow(productId);
 
         product.setActive(false);
 
@@ -106,48 +118,149 @@ public class ProductService {
     }
 
     @Transactional
-    public ProductResponse restoreProduct(Long productId) {
-        Product product = productDao.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException("Product was not found"));
+    public ProductResponse restoreProduct(
+            Long productId
+    ) {
 
-        if (Boolean.TRUE.equals(product.getActive())) {
-            throw new InvalidProductStatusException("Product is already active");
+        Product product =
+                getProductOrThrow(productId);
+
+        if (Boolean.TRUE.equals(
+                product.getActive()
+        )) {
+            throw new InvalidProductStatusException(
+                    "Product is already active"
+            );
         }
 
         product.setActive(true);
 
-        Product savedProduct = productDao.save(product);
-
-        return new ProductResponse(savedProduct);
+        return saveAndConvert(product);
     }
 
     @Transactional(readOnly = true)
-    public Page<ProductResponse> getAllProductsForAdmin(Boolean active, Pageable pageable) {
+    public Page<ProductResponse> getAllProductsForAdmin(
+            Boolean active,
+            Pageable pageable
+    ) {
+
         Page<Product> products;
 
         if (active == null) {
             products = productDao.findAll(pageable);
         } else {
-            products = productDao.findAllByActive(active, pageable);
+            products = productDao.findAllByActive(
+                    active,
+                    pageable
+            );
         }
 
-        return products.map(ProductResponse::new);
+        return toProductResponses(products);
     }
 
     @Transactional(readOnly = true)
-    public ProductResponse getProductByIdForAdmin(Long productId) {
-        Product product = productDao.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException("Product was not found"));
+    public ProductResponse getProductByIdForAdmin(
+            Long productId
+    ) {
+
+        Product product =
+                getProductOrThrow(productId);
 
         return new ProductResponse(product);
     }
 
     @Transactional
-    public ProductResponse updateProductStock(Long productId, AdminProductStockRequest request) {
-        Product product = productDao.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException("Product was not found"));
+    public ProductResponse updateProductStock(
+            Long productId,
+            AdminProductStockRequest request
+    ) {
 
-        Stock stock = product.getStock();
+        Product product =
+                getProductOrThrow(productId);
+
+        Stock stock =
+                getOrCreateStock(product);
+
+        stock.setQuantity(
+                request.getStockQuantity()
+        );
+
+        return saveAndConvert(product);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ProductResponse> getLowStockProductsForAdmin(
+            Integer threshold,
+            Pageable pageable
+    ) {
+
+        Page<Product> products =
+                productDao.findLowStockProducts(
+                        threshold,
+                        pageable
+                );
+
+        return toProductResponses(products);
+    }
+
+    private Product getProductOrThrow(
+            Long productId
+    ) {
+
+        return productDao.findById(productId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                PRODUCT_NOT_FOUND
+                        )
+                );
+    }
+
+    private Product getActiveProductOrThrow(
+            Long productId
+    ) {
+
+        Product product =
+                getProductOrThrow(productId);
+
+        if (!Boolean.TRUE.equals(
+                product.getActive()
+        )) {
+            throw new ResourceNotFoundException(
+                    PRODUCT_NOT_FOUND
+            );
+        }
+
+        return product;
+    }
+
+    private void applyProductDetails(
+            Product product,
+            AdminProductRequest request
+    ) {
+
+        product.setName(
+                request.getName()
+        );
+
+        product.setShortDescription(
+                request.getShortDescription()
+        );
+
+        product.setLongDescription(
+                request.getLongDescription()
+        );
+
+        product.setPrice(
+                request.getPrice()
+        );
+    }
+
+    private Stock getOrCreateStock(
+            Product product
+    ) {
+
+        Stock stock =
+                product.getStock();
 
         if (stock == null) {
             stock = new Stock();
@@ -155,17 +268,35 @@ public class ProductService {
             product.setStock(stock);
         }
 
-        stock.setQuantity(request.getStockQuantity());
-
-        Product savedProduct = productDao.save(product);
-
-        return new ProductResponse(savedProduct);
+        return stock;
     }
 
-    @Transactional(readOnly = true)
-    public Page<ProductResponse> getLowStockProductsForAdmin(Integer threshold, Pageable pageable) {
-        Page<Product> products = productDao.findLowStockProducts(threshold, pageable);
+    private ProductResponse saveAndConvert(
+            Product product
+    ) {
 
-        return products.map(ProductResponse::new);
+        Product savedProduct =
+                productDao.save(product);
+
+        return new ProductResponse(
+                savedProduct
+        );
+    }
+
+    private Page<ProductResponse> toProductResponses(
+            Page<Product> products
+    ) {
+
+        return products.map(
+                ProductResponse::new
+        );
+    }
+
+    private boolean hasKeyword(
+            String keyword
+    ) {
+
+        return keyword != null
+                && !keyword.isBlank();
     }
 }
