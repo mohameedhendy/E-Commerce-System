@@ -93,19 +93,27 @@ public class UserServiceTest {
                 "UserServiceTest$testRegisterUser@junit.com"
         );
 
-        Assertions.assertDoesNotThrow(
-                () -> userService.registerUser(body),
-                "User should register successfully."
+        LocalUser registeredUser =
+                Assertions.assertDoesNotThrow(
+                        () -> userService.registerUser(body),
+                        "User should register successfully."
+                );
+
+        Assertions.assertEquals(
+                "userservicetest$testregisteruser@junit.com",
+                registeredUser.getEmail(),
+                "Email should be normalized before storage."
         );
 
         Assertions.assertEquals(
-                body.getEmail(),
+                registeredUser.getEmail(),
                 greenMailExtension
                         .getReceivedMessages()[0]
                         .getRecipients(
                                 Message.RecipientType.TO
                         )[0]
-                        .toString()
+                        .toString(),
+                "Verification email should be sent to the normalized address."
         );
     }
 
@@ -254,7 +262,7 @@ public class UserServiceTest {
 
         Assertions.assertDoesNotThrow(
                 () -> userService.forgotPassword(
-                        "UserA@junit.com"
+                        "  USERA@JUNIT.COM  "
                 ),
                 "Existing email should be accepted."
         );
@@ -407,6 +415,74 @@ public class UserServiceTest {
                 UserAlreadyExistException.class,
                 () -> userService.registerUser(body),
                 "Email uniqueness should be case-insensitive."
+        );
+    }
+
+    @Test
+    @Transactional
+    public void registrationNormalizesUsernameAndEmail()
+            throws UserAlreadyExistException,
+            EmailFailureException {
+
+        RegistrationBody body =
+                new RegistrationBody();
+
+        body.setUsername("  NormalizedUser  ");
+        body.setEmail("  NormalizedUser@JUNIT.COM  ");
+        body.setFirstName("  FirstName  ");
+        body.setLastName("  LastName  ");
+        body.setPassword("Password123!");
+
+        LocalUser registeredUser =
+                userService.registerUser(body);
+
+        Assertions.assertEquals(
+                "NormalizedUser",
+                registeredUser.getUsername()
+        );
+
+        Assertions.assertEquals(
+                "normalizeduser@junit.com",
+                registeredUser.getEmail()
+        );
+
+        Assertions.assertEquals(
+                "FirstName",
+                registeredUser.getFirstName()
+        );
+
+        Assertions.assertEquals(
+                "LastName",
+                registeredUser.getLastName()
+        );
+
+        LocalUser storedUser = localUserDao
+                .findByUsernameIgnoreCase(
+                        "normalizeduser"
+                )
+                .orElseThrow();
+
+        Assertions.assertEquals(
+                "normalizeduser@junit.com",
+                storedUser.getEmail(),
+                "Normalized email should be stored in the database."
+        );
+    }
+
+    @Test
+    @Transactional
+    public void loginTrimsUsername()
+            throws UserNotVerifiedException,
+            EmailFailureException {
+
+        LoginBody body = new LoginBody();
+
+        body.setUsername("  UserA  ");
+        body.setPassword("PasswordA123");
+
+        Assertions.assertNotNull(
+                userService.loginUser(body),
+                "Login should ignore surrounding username spaces."
         );
     }
 }

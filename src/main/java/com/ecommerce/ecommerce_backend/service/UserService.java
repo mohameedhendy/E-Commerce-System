@@ -18,7 +18,7 @@ import com.ecommerce.ecommerce_backend.model.VerificationToken;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import java.util.Locale;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
@@ -37,25 +37,60 @@ public class UserService {
     private final ApplicationProperties applicationProperties;
 
     @Transactional(rollbackFor = EmailFailureException.class)
-    public LocalUser registerUser(RegistrationBody registrationBody) throws UserAlreadyExistException, EmailFailureException {
-        if (userDao.findByEmailIgnoreCase(registrationBody.getEmail()).isPresent()
-                || userDao.findByUsernameIgnoreCase(registrationBody.getUsername()).isPresent()) {
+    public LocalUser registerUser(RegistrationBody registrationBody)
+            throws UserAlreadyExistException, EmailFailureException {
+
+        String normalizedUsername =
+                normalizeUsername(
+                        registrationBody.getUsername()
+                );
+
+        String normalizedEmail =
+                normalizeEmail(
+                        registrationBody.getEmail()
+                );
+
+        boolean usernameExists =
+                userDao.findByUsernameIgnoreCase(
+                        normalizedUsername
+                ).isPresent();
+
+        boolean emailExists =
+                userDao.findByEmailIgnoreCase(
+                        normalizedEmail
+                ).isPresent();
+
+        if (usernameExists || emailExists) {
             throw new UserAlreadyExistException();
         }
 
         LocalUser user = new LocalUser();
+
         user.setRole(Role.USER);
-        user.setEmail(registrationBody.getEmail());
-        user.setUsername(registrationBody.getUsername());
-        user.setFirstName(registrationBody.getFirstName());
-        user.setLastName(registrationBody.getLastName());
-        user.setPassword(encryptionService.encryptPassword(registrationBody.getPassword()));
+        user.setEmail(normalizedEmail);
+        user.setUsername(normalizedUsername);
+        user.setFirstName(
+                registrationBody.getFirstName().trim()
+        );
+        user.setLastName(
+                registrationBody.getLastName().trim()
+        );
+        user.setPassword(
+                encryptionService.encryptPassword(
+                        registrationBody.getPassword()
+                )
+        );
 
         if (applicationProperties.email()
-        .verification()
-        .enabled()) {
-            VerificationToken verificationToken = createVerificationToken(user);
-            emailService.sendVerificationEmail(verificationToken);
+                .verification()
+                .enabled()) {
+
+            VerificationToken verificationToken =
+                    createVerificationToken(user);
+
+            emailService.sendVerificationEmail(
+                    verificationToken
+            );
         } else {
             user.setEmailVerified(true);
         }
@@ -67,9 +102,18 @@ public class UserService {
     public String loginUser(LoginBody loginBody)
             throws UserNotVerifiedException, EmailFailureException {
 
+        String normalizedUsername =
+                normalizeUsername(
+                        loginBody.getUsername()
+                );
+
         LocalUser user = userDao
-                .findByUsernameIgnoreCase(loginBody.getUsername())
-                .orElseThrow(InvalidCredentialsException::new);
+                .findByUsernameIgnoreCase(
+                        normalizedUsername
+                )
+                .orElseThrow(
+                        InvalidCredentialsException::new
+                );
 
         boolean passwordMatches =
                 encryptionService.verifyPassword(
@@ -173,8 +217,13 @@ public class UserService {
     public void forgotPassword(String email)
             throws EmailFailureException {
 
+        String normalizedEmail =
+                normalizeEmail(email);
+
         Optional<LocalUser> opUser =
-                userDao.findByEmailIgnoreCase(email);
+                userDao.findByEmailIgnoreCase(
+                        normalizedEmail
+                );
 
         if (opUser.isEmpty()) {
             return;
@@ -240,5 +289,15 @@ public class UserService {
                     INVALID_PASSWORD_RESET_TOKEN
             );
         }
+    }
+
+    private String normalizeUsername(String username) {
+        return username.trim();
+    }
+
+    private String normalizeEmail(String email) {
+        return email
+                .trim()
+                .toLowerCase(Locale.ROOT);
     }
 }
