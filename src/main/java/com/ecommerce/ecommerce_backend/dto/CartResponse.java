@@ -18,6 +18,9 @@ public class CartResponse {
     private BigDecimal subtotal;
     private LocalDateTime createdAt;
 
+    private CartResponse() {
+    }
+
     public CartResponse(Cart cart) {
 
         this.id = cart.getId();
@@ -51,5 +54,23 @@ public class CartResponse {
                 );
 
         this.createdAt = cart.getCreatedAt();
+    }
+
+    public static CartResponse empty() {
+
+        CartResponse response =
+                new CartResponse();
+
+        response.id = null;
+        response.items = List.of();
+        response.totalItems = 0;
+        response.totalQuantity = 0;
+        response.subtotal = BigDecimal.ZERO.setScale(
+                2,
+                RoundingMode.HALF_UP
+        );
+        response.createdAt = null;
+
+        return response;
     }
 }
