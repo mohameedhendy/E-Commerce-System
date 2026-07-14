@@ -20,13 +20,25 @@ public class RegistrationBody {
     private String username;
 
     @NotBlank(message = "First name is required")
+    @Size(
+            max = 255,
+            message = "First name must not exceed 255 characters"
+    )
     private String firstName;
 
     @NotBlank(message = "Last name is required")
+    @Size(
+            max = 255,
+            message = "Last name must not exceed 255 characters"
+    )
     private String lastName;
 
     @NotBlank(message = "Email is required")
     @Email(message = "Email must be valid")
+    @Size(
+            max = 320,
+            message = "Email must not exceed 320 characters"
+    )
     private String email;
 
     @NotBlank(message = "Password is required")
