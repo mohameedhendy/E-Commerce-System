@@ -27,7 +27,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import com.ecommerce.ecommerce_backend.util.MoneyUtils;
-import java.util.HashSet;
 import java.util.Locale;
 
 @Service
@@ -276,7 +275,6 @@ public class OrderService {
         order.setShippingAddress(
                 new ShippingAddress(address)
         );
-        order.setQuantities(new HashSet<>());
 
         return order;
     }

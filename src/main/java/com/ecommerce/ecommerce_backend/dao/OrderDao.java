@@ -12,8 +12,7 @@ import org.springframework.data.jpa.repository.Lock;
 
 import java.util.Optional;
 
-public interface OrderDao
-        extends JpaRepository<Order, Long> {
+public interface OrderDao extends JpaRepository<Order, Long> {
 
     Page<Order> findAllByUser(
             LocalUser user,
@@ -32,11 +31,6 @@ public interface OrderDao
     );
 
     long countByStatus(OrderStatus status);
-
-    Optional<Order> findByIdAndUser(
-            Long id,
-            LocalUser user
-    );
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @EntityGraph(
