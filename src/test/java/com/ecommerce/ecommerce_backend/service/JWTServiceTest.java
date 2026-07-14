@@ -179,6 +179,7 @@ public class JWTServiceTest {
 
     @Test
     public void testPasswordResetToken() {
+
         LocalUser user = localUserDao
                 .findByUsernameIgnoreCase("UserA")
                 .orElseThrow();
@@ -186,10 +187,19 @@ public class JWTServiceTest {
         String token =
                 jwtService.generatePasswordResetJWT(user);
 
+        JWTService.PasswordResetTokenData tokenData =
+                jwtService.getPasswordResetData(token);
+
         Assertions.assertEquals(
                 user.getEmail(),
-                jwtService.getResetPasswordEmail(token),
+                tokenData.email(),
                 "Password reset token should contain the user's email."
+        );
+
+        Assertions.assertEquals(
+                user.getPasswordResetVersion(),
+                tokenData.version(),
+                "Password reset token should contain the current reset version."
         );
     }
 }

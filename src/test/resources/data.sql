@@ -4,28 +4,38 @@
 -- UserC = PasswordC123
 
 INSERT INTO local_user
-(email, first_name, last_name, password, username, email_verified, role)
+(email,
+ first_name,
+ last_name,
+ password,
+ username,
+ email_verified,
+ role,
+ password_reset_version)
 VALUES ('UserA@junit.com',
         'UserA-FirstName',
         'UserA-LastName',
         '$2a$10$s6u9/a9H6arpRiLeYXt9re/Uescc3qvqzV/mgN5W1L/gCO1OYBbD2',
         'UserA',
         true,
-        'USER'),
+        'USER',
+        0),
        ('UserB@junit.com',
         'UserB-FirstName',
         'UserB-LastName',
         '$2a$10$U8U3WGo7MmKaVb..wHlYze9EvsjdhfKn8zlVIccVb8Sr4ImvQ5kC2',
         'UserB',
         false,
-        'USER'),
+        'USER',
+        0),
        ('UserC@junit.com',
         'UserC-FirstName',
         'UserC-LastName',
         '$2a$10$u9s.85Xsm0EdwAh1E8QdZOj7mqQxZeDM6vxIFBxzn0Bd.oObkzj3K',
         'UserC',
         false,
-        'USER');
+        'USER',
+        0);
 
 INSERT INTO address
     (address_line_1, city, country, user_id)

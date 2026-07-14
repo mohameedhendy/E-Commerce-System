@@ -273,6 +273,9 @@ public class UserServiceTest {
                 .findByUsernameIgnoreCase("UserA")
                 .orElseThrow();
 
+        long originalResetVersion =
+                user.getPasswordResetVersion();
+
         String token =
                 jwtService.generatePasswordResetJWT(user);
 
@@ -294,6 +297,18 @@ public class UserServiceTest {
                         updatedUser.getPassword()
                 ),
                 "Password change should be written to DB."
+        );
+
+        Assertions.assertEquals(
+                originalResetVersion + 1,
+                updatedUser.getPasswordResetVersion(),
+                "Password reset version should increase after reset."
+        );
+
+        Assertions.assertThrows(
+                InvalidTokenException.class,
+                () -> userService.resetPassword(body),
+                "Password reset token must not be reusable."
         );
     }
 

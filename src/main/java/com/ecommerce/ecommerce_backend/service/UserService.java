@@ -27,6 +27,8 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 public class UserService {
+    private static final String INVALID_PASSWORD_RESET_TOKEN =
+            "Invalid or expired password reset token";
 
     private final LocalUserDao userDao;
     private final EncryptionService encryptionService;
@@ -181,23 +183,53 @@ public class UserService {
     }
 
     @Transactional
-    public void resetPassword(PasswordResetBody body) throws InvalidTokenException {
-        String email;
+    public void resetPassword(PasswordResetBody body)
+            throws InvalidTokenException {
+
+        JWTService.PasswordResetTokenData tokenData;
 
         try {
-            email = jwtService.getResetPasswordEmail(body.getToken());
+            tokenData = jwtService.getPasswordResetData(
+                    body.getToken()
+            );
         } catch (JWTVerificationException ex) {
-            throw new InvalidTokenException("Invalid or expired password reset token");
+            throw new InvalidTokenException(
+                    INVALID_PASSWORD_RESET_TOKEN
+            );
         }
 
-        Optional<LocalUser> opUser = userDao.findByEmailIgnoreCase(email);
+        if (tokenData.email() == null
+                || tokenData.version() == null) {
 
-        if (opUser.isEmpty()) {
-            throw new InvalidTokenException("Invalid or expired password reset token");
+            throw new InvalidTokenException(
+                    INVALID_PASSWORD_RESET_TOKEN
+            );
         }
 
-        LocalUser user = opUser.get();
-        user.setPassword(encryptionService.encryptPassword(body.getPassword()));
-        userDao.save(user);
+        LocalUser user = userDao
+                .findByEmailIgnoreCase(tokenData.email())
+                .orElseThrow(() ->
+                        new InvalidTokenException(
+                                INVALID_PASSWORD_RESET_TOKEN
+                        )
+                );
+
+        String encodedPassword =
+                encryptionService.encryptPassword(
+                        body.getPassword()
+                );
+
+        int updatedRows =
+                userDao.updatePasswordIfResetVersionMatches(
+                        user.getId(),
+                        tokenData.version(),
+                        encodedPassword
+                );
+
+        if (updatedRows == 0) {
+            throw new InvalidTokenException(
+                    INVALID_PASSWORD_RESET_TOKEN
+            );
+        }
     }
 }

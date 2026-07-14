@@ -38,6 +38,12 @@ public class LocalUser implements UserDetails {
     @Column(name = "password", nullable = false, length = 1000)
     private String password;
 
+    @Column(
+            name = "password_reset_version",
+            nullable = false
+    )
+    private long passwordResetVersion;
+
     @JsonIgnore
     @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private Set<Address> addresses;

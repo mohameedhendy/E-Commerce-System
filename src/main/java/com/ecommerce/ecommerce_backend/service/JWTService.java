@@ -20,6 +20,8 @@ public class JWTService {
             "VERIFICATION_EMAIL";
     private static final String RESET_PASSWORD_EMAIL_KEY =
             "RESET_PASSWORD_EMAIL";
+    private static final String RESET_PASSWORD_VERSION_KEY =
+            "RESET_PASSWORD_VERSION";
     private static final String TOKEN_TYPE_KEY =
             "TOKEN_TYPE";
 
@@ -88,6 +90,10 @@ public class JWTService {
                         user.getEmail()
                 )
                 .withClaim(
+                        RESET_PASSWORD_VERSION_KEY,
+                        user.getPasswordResetVersion()
+                )
+                .withClaim(
                         TOKEN_TYPE_KEY,
                         TokenType.PASSWORD_RESET.name()
                 )
@@ -122,16 +128,26 @@ public class JWTService {
                 .asString();
     }
 
-    public String getResetPasswordEmail(String token) {
+    public PasswordResetTokenData getPasswordResetData(
+            String token
+    ) {
         DecodedJWT jwt = verifyToken(
                 token,
                 TokenType.PASSWORD_RESET
         );
 
-        return jwt.getClaim(
+        return new PasswordResetTokenData(
+                jwt.getClaim(
                         RESET_PASSWORD_EMAIL_KEY
-                )
-                .asString();
+                ).asString(),
+                jwt.getClaim(
+                        RESET_PASSWORD_VERSION_KEY
+                ).asLong()
+        );
+    }
+
+    public String getResetPasswordEmail(String token) {
+        return getPasswordResetData(token).email();
     }
 
     private DecodedJWT verifyToken(
@@ -153,5 +169,11 @@ public class JWTService {
                 System.currentTimeMillis()
                         + expirySeconds * 1000L
         );
+    }
+
+    public record PasswordResetTokenData(
+            String email,
+            Long version
+    ) {
     }
 }
