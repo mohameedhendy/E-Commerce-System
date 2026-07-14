@@ -102,6 +102,9 @@ public class OrderService {
             orderQuantity.setProduct(product);
             orderQuantity.setQuantity(itemRequest.getQuantity());
             orderQuantity.setUnitPrice(unitPrice);
+            orderQuantity.setProductName(
+                    product.getName()
+            );
 
             BigDecimal itemTotal = unitPrice.multiply(
                     BigDecimal.valueOf(itemRequest.getQuantity())

@@ -29,6 +29,13 @@ public class ProductOrderQuantity {
     )
     private BigDecimal unitPrice;
 
+    @Column(
+            name = "product_name",
+            nullable = false,
+            length = 255
+    )
+    private String productName;
+
     @ManyToOne
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;

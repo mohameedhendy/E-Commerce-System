@@ -17,8 +17,8 @@ public class OrderItemResponse {
 
     public OrderItemResponse(ProductOrderQuantity item) {
         this.productId = item.getProduct().getId();
-        this.productName = item.getProduct().getName();
-
+        this.productName =
+                item.getProductName();
         this.price = item.getUnitPrice()
                 .setScale(2, RoundingMode.HALF_UP);
 

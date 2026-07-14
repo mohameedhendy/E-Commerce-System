@@ -135,14 +135,21 @@ VALUES (1,
         'Hibernate');
 
 INSERT INTO product_order_quantity
-    (order_id, product_id, quantity, unit_price)
-VALUES (1, 1, 5, 5.50),
-       (1, 2, 5, 10.56),
-       (2, 3, 5, 2.74),
-       (2, 2, 5, 10.56),
-       (2, 5, 5, 42.59),
-       (3, 3, 5, 2.74),
-       (4, 4, 5, 15.69),
-       (4, 2, 5, 10.56),
-       (5, 3, 5, 2.74),
-       (5, 1, 5, 5.50);
+(
+    order_id,
+    product_id,
+    quantity,
+    unit_price,
+    product_name
+)
+VALUES
+    (1, 1, 5, 5.50, 'Product #1'),
+    (1, 2, 5, 10.56, 'Product #2'),
+    (2, 3, 5, 2.74, 'Product #3'),
+    (2, 2, 5, 10.56, 'Product #2'),
+    (2, 5, 5, 42.59, 'Product #5'),
+    (3, 3, 5, 2.74, 'Product #3'),
+    (4, 4, 5, 15.69, 'Product #4'),
+    (4, 2, 5, 10.56, 'Product #2'),
+    (5, 3, 5, 2.74, 'Product #3'),
+    (5, 1, 5, 5.50, 'Product #1');
