@@ -369,4 +369,44 @@ public class UserServiceTest {
                 )
         );
     }
+
+    @Test
+    @Transactional
+    public void usernameDuplicateWithDifferentCaseIsRejected() {
+
+        RegistrationBody body =
+                new RegistrationBody();
+
+        body.setUsername("usera");
+        body.setEmail("case-username-test@junit.com");
+        body.setFirstName("FirstName");
+        body.setLastName("LastName");
+        body.setPassword("Password123!");
+
+        Assertions.assertThrows(
+                UserAlreadyExistException.class,
+                () -> userService.registerUser(body),
+                "Username uniqueness should be case-insensitive."
+        );
+    }
+
+    @Test
+    @Transactional
+    public void emailDuplicateWithDifferentCaseIsRejected() {
+
+        RegistrationBody body =
+                new RegistrationBody();
+
+        body.setUsername("CaseEmailTestUser");
+        body.setEmail("usera@JUNIT.COM");
+        body.setFirstName("FirstName");
+        body.setLastName("LastName");
+        body.setPassword("Password123!");
+
+        Assertions.assertThrows(
+                UserAlreadyExistException.class,
+                () -> userService.registerUser(body),
+                "Email uniqueness should be case-insensitive."
+        );
+    }
 }
