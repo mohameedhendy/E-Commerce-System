@@ -13,7 +13,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
-
+import com.ecommerce.ecommerce_backend.dto.AddCartItemRequest;
+import com.ecommerce.ecommerce_backend.exception.InsufficientStockException;
+import com.ecommerce.ecommerce_backend.exception.ResourceNotFoundException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
@@ -224,6 +226,251 @@ public class CartServiceTest {
                 response.getItems()
                         .getFirst()
                         .isActive()
+        );
+    }
+
+    @Test
+    public void addingProductCreatesCartAndItem() {
+
+        LocalUser user = localUserDao
+                .findByUsernameIgnoreCase("UserC")
+                .orElseThrow();
+
+        Product product = productDao
+                .findById(1L)
+                .orElseThrow();
+
+        Assertions.assertFalse(
+                cartDao.existsByUser_Id(user.getId())
+        );
+
+        AddCartItemRequest request =
+                new AddCartItemRequest();
+
+        request.setProductId(product.getId());
+        request.setQuantity(2);
+
+        CartResponse response =
+                cartService.addItem(user, request);
+
+        Assertions.assertNotNull(
+                response.getId()
+        );
+
+        Assertions.assertEquals(
+                1,
+                response.getTotalItems()
+        );
+
+        Assertions.assertEquals(
+                2,
+                response.getTotalQuantity()
+        );
+
+        Assertions.assertEquals(
+                product.getId(),
+                response.getItems()
+                        .getFirst()
+                        .getProductId()
+        );
+
+        Assertions.assertEquals(
+                2,
+                response.getItems()
+                        .getFirst()
+                        .getQuantity()
+        );
+
+        Cart storedCart = cartDao
+                .findDetailedByUserId(user.getId())
+                .orElseThrow();
+
+        Assertions.assertEquals(
+                1,
+                storedCart.getItems().size()
+        );
+
+        Assertions.assertEquals(
+                2,
+                storedCart.getItems()
+                        .getFirst()
+                        .getQuantity()
+        );
+    }
+
+    @Test
+    public void addingSameProductIncreasesExistingQuantity() {
+
+        LocalUser user = localUserDao
+                .findByUsernameIgnoreCase("UserC")
+                .orElseThrow();
+
+        Product product = productDao
+                .findById(1L)
+                .orElseThrow();
+
+        AddCartItemRequest firstRequest =
+                new AddCartItemRequest();
+
+        firstRequest.setProductId(product.getId());
+        firstRequest.setQuantity(2);
+
+        cartService.addItem(
+                user,
+                firstRequest
+        );
+
+        AddCartItemRequest secondRequest =
+                new AddCartItemRequest();
+
+        secondRequest.setProductId(product.getId());
+        secondRequest.setQuantity(3);
+
+        CartResponse response =
+                cartService.addItem(
+                        user,
+                        secondRequest
+                );
+
+        Assertions.assertEquals(
+                1,
+                response.getTotalItems(),
+                "The same product must not be duplicated."
+        );
+
+        Assertions.assertEquals(
+                5,
+                response.getTotalQuantity()
+        );
+
+        Assertions.assertEquals(
+                5,
+                response.getItems()
+                        .getFirst()
+                        .getQuantity()
+        );
+
+        Cart storedCart = cartDao
+                .findDetailedByUserId(user.getId())
+                .orElseThrow();
+
+        Assertions.assertEquals(
+                1,
+                storedCart.getItems().size()
+        );
+    }
+
+    @Test
+    public void quantityGreaterThanStockIsRejected() {
+
+        LocalUser user = localUserDao
+                .findByUsernameIgnoreCase("UserC")
+                .orElseThrow();
+
+        Product product = productDao
+                .findById(1L)
+                .orElseThrow();
+
+        int availableStock =
+                product.getStock().getQuantity();
+
+        AddCartItemRequest request =
+                new AddCartItemRequest();
+
+        request.setProductId(product.getId());
+        request.setQuantity(
+                availableStock + 1
+        );
+
+        InsufficientStockException exception =
+                Assertions.assertThrows(
+                        InsufficientStockException.class,
+                        () -> cartService.addItem(
+                                user,
+                                request
+                        )
+                );
+
+        Assertions.assertTrue(
+                exception.getMessage()
+                        .contains(product.getName())
+        );
+
+        Assertions.assertFalse(
+                cartDao.existsByUser_Id(user.getId()),
+                "Rejected additions should not create an empty cart."
+        );
+    }
+
+    @Test
+    public void inactiveProductCannotBeAddedToCart() {
+
+        LocalUser user = localUserDao
+                .findByUsernameIgnoreCase("UserC")
+                .orElseThrow();
+
+        Product product = productDao
+                .findById(1L)
+                .orElseThrow();
+
+        product.setActive(false);
+        productDao.saveAndFlush(product);
+
+        AddCartItemRequest request =
+                new AddCartItemRequest();
+
+        request.setProductId(product.getId());
+        request.setQuantity(1);
+
+        ResourceNotFoundException exception =
+                Assertions.assertThrows(
+                        ResourceNotFoundException.class,
+                        () -> cartService.addItem(
+                                user,
+                                request
+                        )
+                );
+
+        Assertions.assertEquals(
+                "Product was not found",
+                exception.getMessage()
+        );
+
+        Assertions.assertFalse(
+                cartDao.existsByUser_Id(user.getId()),
+                "Inactive products should not create a cart."
+        );
+    }
+
+    @Test
+    public void unknownProductCannotBeAddedToCart() {
+
+        LocalUser user = localUserDao
+                .findByUsernameIgnoreCase("UserC")
+                .orElseThrow();
+
+        AddCartItemRequest request =
+                new AddCartItemRequest();
+
+        request.setProductId(Long.MAX_VALUE);
+        request.setQuantity(1);
+
+        ResourceNotFoundException exception =
+                Assertions.assertThrows(
+                        ResourceNotFoundException.class,
+                        () -> cartService.addItem(
+                                user,
+                                request
+                        )
+                );
+
+        Assertions.assertEquals(
+                "Product was not found",
+                exception.getMessage()
+        );
+
+        Assertions.assertFalse(
+                cartDao.existsByUser_Id(user.getId())
         );
     }
 }
