@@ -1,6 +1,5 @@
 package com.ecommerce.ecommerce_backend.security;
 
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,6 +16,11 @@ import org.springframework.security.config.Customizer;
 public class WebSecurityConfig {
 
     private final JWTRequestFilter jwtRequestFilter;
+    private final CustomAuthenticationEntryPoint
+            customAuthenticationEntryPoint;
+
+    private final CustomAccessDeniedHandler
+            customAccessDeniedHandler;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -30,9 +34,13 @@ public class WebSecurityConfig {
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .exceptionHandling(exception ->
-                        exception.authenticationEntryPoint((request, response, authException) ->
-                                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized")
-                        )
+                        exception
+                                .authenticationEntryPoint(
+                                        customAuthenticationEntryPoint
+                                )
+                                .accessDeniedHandler(
+                                        customAccessDeniedHandler
+                                )
                 )
                 .authorizeHttpRequests(request ->
                         request
