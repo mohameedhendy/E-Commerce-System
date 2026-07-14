@@ -14,11 +14,14 @@ public class PasswordResetBody {
     private String token;
 
     @NotBlank(message = "Password is required")
-    @Size(min = 8, max = 32, message = "Password must be between 8 and 32 characters")
+    @Size(
+            min = 8,
+            max = 32,
+            message = "Password must be between 8 and 32 characters"
+    )
     @Pattern(
-            regexp = "^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{8,}$",
+            regexp = "^(?=.*[A-Za-z])(?=.*\\d).+$",
             message = "Password must contain at least one letter and one number"
     )
     private String password;
-
 }

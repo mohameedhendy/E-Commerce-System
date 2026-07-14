@@ -180,31 +180,41 @@ public class AuthenticationControllerTest {
     }
 
     @Test
-    public void passwordWithUnsupportedCharactersReturnsBadRequest()
+    @Transactional
+    public void passwordWithSpecialCharactersReturnsOk()
             throws Exception {
 
         RegistrationBody body = createValidRegistrationBody();
+
+        body.setUsername(
+                "AuthenticationSpecialPasswordUser"
+        );
+
+        body.setEmail(
+                "authentication-special-password@junit.com"
+        );
+
         body.setPassword("Password123!");
 
         performRegistration(body)
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isOk());
     }
 
     @Test
-    public void loginWithInvalidPasswordFormatReturnsBadRequest()
+    public void loginDoesNotApplyRegistrationPasswordPolicy()
             throws Exception {
 
         mvc.perform(
                         post("/auth/login")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
-                                        {
-                                          "username": "UserA",
-                                          "password": "password"
-                                        }
-                                        """)
+                                    {
+                                      "username": "UserA",
+                                      "password": "legacy-password"
+                                    }
+                                    """)
                 )
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -226,6 +236,23 @@ public class AuthenticationControllerTest {
                                         """)
                 )
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void loginWithBlankPasswordReturnsBadRequest()
+            throws Exception {
+
+        mvc.perform(
+                        post("/auth/login")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                    {
+                                      "username": "UserA",
+                                      "password": ""
+                                    }
+                                    """)
+                )
+                .andExpect(status().isBadRequest());
     }
 
     private ResultActions performRegistration(
