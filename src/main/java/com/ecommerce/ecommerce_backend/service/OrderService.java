@@ -26,18 +26,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
+import com.ecommerce.ecommerce_backend.util.MoneyUtils;
 import java.util.HashSet;
 import java.util.Locale;
 
 @Service
 @RequiredArgsConstructor
 public class OrderService {
-
-    private static final int MONEY_SCALE = 2;
-
-    private static final RoundingMode MONEY_ROUNDING_MODE =
-            RoundingMode.HALF_UP;
 
     private static final String ORDER_NOT_FOUND =
             "Order was not found";
@@ -116,7 +111,7 @@ public class OrderService {
         }
 
         order.setTotalAmount(
-                scaleMoney(orderTotal)
+                MoneyUtils.scale(orderTotal)
         );
 
         Order savedOrder =
@@ -301,7 +296,9 @@ public class OrderService {
         );
 
         BigDecimal unitPrice =
-                scaleMoney(product.getPrice());
+                MoneyUtils.scale(
+                        product.getPrice()
+                );
 
         ProductOrderQuantity orderItem =
                 new ProductOrderQuantity();
@@ -364,12 +361,10 @@ public class OrderService {
             ProductOrderQuantity orderItem
     ) {
 
-        return orderItem.getUnitPrice()
-                .multiply(
-                        BigDecimal.valueOf(
-                                orderItem.getQuantity()
-                        )
-                );
+        return MoneyUtils.calculateTotal(
+                orderItem.getUnitPrice(),
+                orderItem.getQuantity()
+        );
     }
 
     private void restoreStock(Order order) {
@@ -502,15 +497,5 @@ public class OrderService {
                             + "PENDING, CONFIRMED, CANCELLED"
             );
         }
-    }
-
-    private BigDecimal scaleMoney(
-            BigDecimal value
-    ) {
-
-        return value.setScale(
-                MONEY_SCALE,
-                MONEY_ROUNDING_MODE
-        );
     }
 }

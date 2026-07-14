@@ -2,13 +2,12 @@ package com.ecommerce.ecommerce_backend.dto;
 
 import com.ecommerce.ecommerce_backend.model.Order;
 import com.ecommerce.ecommerce_backend.model.ShippingAddress;
+import com.ecommerce.ecommerce_backend.util.MoneyUtils;
 import lombok.Getter;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
-
 
 @Getter
 public class OrderResponse {
@@ -21,6 +20,7 @@ public class OrderResponse {
     private LocalDateTime createdAt;
 
     public OrderResponse(Order order) {
+
         this.id = order.getId();
 
         ShippingAddress shippingAddress =
@@ -39,12 +39,13 @@ public class OrderResponse {
                 .map(OrderItemResponse::new)
                 .toList();
 
-        this.orderTotal = order.getTotalAmount()
-                .setScale(2, RoundingMode.HALF_UP);
+        this.orderTotal = MoneyUtils.scale(
+                order.getTotalAmount()
+        );
 
-        this.status = order.getStatus() != null
-                ? order.getStatus().name()
-                : null;
+        this.status = order.getStatus() == null
+                ? null
+                : order.getStatus().name();
 
         this.createdAt = order.getCreatedAt();
     }
