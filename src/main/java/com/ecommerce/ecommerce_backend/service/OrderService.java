@@ -125,12 +125,26 @@ public class OrderService {
     }
 
     @Transactional
-    public OrderResponse cancelOrder(LocalUser user, Long orderId) {
-        Order order = orderDao.findById(orderId)
-                .orElseThrow(() -> new ResourceNotFoundException("Order was not found"));
+    public OrderResponse cancelOrder(
+            LocalUser user,
+            Long orderId
+    ) {
 
-        if (!order.getUser().getId().equals(user.getId())) {
-            throw new ForbiddenActionException("You are not allowed to cancel this order");
+        Order order = orderDao
+                .findLockedById(orderId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Order was not found"
+                        )
+                );
+
+        if (!order.getUser()
+                .getId()
+                .equals(user.getId())) {
+
+            throw new ForbiddenActionException(
+                    "You are not allowed to cancel this order"
+            );
         }
 
         if (order.getStatus() == OrderStatus.CANCELLED) {
@@ -150,7 +164,8 @@ public class OrderService {
                 OrderStatus.CANCELLED
         );
 
-        Order savedOrder = orderDao.save(order);
+        Order savedOrder =
+                orderDao.save(order);
 
         return new OrderResponse(savedOrder);
     }
@@ -172,7 +187,8 @@ public class OrderService {
             Long orderId,
             AdminOrderStatusRequest request) {
 
-        Order order = orderDao.findById(orderId)
+        Order order = orderDao
+                .findLockedById(orderId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
                                 "Order was not found"
