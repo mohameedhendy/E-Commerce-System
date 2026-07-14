@@ -1,0 +1,9 @@
+UPDATE product
+SET active = TRUE
+WHERE active IS NULL;
+
+ALTER TABLE product
+    ALTER COLUMN active SET DEFAULT TRUE;
+
+ALTER TABLE product
+    ALTER COLUMN active SET NOT NULL;

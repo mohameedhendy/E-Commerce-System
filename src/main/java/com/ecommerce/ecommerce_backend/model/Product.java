@@ -41,7 +41,10 @@ public class Product {
     )
     private Stock stock;
 
-    @Column(name = "active")
+    @Column(
+            name = "active",
+            nullable = false
+    )
     private Boolean active = true;
 
 }
