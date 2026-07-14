@@ -76,11 +76,41 @@ public class ProductController {
     @GetMapping("/{productId}/reviews")
     public ResponseEntity<PagedResponse<ReviewResponse>> getProductReviews(
             @PathVariable Long productId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
-    ) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
 
-        return ResponseEntity.ok(new PagedResponse<>(reviewService.getProductReviews(productId, pageable)));
+            @RequestParam(defaultValue = "0")
+            @Min(
+                    value = 0,
+                    message = "Page number must be 0 or greater"
+            )
+            int page,
+
+            @RequestParam(defaultValue = "10")
+            @Min(
+                    value = 1,
+                    message = "Page size must be at least 1"
+            )
+            @Max(
+                    value = 50,
+                    message = "Page size must not exceed 50"
+            )
+            int size
+    ) {
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by(
+                        Sort.Direction.DESC,
+                        "createdAt"
+                )
+        );
+
+        return ResponseEntity.ok(
+                new PagedResponse<>(
+                        reviewService.getProductReviews(
+                                productId,
+                                pageable
+                        )
+                )
+        );
     }
 }
