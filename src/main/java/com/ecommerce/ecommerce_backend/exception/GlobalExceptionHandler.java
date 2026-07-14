@@ -46,17 +46,6 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
 
-    @ExceptionHandler(EmailNotFoundException.class)
-    public ResponseEntity<ApiErrorResponse> handleEmailNotFound(EmailNotFoundException ex) {
-        ApiErrorResponse response = new ApiErrorResponse(
-                HttpStatus.NOT_FOUND.value(),
-                "Not Found",
-                "Email address was not found"
-        );
-
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
-    }
-
     @ExceptionHandler(EmailFailureException.class)
     public ResponseEntity<ApiErrorResponse> handleEmailFailure(EmailFailureException ex) {
         ApiErrorResponse response = new ApiErrorResponse(

@@ -8,7 +8,6 @@ import com.ecommerce.ecommerce_backend.dto.LoginBody;
 import com.ecommerce.ecommerce_backend.dto.PasswordResetBody;
 import com.ecommerce.ecommerce_backend.dto.RegistrationBody;
 import com.ecommerce.ecommerce_backend.exception.EmailFailureException;
-import com.ecommerce.ecommerce_backend.exception.EmailNotFoundException;
 import com.ecommerce.ecommerce_backend.exception.InvalidCredentialsException;
 import com.ecommerce.ecommerce_backend.exception.InvalidTokenException;
 import com.ecommerce.ecommerce_backend.exception.UserAlreadyExistException;
@@ -171,15 +170,25 @@ public class UserService {
         return false;
     }
 
-    public void forgotPassword(String email) throws EmailNotFoundException, EmailFailureException {
-        Optional<LocalUser> opUser = userDao.findByEmailIgnoreCase(email);
-        if (opUser.isPresent()) {
-            LocalUser user = opUser.get();
-            String token = jwtService.generatePasswordResetJWT(user);
-            emailService.sendPasswordResetEmail(user, token);
-        } else {
-            throw new EmailNotFoundException();
+    public void forgotPassword(String email)
+            throws EmailFailureException {
+
+        Optional<LocalUser> opUser =
+                userDao.findByEmailIgnoreCase(email);
+
+        if (opUser.isEmpty()) {
+            return;
         }
+
+        LocalUser user = opUser.get();
+
+        String token =
+                jwtService.generatePasswordResetJWT(user);
+
+        emailService.sendPasswordResetEmail(
+                user,
+                token
+        );
     }
 
     @Transactional

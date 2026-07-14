@@ -6,7 +6,6 @@ import com.ecommerce.ecommerce_backend.dto.LoginBody;
 import com.ecommerce.ecommerce_backend.dto.PasswordResetBody;
 import com.ecommerce.ecommerce_backend.dto.RegistrationBody;
 import com.ecommerce.ecommerce_backend.exception.EmailFailureException;
-import com.ecommerce.ecommerce_backend.exception.EmailNotFoundException;
 import com.ecommerce.ecommerce_backend.exception.InvalidCredentialsException;
 import com.ecommerce.ecommerce_backend.exception.InvalidTokenException;
 import com.ecommerce.ecommerce_backend.exception.UserAlreadyExistException;
@@ -238,11 +237,19 @@ public class UserServiceTest {
     public void testForgotPassword()
             throws MessagingException {
 
-        Assertions.assertThrows(
-                EmailNotFoundException.class,
+        Assertions.assertDoesNotThrow(
                 () -> userService.forgotPassword(
                         "UserNotExist@junit.com"
-                )
+                ),
+                "Unknown email should not reveal whether an account exists."
+        );
+
+        Assertions.assertEquals(
+                0,
+                greenMailExtension
+                        .getReceivedMessages()
+                        .length,
+                "No email should be sent for an unknown address."
         );
 
         Assertions.assertDoesNotThrow(
@@ -253,14 +260,21 @@ public class UserServiceTest {
         );
 
         Assertions.assertEquals(
+                1,
+                greenMailExtension
+                        .getReceivedMessages()
+                        .length,
+                "A password reset email should be sent for an existing account."
+        );
+
+        Assertions.assertEquals(
                 "UserA@junit.com",
                 greenMailExtension
                         .getReceivedMessages()[0]
                         .getRecipients(
                                 Message.RecipientType.TO
                         )[0]
-                        .toString(),
-                "Password reset email should be sent."
+                        .toString()
         );
     }
 

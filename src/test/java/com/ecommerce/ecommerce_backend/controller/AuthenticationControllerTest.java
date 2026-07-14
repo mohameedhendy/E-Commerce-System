@@ -14,7 +14,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.transaction.annotation.Transactional;
-
+import org.junit.jupiter.api.Assertions;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -283,5 +283,44 @@ public class AuthenticationControllerTest {
         body.setPassword("Password123");
 
         return body;
+    }
+
+    @Test
+    public void forgotPasswordDoesNotRevealWhetherEmailExists()
+            throws Exception {
+
+        mvc.perform(
+                        post("/auth/forgot")
+                                .param(
+                                        "email",
+                                        "unknown-user@junit.com"
+                                )
+                )
+                .andExpect(status().isOk());
+
+        Assertions.assertEquals(
+                0,
+                greenMailExtension
+                        .getReceivedMessages()
+                        .length,
+                "No email should be sent for an unknown address."
+        );
+
+        mvc.perform(
+                        post("/auth/forgot")
+                                .param(
+                                        "email",
+                                        "UserA@junit.com"
+                                )
+                )
+                .andExpect(status().isOk());
+
+        Assertions.assertEquals(
+                1,
+                greenMailExtension
+                        .getReceivedMessages()
+                        .length,
+                "A reset email should be sent for an existing account."
+        );
     }
 }

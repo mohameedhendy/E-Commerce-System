@@ -53,10 +53,12 @@ public class AuthenticationController {
     }
 
     @PostMapping("/forgot")
-    public ResponseEntity<Void> forgotPassword(@RequestParam String email)
-            throws EmailNotFoundException, EmailFailureException {
+    public ResponseEntity<Void> forgotPassword(
+            @RequestParam String email)
+            throws EmailFailureException {
 
         userService.forgotPassword(email);
+
         return ResponseEntity.ok().build();
     }
 
