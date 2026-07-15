@@ -1,8 +1,8 @@
 package com.ecommerce.ecommerce_backend.security;
 
 import com.ecommerce.ecommerce_backend.dao.LocalUserDao;
+import com.ecommerce.ecommerce_backend.model.LocalUser;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
@@ -20,7 +20,7 @@ public class DatabaseUserDetailsService
 
     @Override
     @Transactional(readOnly = true)
-    public UserDetails loadUserByUsername(
+    public LocalUser loadUserByUsername(
             String username
     ) throws UsernameNotFoundException {
 

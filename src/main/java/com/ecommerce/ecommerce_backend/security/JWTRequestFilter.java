@@ -1,7 +1,6 @@
 package com.ecommerce.ecommerce_backend.security;
 
 import com.auth0.jwt.exceptions.JWTVerificationException;
-import com.ecommerce.ecommerce_backend.dao.LocalUserDao;
 import com.ecommerce.ecommerce_backend.model.LocalUser;
 import com.ecommerce.ecommerce_backend.service.JWTService;
 import jakarta.servlet.FilterChain;
@@ -11,6 +10,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -30,7 +30,9 @@ public class JWTRequestFilter
             "Bearer ";
 
     private final JWTService jwtService;
-    private final LocalUserDao userDao;
+
+    private final DatabaseUserDetailsService
+            userDetailsService;
 
     @Override
     protected void doFilterInternal(
@@ -43,9 +45,7 @@ public class JWTRequestFilter
                 extractBearerToken(request);
 
         if (tokenOptional.isEmpty()
-                || SecurityContextHolder
-                .getContext()
-                .getAuthentication() != null) {
+                || isAlreadyAuthenticated()) {
 
             filterChain.doFilter(
                     request,
@@ -60,8 +60,10 @@ public class JWTRequestFilter
                     tokenOptional.get(),
                     request
             );
+
         } catch (
                 JWTVerificationException
+                | UsernameNotFoundException
                 | IllegalArgumentException exception
         ) {
             SecurityContextHolder.clearContext();
@@ -71,6 +73,13 @@ public class JWTRequestFilter
                 request,
                 response
         );
+    }
+
+    private boolean isAlreadyAuthenticated() {
+
+        return SecurityContextHolder
+                .getContext()
+                .getAuthentication() != null;
     }
 
     private Optional<String> extractBearerToken(
@@ -111,12 +120,11 @@ public class JWTRequestFilter
         String username =
                 jwtService.getUsername(token);
 
-        LocalUser user = userDao
-                .findByUsernameIgnoreCase(username)
-                .orElse(null);
+        LocalUser user =
+                userDetailsService
+                        .loadUserByUsername(username);
 
-        if (user == null
-                || !user.isEmailVerified()) {
+        if (!user.isEmailVerified()) {
             return;
         }
 

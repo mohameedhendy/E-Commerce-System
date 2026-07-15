@@ -115,6 +115,34 @@ public class JWTRequestFilterTest {
                 .andExpect(status().isOk());
     }
 
+    @Test
+    public void tokenForMissingUserCannotAuthenticate()
+            throws Exception {
+
+        LocalUser missingUser =
+                new LocalUser();
+
+        missingUser.setUsername(
+                "MissingJwtUser"
+        );
+
+        String token =
+                jwtService.generateToken(
+                        missingUser
+                );
+
+        mvc.perform(
+                        get(AUTHENTICATED_PATH)
+                                .header(
+                                        "Authorization",
+                                        "Bearer " + token
+                                )
+                )
+                .andExpect(
+                        status().isUnauthorized()
+                );
+    }
+
     private LocalUser getUser(String username) {
         return localUserDao
                 .findByUsernameIgnoreCase(username)
