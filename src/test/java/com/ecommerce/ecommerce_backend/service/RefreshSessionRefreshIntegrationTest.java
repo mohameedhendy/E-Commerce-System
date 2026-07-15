@@ -417,6 +417,74 @@ public class RefreshSessionRefreshIntegrationTest {
         );
     }
 
+    @Test
+    public void userCanRevokeOneSelectedSession()
+            throws Exception {
+
+        LocalUser user = localUserDao
+                .findByUsernameIgnoreCase("UserA")
+                .orElseThrow();
+
+        LoginResponse firstLogin =
+                loginAsUserA();
+
+        LoginResponse secondLogin =
+                loginAsUserA();
+
+        JWTService.RefreshTokenData firstTokenData =
+                jwtService.getRefreshTokenData(
+                        firstLogin.getRefreshToken()
+                );
+
+        JWTService.RefreshTokenData secondTokenData =
+                jwtService.getRefreshTokenData(
+                        secondLogin.getRefreshToken()
+                );
+
+        userService.revokeSession(
+                user,
+                secondTokenData.sessionId()
+        );
+
+        RefreshSession firstSession =
+                refreshSessionDao
+                        .findBySessionId(
+                                firstTokenData.sessionId()
+                        )
+                        .orElseThrow();
+
+        RefreshSession secondSession =
+                refreshSessionDao
+                        .findBySessionId(
+                                secondTokenData.sessionId()
+                        )
+                        .orElseThrow();
+
+        Assertions.assertFalse(
+                firstSession.isRevoked()
+        );
+
+        Assertions.assertTrue(
+                secondSession.isRevoked()
+        );
+
+        LoginResponse firstRefresh =
+                userService.refreshAccessToken(
+                        firstLogin.getRefreshToken()
+                );
+
+        Assertions.assertNotNull(
+                firstRefresh.getAccessToken()
+        );
+
+        Assertions.assertThrows(
+                InvalidTokenException.class,
+                () -> userService.refreshAccessToken(
+                        secondLogin.getRefreshToken()
+                )
+        );
+    }
+
     private LoginResponse loginAsUserA()
             throws Exception {
 

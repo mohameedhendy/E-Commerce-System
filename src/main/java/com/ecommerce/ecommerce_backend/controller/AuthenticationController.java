@@ -23,7 +23,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.ecommerce.ecommerce_backend.dto.RefreshSessionResponse;
-
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import java.util.List;
 
 @RestController
@@ -120,6 +121,24 @@ public class AuthenticationController {
         return ResponseEntity.ok(
                 userService.getActiveSessions(user)
         );
+    }
+
+    @DeleteMapping("/sessions/{sessionId}")
+    public ResponseEntity<Void> revokeSession(
+            @AuthenticationPrincipal
+            LocalUser user,
+            @PathVariable
+            String sessionId
+    ) {
+
+        userService.revokeSession(
+                user,
+                sessionId
+        );
+
+        return ResponseEntity
+                .noContent()
+                .build();
     }
 
     @PostMapping("/verify")

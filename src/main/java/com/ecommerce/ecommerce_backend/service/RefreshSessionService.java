@@ -169,6 +169,19 @@ public class RefreshSessionService {
                 .toList();
     }
 
+    @Transactional
+    public void revokeOwnedSession(
+            Long userId,
+            String sessionId
+    ) {
+
+        refreshSessionDao
+                .revokeBySessionIdAndUserId(
+                        sessionId,
+                        userId
+                );
+    }
+
     private void validateSession(
             RefreshSession refreshSession,
             JWTService.RefreshTokenData tokenData

@@ -301,6 +301,19 @@ public class UserService {
                 );
     }
 
+    @Transactional
+    public void revokeSession(
+            LocalUser user,
+            String sessionId
+    ) {
+
+        refreshSessionService
+                .revokeOwnedSession(
+                        user.getId(),
+                        sessionId
+                );
+    }
+
     public void forgotPassword(
             String email
     ) throws EmailFailureException {

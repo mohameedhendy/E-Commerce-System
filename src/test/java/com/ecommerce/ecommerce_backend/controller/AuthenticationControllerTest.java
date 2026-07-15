@@ -25,7 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import com.ecommerce.ecommerce_backend.dao.RefreshSessionDao;
-
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import java.sql.Timestamp;
 import java.time.Instant;
 
@@ -871,5 +871,105 @@ public class AuthenticationControllerTest {
                 );
     }
 
+    @Test
+    @Transactional
+    public void authenticatedUserCanRevokeSelectedSession()
+            throws Exception {
 
+        JsonNode firstLogin =
+                loginAndGetTokenPair();
+
+        JsonNode secondLogin =
+                loginAndGetTokenPair();
+
+        String secondRefreshToken =
+                secondLogin
+                        .get("refreshToken")
+                        .asText();
+
+        String secondSessionId =
+                jwtService
+                        .getRefreshTokenData(
+                                secondRefreshToken
+                        )
+                        .sessionId();
+
+        mvc.perform(
+                        delete(
+                                "/auth/sessions/{sessionId}",
+                                secondSessionId
+                        )
+                                .header(
+                                        "Authorization",
+                                        "Bearer "
+                                                + firstLogin
+                                                .get("accessToken")
+                                                .asText()
+                                )
+                )
+                .andExpect(
+                        status().isNoContent()
+                );
+
+        RefreshTokenRequest revokedSessionRequest =
+                new RefreshTokenRequest();
+
+        revokedSessionRequest.setRefreshToken(
+                secondRefreshToken
+        );
+
+        mvc.perform(
+                        post("/auth/refresh")
+                                .contentType(
+                                        MediaType.APPLICATION_JSON
+                                )
+                                .content(
+                                        objectMapper.writeValueAsString(
+                                                revokedSessionRequest
+                                        )
+                                )
+                )
+                .andExpect(
+                        status().isBadRequest()
+                );
+
+        RefreshTokenRequest remainingSessionRequest =
+                new RefreshTokenRequest();
+
+        remainingSessionRequest.setRefreshToken(
+                firstLogin
+                        .get("refreshToken")
+                        .asText()
+        );
+
+        mvc.perform(
+                        post("/auth/refresh")
+                                .contentType(
+                                        MediaType.APPLICATION_JSON
+                                )
+                                .content(
+                                        objectMapper.writeValueAsString(
+                                                remainingSessionRequest
+                                        )
+                                )
+                )
+                .andExpect(
+                        status().isOk()
+                );
+    }
+
+    @Test
+    public void revokingSessionRequiresAuthentication()
+            throws Exception {
+
+        mvc.perform(
+                        delete(
+                                "/auth/sessions/{sessionId}",
+                                "some-session-id"
+                        )
+                )
+                .andExpect(
+                        status().isUnauthorized()
+                );
+    }
 }

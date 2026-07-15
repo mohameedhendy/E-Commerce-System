@@ -43,6 +43,22 @@ public interface RefreshSessionDao
             @Param("userId") Long userId
     );
 
+    @Modifying(
+            clearAutomatically = true,
+            flushAutomatically = true
+    )
+    @Query("""
+        UPDATE RefreshSession refreshSession
+        SET refreshSession.revoked = true
+        WHERE refreshSession.sessionId = :sessionId
+          AND refreshSession.user.id = :userId
+          AND refreshSession.revoked = false
+        """)
+    int revokeBySessionIdAndUserId(
+            @Param("sessionId") String sessionId,
+            @Param("userId") Long userId
+    );
+
     List<RefreshSession>
     findAllByUser_IdAndRevokedFalseAndExpiresAtAfterOrderByCreatedAtDesc(
             Long userId,
