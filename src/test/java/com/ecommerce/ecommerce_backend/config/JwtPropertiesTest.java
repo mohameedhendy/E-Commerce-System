@@ -4,6 +4,10 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validator;
+
+import java.util.Set;
 
 @SpringBootTest(properties = {
         "jwt.algorithm.key=JwtPropertiesTestSecretKey12345678901234567890",
@@ -15,6 +19,9 @@ public class JwtPropertiesTest {
 
     @Autowired
     private JwtProperties jwtProperties;
+
+    @Autowired
+    private Validator validator;
 
     @Test
     public void jwtPropertiesAreBoundCorrectly() {
@@ -55,6 +62,52 @@ public class JwtPropertiesTest {
                 1800L,
                 jwtProperties
                         .passwordResetExpiryInSeconds()
+        );
+    }
+
+    @Test
+    public void configuredJwtPropertiesAreValid() {
+
+        Set<ConstraintViolation<JwtProperties>> violations =
+                validator.validate(
+                        jwtProperties
+                );
+
+        Assertions.assertTrue(
+                violations.isEmpty(),
+                "Configured JWT properties must be valid."
+        );
+    }
+
+    @Test
+    public void shortJwtSecretIsRejected() {
+
+        JwtProperties invalidProperties =
+                new JwtProperties(
+                        new JwtProperties.AlgorithmProperties(
+                                "short-secret"
+                        ),
+                        "eCommerce",
+                        3600L,
+                        2592000L,
+                        86400L,
+                        1800L
+                );
+
+        Set<ConstraintViolation<JwtProperties>> violations =
+                validator.validate(
+                        invalidProperties
+                );
+
+        Assertions.assertTrue(
+                violations.stream()
+                        .anyMatch(violation ->
+                                violation
+                                        .getPropertyPath()
+                                        .toString()
+                                        .equals("algorithm.key")
+                        ),
+                "JWT secrets shorter than 32 characters must be rejected."
         );
     }
 }
