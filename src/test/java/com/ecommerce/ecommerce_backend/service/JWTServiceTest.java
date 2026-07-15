@@ -14,6 +14,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.util.UUID;
+
 @SpringBootTest
 public class JWTServiceTest {
 
@@ -290,7 +292,7 @@ public class JWTServiceTest {
                 .orElseThrow();
 
         String refreshToken =
-                jwtService.generateRefreshToken(user);
+                generateSessionRefreshToken(user);
 
         Assertions.assertEquals(
                 user.getUsername(),
@@ -308,7 +310,7 @@ public class JWTServiceTest {
                 .orElseThrow();
 
         String refreshToken =
-                jwtService.generateRefreshToken(user);
+                generateSessionRefreshToken(user);
 
         Assertions.assertThrows(
                 JWTVerificationException.class,
@@ -349,7 +351,7 @@ public class JWTServiceTest {
                 System.currentTimeMillis() / 1000L;
 
         String refreshToken =
-                jwtService.generateRefreshToken(user);
+                generateSessionRefreshToken(user);
 
         long afterGeneration =
                 System.currentTimeMillis() / 1000L;
@@ -391,7 +393,7 @@ public class JWTServiceTest {
                 .orElseThrow();
 
         String refreshToken =
-                jwtService.generateRefreshToken(user);
+                generateSessionRefreshToken(user);
 
         JWTService.RefreshTokenData tokenData =
                 jwtService.getRefreshTokenData(
@@ -515,6 +517,17 @@ public class JWTServiceTest {
                 firstTokenData.sessionId(),
                 secondTokenData.sessionId(),
                 "Different login sessions must retain independent session IDs."
+        );
+    }
+
+    private String generateSessionRefreshToken(
+            LocalUser user
+    ) {
+
+        return jwtService.generateRefreshToken(
+                user,
+                UUID.randomUUID().toString(),
+                0L
         );
     }
 }

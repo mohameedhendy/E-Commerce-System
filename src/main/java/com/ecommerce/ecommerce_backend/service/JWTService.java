@@ -1,7 +1,6 @@
 package com.ecommerce.ecommerce_backend.service;
 
 import com.auth0.jwt.JWT;
-import com.auth0.jwt.JWTCreator;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.ecommerce.ecommerce_backend.config.JwtProperties;
@@ -72,25 +71,6 @@ public class JWTService {
                 user,
                 TokenType.ACCESS,
                 jwtProperties.expiryInSeconds()
-        );
-    }
-
-    /**
-     * Temporary compatibility method for refresh tokens
-     * created before session-based authentication.
-     */
-    public String generateRefreshToken(
-            LocalUser user
-    ) {
-
-        return buildRefreshToken(
-                user,
-                null,
-                null,
-                createExpiryDate(
-                        jwtProperties
-                                .refreshExpiryInSeconds()
-                )
         );
     }
 
@@ -277,44 +257,36 @@ public class JWTService {
     private String buildRefreshToken(
             LocalUser user,
             String sessionId,
-            Long sessionVersion,
+            long sessionVersion,
             Date expiresAt
     ) {
 
-        JWTCreator.Builder tokenBuilder =
-                JWT.create()
-                        .withClaim(
-                                USERNAME_KEY,
-                                user.getUsername()
-                        )
-                        .withClaim(
-                                REFRESH_TOKEN_VERSION_KEY,
-                                user.getRefreshTokenVersion()
-                        )
-                        .withClaim(
-                                TOKEN_TYPE_KEY,
-                                TokenType.REFRESH.name()
-                        )
-                        .withIssuer(
-                                jwtProperties.issuer()
-                        )
-                        .withExpiresAt(expiresAt);
-
-        if (sessionId != null
-                && sessionVersion != null) {
-
-            tokenBuilder
-                    .withClaim(
-                            REFRESH_SESSION_ID_KEY,
-                            sessionId
-                    )
-                    .withClaim(
-                            REFRESH_SESSION_VERSION_KEY,
-                            sessionVersion
-                    );
-        }
-
-        return tokenBuilder.sign(algorithm);
+        return JWT.create()
+                .withClaim(
+                        USERNAME_KEY,
+                        user.getUsername()
+                )
+                .withClaim(
+                        REFRESH_TOKEN_VERSION_KEY,
+                        user.getRefreshTokenVersion()
+                )
+                .withClaim(
+                        REFRESH_SESSION_ID_KEY,
+                        sessionId
+                )
+                .withClaim(
+                        REFRESH_SESSION_VERSION_KEY,
+                        sessionVersion
+                )
+                .withClaim(
+                        TOKEN_TYPE_KEY,
+                        TokenType.REFRESH.name()
+                )
+                .withIssuer(
+                        jwtProperties.issuer()
+                )
+                .withExpiresAt(expiresAt)
+                .sign(algorithm);
     }
 
     private String generateUserToken(

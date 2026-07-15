@@ -250,33 +250,16 @@ public class UserService {
     ) throws InvalidTokenException {
 
         JWTService.RefreshTokenData tokenData =
-                decodeRefreshToken(
-                        refreshToken
+                decodeRefreshToken(refreshToken);
+
+        RefreshSession rotatedSession =
+                refreshSessionService.rotateSession(
+                        tokenData
                 );
 
-        if (hasSessionData(tokenData)) {
-
-            RefreshSession rotatedSession =
-                    refreshSessionService
-                            .rotateSession(
-                                    tokenData
-                            );
-
-            return createSessionBackedLoginResponse(
-                    rotatedSession.getUser(),
-                    rotatedSession
-            );
-        }
-
-        /*
-         * Temporary compatibility path for refresh tokens
-         * issued before refresh sessions were introduced.
-         *
-         * This branch will be removed after all older tests
-         * and flows are migrated to session-backed tokens.
-         */
-        return refreshLegacyAccessToken(
-                tokenData
+        return createSessionBackedLoginResponse(
+                rotatedSession.getUser(),
+                rotatedSession
         );
     }
 
@@ -419,7 +402,10 @@ public class UserService {
                     );
 
             if (tokenData.username() == null
-                    || tokenData.version() == null) {
+                    || tokenData.version() == null
+                    || tokenData.sessionId() == null
+                    || tokenData.sessionId().isBlank()
+                    || tokenData.sessionVersion() == null) {
 
                 throw new InvalidTokenException(
                         INVALID_REFRESH_TOKEN
@@ -434,60 +420,6 @@ public class UserService {
                     INVALID_REFRESH_TOKEN
             );
         }
-    }
-
-    private boolean hasSessionData(
-            JWTService.RefreshTokenData tokenData
-    ) {
-
-        return tokenData.sessionId() != null
-                && !tokenData.sessionId().isBlank()
-                && tokenData.sessionVersion() != null;
-    }
-
-    private LoginResponse refreshLegacyAccessToken(
-            JWTService.RefreshTokenData tokenData
-    ) throws InvalidTokenException {
-
-        LocalUser user = userDao
-                .findByUsernameIgnoreCase(
-                        tokenData.username()
-                )
-                .orElseThrow(() ->
-                        new InvalidTokenException(
-                                INVALID_REFRESH_TOKEN
-                        )
-                );
-
-        if (!user.isEmailVerified()) {
-            throw new InvalidTokenException(
-                    INVALID_REFRESH_TOKEN
-            );
-        }
-
-        int updatedRows =
-                userDao.rotateRefreshTokenVersion(
-                        user.getId(),
-                        tokenData.version()
-                );
-
-        if (updatedRows == 0) {
-            throw new InvalidTokenException(
-                    INVALID_REFRESH_TOKEN
-            );
-        }
-
-        LocalUser rotatedUser = userDao
-                .findById(user.getId())
-                .orElseThrow(() ->
-                        new InvalidTokenException(
-                                INVALID_REFRESH_TOKEN
-                        )
-                );
-
-        return createLegacyLoginResponse(
-                rotatedUser
-        );
     }
 
     private boolean shouldResendVerificationEmail(
@@ -569,22 +501,6 @@ public class UserService {
                         refreshSession.getTokenVersion(),
                         refreshSession.getExpiresAt()
                 );
-
-        return new LoginResponse(
-                accessToken,
-                refreshToken
-        );
-    }
-
-    private LoginResponse createLegacyLoginResponse(
-            LocalUser user
-    ) {
-
-        String accessToken =
-                jwtService.generateToken(user);
-
-        String refreshToken =
-                jwtService.generateRefreshToken(user);
 
         return new LoginResponse(
                 accessToken,

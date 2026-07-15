@@ -490,18 +490,18 @@ public class UserServiceTest {
     @Test
     @Transactional
     public void validRefreshTokenGeneratesNewTokenPair()
-            throws InvalidTokenException {
+            throws Exception {
 
         LocalUser user = localUserDao
                 .findByUsernameIgnoreCase("UserA")
                 .orElseThrow();
 
-        String refreshToken =
-                jwtService.generateRefreshToken(user);
+        LoginResponse loginResponse =
+                loginAsUserA();
 
         LoginResponse response =
                 userService.refreshAccessToken(
-                        refreshToken
+                        loginResponse.getRefreshToken()
                 );
 
         Assertions.assertNotNull(
@@ -530,14 +530,17 @@ public class UserServiceTest {
     @Test
     @Transactional
     public void passwordResetInvalidatesExistingRefreshToken()
-            throws InvalidTokenException {
+            throws Exception {
 
         LocalUser user = localUserDao
                 .findByUsernameIgnoreCase("UserA")
                 .orElseThrow();
 
+        LoginResponse loginResponse =
+                loginAsUserA();
+
         String refreshToken =
-                jwtService.generateRefreshToken(user);
+                loginResponse.getRefreshToken();
 
         String passwordResetToken =
                 jwtService.generatePasswordResetJWT(user);
@@ -562,16 +565,13 @@ public class UserServiceTest {
     @Test
     @Transactional
     public void refreshTokenCannotBeReused()
-            throws InvalidTokenException {
+            throws Exception {
 
-        LocalUser user = localUserDao
-                .findByUsernameIgnoreCase("UserA")
-                .orElseThrow();
+        LoginResponse loginResponse =
+                loginAsUserA();
 
         String originalRefreshToken =
-                jwtService.generateRefreshToken(
-                        user
-                );
+                loginResponse.getRefreshToken();
 
         LoginResponse firstResponse =
                 userService.refreshAccessToken(
@@ -611,16 +611,13 @@ public class UserServiceTest {
     @Test
     @Transactional
     public void logoutInvalidatesRefreshToken()
-            throws InvalidTokenException {
+            throws Exception {
 
-        LocalUser user = localUserDao
-                .findByUsernameIgnoreCase("UserA")
-                .orElseThrow();
+        LoginResponse loginResponse =
+                loginAsUserA();
 
         String refreshToken =
-                jwtService.generateRefreshToken(
-                        user
-                );
+                loginResponse.getRefreshToken();
 
         userService.logout(
                 refreshToken
@@ -652,6 +649,20 @@ public class UserServiceTest {
                         accessToken
                 ),
                 "Access token must not be accepted by logout."
+        );
+    }
+
+    private LoginResponse loginAsUserA()
+            throws Exception {
+
+        LoginBody loginBody =
+                new LoginBody();
+
+        loginBody.setUsername("UserA");
+        loginBody.setPassword("PasswordA123");
+
+        return userService.loginUser(
+                loginBody
         );
     }
 }

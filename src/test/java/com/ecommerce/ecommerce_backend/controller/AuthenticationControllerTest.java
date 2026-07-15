@@ -368,18 +368,13 @@ public class AuthenticationControllerTest {
     public void validRefreshTokenReturnsNewTokenPair()
             throws Exception {
 
-        LocalUser user = localUserDao
-                .findByUsernameIgnoreCase("UserA")
-                .orElseThrow();
+        String refreshToken =
+                loginAndGetRefreshToken();
 
         RefreshTokenRequest request =
                 new RefreshTokenRequest();
 
-        request.setRefreshToken(
-                jwtService.generateRefreshToken(
-                        user
-                )
-        );
+        request.setRefreshToken(refreshToken);
 
         mvc.perform(
                         post("/auth/refresh")
@@ -474,14 +469,8 @@ public class AuthenticationControllerTest {
     public void refreshTokenCannotBeUsedTwice()
             throws Exception {
 
-        LocalUser user = localUserDao
-                .findByUsernameIgnoreCase("UserA")
-                .orElseThrow();
-
         String refreshToken =
-                jwtService.generateRefreshToken(
-                        user
-                );
+                loginAndGetRefreshToken();
 
         RefreshTokenRequest request =
                 new RefreshTokenRequest();
@@ -541,18 +530,13 @@ public class AuthenticationControllerTest {
     public void validLogoutInvalidatesRefreshToken()
             throws Exception {
 
-        LocalUser user = localUserDao
-                .findByUsernameIgnoreCase("UserA")
-                .orElseThrow();
+        String refreshToken =
+                loginAndGetRefreshToken();
 
         RefreshTokenRequest request =
                 new RefreshTokenRequest();
 
-        request.setRefreshToken(
-                jwtService.generateRefreshToken(
-                        user
-                )
-        );
+        request.setRefreshToken(refreshToken);
 
         String requestBody =
                 objectMapper.writeValueAsString(
@@ -623,5 +607,32 @@ public class AuthenticationControllerTest {
                                         "Invalid or expired refresh token"
                                 )
                 );
+    }
+
+    private String loginAndGetRefreshToken()
+            throws Exception {
+
+        String responseBody =
+                mvc.perform(
+                                post("/auth/login")
+                                        .contentType(
+                                                MediaType.APPLICATION_JSON
+                                        )
+                                        .content("""
+                                            {
+                                              "username": "UserA",
+                                              "password": "PasswordA123"
+                                            }
+                                            """)
+                        )
+                        .andExpect(status().isOk())
+                        .andReturn()
+                        .getResponse()
+                        .getContentAsString();
+
+        return objectMapper
+                .readTree(responseBody)
+                .get("refreshToken")
+                .asText();
     }
 }
