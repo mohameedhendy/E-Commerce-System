@@ -2,10 +2,10 @@ package com.ecommerce.ecommerce_backend.dto;
 
 import com.ecommerce.ecommerce_backend.model.CartItem;
 import com.ecommerce.ecommerce_backend.model.Product;
+import com.ecommerce.ecommerce_backend.util.MoneyUtils;
 import lombok.Getter;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 
 @Getter
 public class CartItemResponse {
@@ -19,35 +19,41 @@ public class CartItemResponse {
     private Integer availableStock;
     private boolean active;
 
-    public CartItemResponse(CartItem item) {
+    public CartItemResponse(
+            CartItem item
+    ) {
 
-        Product product = item.getProduct();
+        Product product =
+                item.getProduct();
 
-        this.id = item.getId();
-        this.productId = product.getId();
-        this.productName = product.getName();
+        this.id =
+                item.getId();
 
-        this.unitPrice = product.getPrice()
-                .setScale(
-                        2,
-                        RoundingMode.HALF_UP
+        this.productId =
+                product.getId();
+
+        this.productName =
+                product.getName();
+
+        this.unitPrice =
+                MoneyUtils.scale(
+                        product.getPrice()
                 );
 
-        this.quantity = item.getQuantity();
+        this.quantity =
+                item.getQuantity();
 
-        this.itemTotal = unitPrice
-                .multiply(
-                        BigDecimal.valueOf(quantity)
-                )
-                .setScale(
-                        2,
-                        RoundingMode.HALF_UP
+        this.itemTotal =
+                MoneyUtils.calculateTotal(
+                        unitPrice,
+                        quantity
                 );
 
         this.availableStock =
-                product.getStock() != null
-                        ? product.getStock().getQuantity()
-                        : 0;
+                product.getStock() == null
+                        ? 0
+                        : product.getStock()
+                        .getQuantity();
 
         this.active =
                 Boolean.TRUE.equals(

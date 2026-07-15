@@ -1,10 +1,10 @@
 package com.ecommerce.ecommerce_backend.dto;
 
 import com.ecommerce.ecommerce_backend.model.Cart;
+import com.ecommerce.ecommerce_backend.util.MoneyUtils;
 import lombok.Getter;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -21,39 +21,46 @@ public class CartResponse {
     private CartResponse() {
     }
 
-    public CartResponse(Cart cart) {
+    public CartResponse(
+            Cart cart
+    ) {
 
-        this.id = cart.getId();
+        this.id =
+                cart.getId();
 
-        this.items = cart.getItems()
-                .stream()
-                .map(CartItemResponse::new)
-                .toList();
+        this.items =
+                cart.getItems()
+                        .stream()
+                        .map(CartItemResponse::new)
+                        .toList();
 
-        this.totalItems = items.size();
+        this.totalItems =
+                items.size();
 
-        this.totalQuantity = items
-                .stream()
-                .mapToInt(
-                        CartItemResponse::getQuantity
-                )
-                .sum();
+        this.totalQuantity =
+                items.stream()
+                        .mapToInt(
+                                CartItemResponse::getQuantity
+                        )
+                        .sum();
 
-        this.subtotal = items
-                .stream()
-                .map(
-                        CartItemResponse::getItemTotal
-                )
-                .reduce(
-                        BigDecimal.ZERO,
-                        BigDecimal::add
-                )
-                .setScale(
-                        2,
-                        RoundingMode.HALF_UP
+        BigDecimal calculatedSubtotal =
+                items.stream()
+                        .map(
+                                CartItemResponse::getItemTotal
+                        )
+                        .reduce(
+                                BigDecimal.ZERO,
+                                BigDecimal::add
+                        );
+
+        this.subtotal =
+                MoneyUtils.scale(
+                        calculatedSubtotal
                 );
 
-        this.createdAt = cart.getCreatedAt();
+        this.createdAt =
+                cart.getCreatedAt();
     }
 
     public static CartResponse empty() {
@@ -65,10 +72,12 @@ public class CartResponse {
         response.items = List.of();
         response.totalItems = 0;
         response.totalQuantity = 0;
-        response.subtotal = BigDecimal.ZERO.setScale(
-                2,
-                RoundingMode.HALF_UP
-        );
+
+        response.subtotal =
+                MoneyUtils.scale(
+                        BigDecimal.ZERO
+                );
+
         response.createdAt = null;
 
         return response;
