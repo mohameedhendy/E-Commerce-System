@@ -468,4 +468,71 @@ public class AuthenticationControllerTest {
                         )
                 );
     }
+
+    @Test
+    @Transactional
+    public void refreshTokenCannotBeUsedTwice()
+            throws Exception {
+
+        LocalUser user = localUserDao
+                .findByUsernameIgnoreCase("UserA")
+                .orElseThrow();
+
+        String refreshToken =
+                jwtService.generateRefreshToken(
+                        user
+                );
+
+        RefreshTokenRequest request =
+                new RefreshTokenRequest();
+
+        request.setRefreshToken(
+                refreshToken
+        );
+
+        String requestBody =
+                objectMapper.writeValueAsString(
+                        request
+                );
+
+        mvc.perform(
+                        post("/auth/refresh")
+                                .contentType(
+                                        MediaType.APPLICATION_JSON
+                                )
+                                .content(requestBody)
+                )
+                .andExpect(
+                        status().isOk()
+                )
+                .andExpect(
+                        jsonPath("$.accessToken")
+                                .isNotEmpty()
+                )
+                .andExpect(
+                        jsonPath("$.refreshToken")
+                                .isNotEmpty()
+                );
+
+        mvc.perform(
+                        post("/auth/refresh")
+                                .contentType(
+                                        MediaType.APPLICATION_JSON
+                                )
+                                .content(requestBody)
+                )
+                .andExpect(
+                        status().isBadRequest()
+                )
+                .andExpect(
+                        jsonPath("$.status")
+                                .value(400)
+                )
+                .andExpect(
+                        jsonPath("$.message")
+                                .value(
+                                        "Invalid or expired refresh token"
+                                )
+                );
+    }
 }

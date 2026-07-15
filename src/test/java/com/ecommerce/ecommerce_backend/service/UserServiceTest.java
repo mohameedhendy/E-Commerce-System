@@ -558,4 +558,53 @@ public class UserServiceTest {
                 "Password reset must invalidate existing refresh tokens."
         );
     }
+
+    @Test
+    @Transactional
+    public void refreshTokenCannotBeReused()
+            throws InvalidTokenException {
+
+        LocalUser user = localUserDao
+                .findByUsernameIgnoreCase("UserA")
+                .orElseThrow();
+
+        String originalRefreshToken =
+                jwtService.generateRefreshToken(
+                        user
+                );
+
+        LoginResponse firstResponse =
+                userService.refreshAccessToken(
+                        originalRefreshToken
+                );
+
+        Assertions.assertNotNull(
+                firstResponse.getAccessToken()
+        );
+
+        Assertions.assertNotNull(
+                firstResponse.getRefreshToken()
+        );
+
+        Assertions.assertThrows(
+                InvalidTokenException.class,
+                () -> userService.refreshAccessToken(
+                        originalRefreshToken
+                ),
+                "A refresh token must not be reusable after successful rotation."
+        );
+
+        LoginResponse secondResponse =
+                userService.refreshAccessToken(
+                        firstResponse.getRefreshToken()
+                );
+
+        Assertions.assertNotNull(
+                secondResponse.getAccessToken()
+        );
+
+        Assertions.assertNotNull(
+                secondResponse.getRefreshToken()
+        );
+    }
 }

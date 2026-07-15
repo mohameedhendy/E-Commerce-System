@@ -240,7 +240,7 @@ public class UserService {
         return true;
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public LoginResponse refreshAccessToken(
             String refreshToken
     ) throws InvalidTokenException {
@@ -278,19 +278,35 @@ public class UserService {
                         )
                 );
 
-        boolean versionMatches =
-                user.getRefreshTokenVersion()
-                        == tokenData.version();
-
-        if (!user.isEmailVerified()
-                || !versionMatches) {
-
+        if (!user.isEmailVerified()) {
             throw new InvalidTokenException(
                     INVALID_REFRESH_TOKEN
             );
         }
 
-        return createLoginResponse(user);
+        int updatedRows =
+                userDao.rotateRefreshTokenVersion(
+                        user.getId(),
+                        tokenData.version()
+                );
+
+        if (updatedRows == 0) {
+            throw new InvalidTokenException(
+                    INVALID_REFRESH_TOKEN
+            );
+        }
+
+        LocalUser rotatedUser = userDao
+                .findById(user.getId())
+                .orElseThrow(() ->
+                        new InvalidTokenException(
+                                INVALID_REFRESH_TOKEN
+                        )
+                );
+
+        return createLoginResponse(
+                rotatedUser
+        );
     }
 
     public void forgotPassword(
