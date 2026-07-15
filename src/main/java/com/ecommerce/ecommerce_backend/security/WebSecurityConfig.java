@@ -52,6 +52,7 @@ public class WebSecurityConfig {
                                 .requestMatchers(
                                         "/auth/login",
                                         "/auth/register",
+                                        "/auth/refresh",
                                         "/auth/forgot",
                                         "/auth/reset",
                                         "/auth/verify",

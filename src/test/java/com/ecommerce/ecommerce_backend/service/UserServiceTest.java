@@ -3,6 +3,7 @@ package com.ecommerce.ecommerce_backend.service;
 import com.ecommerce.ecommerce_backend.dao.LocalUserDao;
 import com.ecommerce.ecommerce_backend.dao.VerificationTokenDAO;
 import com.ecommerce.ecommerce_backend.dto.LoginBody;
+import com.ecommerce.ecommerce_backend.dto.LoginResponse;
 import com.ecommerce.ecommerce_backend.dto.PasswordResetBody;
 import com.ecommerce.ecommerce_backend.dto.RegistrationBody;
 import com.ecommerce.ecommerce_backend.exception.EmailFailureException;
@@ -488,7 +489,7 @@ public class UserServiceTest {
 
     @Test
     @Transactional
-    public void validRefreshTokenGeneratesAccessToken()
+    public void validRefreshTokenGeneratesNewTokenPair()
             throws InvalidTokenException {
 
         LocalUser user = localUserDao
@@ -498,15 +499,30 @@ public class UserServiceTest {
         String refreshToken =
                 jwtService.generateRefreshToken(user);
 
-        String accessToken =
+        LoginResponse response =
                 userService.refreshAccessToken(
                         refreshToken
                 );
 
+        Assertions.assertNotNull(
+                response.getAccessToken()
+        );
+
+        Assertions.assertNotNull(
+                response.getRefreshToken()
+        );
+
         Assertions.assertEquals(
                 user.getUsername(),
                 jwtService.getUsername(
-                        accessToken
+                        response.getAccessToken()
+                )
+        );
+
+        Assertions.assertEquals(
+                user.getUsername(),
+                jwtService.getRefreshUsername(
+                        response.getRefreshToken()
                 )
         );
     }

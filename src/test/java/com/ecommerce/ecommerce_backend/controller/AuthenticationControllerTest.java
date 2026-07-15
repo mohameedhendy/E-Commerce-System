@@ -1,6 +1,10 @@
 package com.ecommerce.ecommerce_backend.controller;
 
+import com.ecommerce.ecommerce_backend.dao.LocalUserDao;
+import com.ecommerce.ecommerce_backend.dto.RefreshTokenRequest;
 import com.ecommerce.ecommerce_backend.dto.RegistrationBody;
+import com.ecommerce.ecommerce_backend.model.LocalUser;
+import com.ecommerce.ecommerce_backend.service.JWTService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.icegreen.greenmail.configuration.GreenMailConfiguration;
 import com.icegreen.greenmail.junit5.GreenMailExtension;
@@ -17,10 +21,17 @@ import org.springframework.transaction.annotation.Transactional;
 import org.junit.jupiter.api.Assertions;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 public class AuthenticationControllerTest {
+
+    @Autowired
+    private JWTService jwtService;
+
+    @Autowired
+    private LocalUserDao localUserDao;
 
     @RegisterExtension
     private static final GreenMailExtension greenMailExtension =
@@ -322,5 +333,139 @@ public class AuthenticationControllerTest {
                         .length,
                 "A reset email should be sent for an existing account."
         );
+    }
+
+    @Test
+    public void validLoginReturnsAccessAndRefreshTokens()
+            throws Exception {
+
+        mvc.perform(
+                        post("/auth/login")
+                                .contentType(
+                                        MediaType.APPLICATION_JSON
+                                )
+                                .content("""
+                                    {
+                                      "username": "UserA",
+                                      "password": "PasswordA123"
+                                    }
+                                    """)
+                )
+                .andExpect(
+                        status().isOk()
+                )
+                .andExpect(
+                        jsonPath("$.accessToken")
+                                .isNotEmpty()
+                )
+                .andExpect(
+                        jsonPath("$.refreshToken")
+                                .isNotEmpty()
+                );
+    }
+
+    @Test
+    public void validRefreshTokenReturnsNewTokenPair()
+            throws Exception {
+
+        LocalUser user = localUserDao
+                .findByUsernameIgnoreCase("UserA")
+                .orElseThrow();
+
+        RefreshTokenRequest request =
+                new RefreshTokenRequest();
+
+        request.setRefreshToken(
+                jwtService.generateRefreshToken(
+                        user
+                )
+        );
+
+        mvc.perform(
+                        post("/auth/refresh")
+                                .contentType(
+                                        MediaType.APPLICATION_JSON
+                                )
+                                .content(
+                                        objectMapper.writeValueAsString(
+                                                request
+                                        )
+                                )
+                )
+                .andExpect(
+                        status().isOk()
+                )
+                .andExpect(
+                        jsonPath("$.accessToken")
+                                .isNotEmpty()
+                )
+                .andExpect(
+                        jsonPath("$.refreshToken")
+                                .isNotEmpty()
+                );
+    }
+
+    @Test
+    public void accessTokenCannotBeUsedForRefresh()
+            throws Exception {
+
+        LocalUser user = localUserDao
+                .findByUsernameIgnoreCase("UserA")
+                .orElseThrow();
+
+        RefreshTokenRequest request =
+                new RefreshTokenRequest();
+
+        request.setRefreshToken(
+                jwtService.generateToken(user)
+        );
+
+        mvc.perform(
+                        post("/auth/refresh")
+                                .contentType(
+                                        MediaType.APPLICATION_JSON
+                                )
+                                .content(
+                                        objectMapper.writeValueAsString(
+                                                request
+                                        )
+                                )
+                )
+                .andExpect(
+                        status().isBadRequest()
+                )
+                .andExpect(
+                        jsonPath("$.message")
+                                .value(
+                                        "Invalid or expired refresh token"
+                                )
+                );
+    }
+
+    @Test
+    public void blankRefreshTokenReturnsBadRequest()
+            throws Exception {
+
+        mvc.perform(
+                        post("/auth/refresh")
+                                .contentType(
+                                        MediaType.APPLICATION_JSON
+                                )
+                                .content("""
+                                    {
+                                      "refreshToken": ""
+                                    }
+                                    """)
+                )
+                .andExpect(
+                        status().isBadRequest()
+                )
+                .andExpect(
+                        jsonPath(
+                                "$.validationErrors.refreshToken"
+                        ).value(
+                                "Refresh token is required"
+                        )
+                );
     }
 }

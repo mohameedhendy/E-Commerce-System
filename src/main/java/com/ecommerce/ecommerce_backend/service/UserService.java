@@ -5,6 +5,7 @@ import com.ecommerce.ecommerce_backend.config.ApplicationProperties;
 import com.ecommerce.ecommerce_backend.dao.LocalUserDao;
 import com.ecommerce.ecommerce_backend.dao.VerificationTokenDAO;
 import com.ecommerce.ecommerce_backend.dto.LoginBody;
+import com.ecommerce.ecommerce_backend.dto.LoginResponse;
 import com.ecommerce.ecommerce_backend.dto.PasswordResetBody;
 import com.ecommerce.ecommerce_backend.dto.RegistrationBody;
 import com.ecommerce.ecommerce_backend.exception.EmailFailureException;
@@ -125,7 +126,7 @@ public class UserService {
     @Transactional(
             rollbackFor = EmailFailureException.class
     )
-    public String loginUser(
+    public LoginResponse loginUser(
             LoginBody loginBody
     ) throws UserNotVerifiedException,
             EmailFailureException {
@@ -154,7 +155,7 @@ public class UserService {
         }
 
         if (user.isEmailVerified()) {
-            return jwtService.generateToken(user);
+            return createLoginResponse(user);
         }
 
         boolean emailVerificationEnabled =
@@ -240,7 +241,7 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public String refreshAccessToken(
+    public LoginResponse refreshAccessToken(
             String refreshToken
     ) throws InvalidTokenException {
 
@@ -289,7 +290,7 @@ public class UserService {
             );
         }
 
-        return jwtService.generateToken(user);
+        return createLoginResponse(user);
     }
 
     public void forgotPassword(
@@ -426,6 +427,22 @@ public class UserService {
                 .add(verificationToken);
 
         return verificationToken;
+    }
+
+    private LoginResponse createLoginResponse(
+            LocalUser user
+    ) {
+
+        String accessToken =
+                jwtService.generateToken(user);
+
+        String refreshToken =
+                jwtService.generateRefreshToken(user);
+
+        return new LoginResponse(
+                accessToken,
+                refreshToken
+        );
     }
 
     private String normalizeUsername(
