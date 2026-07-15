@@ -248,4 +248,105 @@ public class JWTServiceTest {
                         + configuredExpirySeconds
         );
     }
+
+    @Test
+    public void refreshTokenReturnsUsername() {
+
+        LocalUser user = localUserDao
+                .findByUsernameIgnoreCase("UserA")
+                .orElseThrow();
+
+        String refreshToken =
+                jwtService.generateRefreshToken(user);
+
+        Assertions.assertEquals(
+                user.getUsername(),
+                jwtService.getRefreshUsername(
+                        refreshToken
+                )
+        );
+    }
+
+    @Test
+    public void refreshTokenCannotBeUsedAsAccessToken() {
+
+        LocalUser user = localUserDao
+                .findByUsernameIgnoreCase("UserA")
+                .orElseThrow();
+
+        String refreshToken =
+                jwtService.generateRefreshToken(user);
+
+        Assertions.assertThrows(
+                JWTVerificationException.class,
+                () -> jwtService.getUsername(
+                        refreshToken
+                ),
+                "Refresh token must not work as an access token."
+        );
+    }
+
+    @Test
+    public void accessTokenCannotBeUsedAsRefreshToken() {
+
+        LocalUser user = localUserDao
+                .findByUsernameIgnoreCase("UserA")
+                .orElseThrow();
+
+        String accessToken =
+                jwtService.generateToken(user);
+
+        Assertions.assertThrows(
+                JWTVerificationException.class,
+                () -> jwtService.getRefreshUsername(
+                        accessToken
+                ),
+                "Access token must not work as a refresh token."
+        );
+    }
+
+    @Test
+    public void refreshTokenUsesConfiguredExpiryTime() {
+
+        LocalUser user = localUserDao
+                .findByUsernameIgnoreCase("UserA")
+                .orElseThrow();
+
+        long beforeGeneration =
+                System.currentTimeMillis() / 1000L;
+
+        String refreshToken =
+                jwtService.generateRefreshToken(user);
+
+        long afterGeneration =
+                System.currentTimeMillis() / 1000L;
+
+        DecodedJWT decodedJWT =
+                JWT.decode(refreshToken);
+
+        Assertions.assertNotNull(
+                decodedJWT.getExpiresAt()
+        );
+
+        long tokenExpirySeconds =
+                decodedJWT
+                        .getExpiresAt()
+                        .getTime()
+                        / 1000L;
+
+        long configuredExpirySeconds =
+                jwtProperties.refreshExpiryInSeconds();
+
+        Assertions.assertTrue(
+                tokenExpirySeconds
+                        >= beforeGeneration
+                        + configuredExpirySeconds
+        );
+
+        Assertions.assertTrue(
+                tokenExpirySeconds
+                        <= afterGeneration
+                        + configuredExpirySeconds
+        );
+    }
 }

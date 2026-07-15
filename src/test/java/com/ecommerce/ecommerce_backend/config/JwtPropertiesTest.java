@@ -8,7 +8,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 @SpringBootTest(properties = {
         "jwt.algorithm.key=JwtPropertiesTestSecretKey12345678901234567890",
         "jwt.issuer=eCommerce-test",
-        "jwt.expiry-in-seconds=604800"
+        "jwt.expiry-in-seconds=604800",
+        "jwt.refresh-expiry-in-seconds=2592000"
 })
 public class JwtPropertiesTest {
 
@@ -23,7 +24,8 @@ public class JwtPropertiesTest {
         );
 
         Assertions.assertFalse(
-                jwtProperties.algorithm()
+                jwtProperties
+                        .algorithm()
                         .key()
                         .isBlank()
         );
@@ -36,6 +38,11 @@ public class JwtPropertiesTest {
         Assertions.assertEquals(
                 604800L,
                 jwtProperties.expiryInSeconds()
+        );
+
+        Assertions.assertEquals(
+                2592000L,
+                jwtProperties.refreshExpiryInSeconds()
         );
     }
 }

@@ -20,7 +20,11 @@ public record JwtProperties(
 
         @NotNull
         @Positive
-        Long expiryInSeconds
+        Long expiryInSeconds,
+
+        @NotNull
+        @Positive
+        Long refreshExpiryInSeconds
 ) {
 
     public record AlgorithmProperties(

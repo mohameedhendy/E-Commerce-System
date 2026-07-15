@@ -15,13 +15,18 @@ import java.util.Date;
 @RequiredArgsConstructor
 public class JWTService {
 
-    private static final String USERNAME_KEY = "USERNAME";
+    private static final String USERNAME_KEY =
+            "USERNAME";
+
     private static final String VERIFICATION_EMAIL_KEY =
             "VERIFICATION_EMAIL";
+
     private static final String RESET_PASSWORD_EMAIL_KEY =
             "RESET_PASSWORD_EMAIL";
+
     private static final String RESET_PASSWORD_VERSION_KEY =
             "RESET_PASSWORD_VERSION";
+
     private static final String TOKEN_TYPE_KEY =
             "TOKEN_TYPE";
 
@@ -34,37 +39,47 @@ public class JWTService {
 
     private enum TokenType {
         ACCESS,
+        REFRESH,
         EMAIL_VERIFICATION,
         PASSWORD_RESET
     }
 
     @PostConstruct
     void initializeAlgorithm() {
+
         algorithm = Algorithm.HMAC256(
-                jwtProperties.algorithm().key()
+                jwtProperties
+                        .algorithm()
+                        .key()
         );
     }
 
-    public String generateToken(LocalUser user) {
-        return JWT.create()
-                .withClaim(
-                        USERNAME_KEY,
-                        user.getUsername()
-                )
-                .withClaim(
-                        TOKEN_TYPE_KEY,
-                        TokenType.ACCESS.name()
-                )
-                .withIssuer(jwtProperties.issuer())
-                .withExpiresAt(
-                        createExpiryDate(
-                                jwtProperties.expiryInSeconds()
-                        )
-                )
-                .sign(algorithm);
+    public String generateToken(
+            LocalUser user
+    ) {
+
+        return generateUserToken(
+                user,
+                TokenType.ACCESS,
+                jwtProperties.expiryInSeconds()
+        );
     }
 
-    public String generateVerificationJWT(LocalUser user) {
+    public String generateRefreshToken(
+            LocalUser user
+    ) {
+
+        return generateUserToken(
+                user,
+                TokenType.REFRESH,
+                jwtProperties.refreshExpiryInSeconds()
+        );
+    }
+
+    public String generateVerificationJWT(
+            LocalUser user
+    ) {
+
         return JWT.create()
                 .withClaim(
                         VERIFICATION_EMAIL_KEY,
@@ -74,7 +89,9 @@ public class JWTService {
                         TOKEN_TYPE_KEY,
                         TokenType.EMAIL_VERIFICATION.name()
                 )
-                .withIssuer(jwtProperties.issuer())
+                .withIssuer(
+                        jwtProperties.issuer()
+                )
                 .withExpiresAt(
                         createExpiryDate(
                                 jwtProperties.expiryInSeconds()
@@ -83,7 +100,10 @@ public class JWTService {
                 .sign(algorithm);
     }
 
-    public String generatePasswordResetJWT(LocalUser user) {
+    public String generatePasswordResetJWT(
+            LocalUser user
+    ) {
+
         return JWT.create()
                 .withClaim(
                         RESET_PASSWORD_EMAIL_KEY,
@@ -97,7 +117,9 @@ public class JWTService {
                         TOKEN_TYPE_KEY,
                         TokenType.PASSWORD_RESET.name()
                 )
-                .withIssuer(jwtProperties.issuer())
+                .withIssuer(
+                        jwtProperties.issuer()
+                )
                 .withExpiresAt(
                         createExpiryDate(
                                 PASSWORD_RESET_EXPIRY_SECONDS
@@ -106,23 +128,45 @@ public class JWTService {
                 .sign(algorithm);
     }
 
-    public String getUsername(String token) {
+    public String getUsername(
+            String token
+    ) {
+
         DecodedJWT jwt = verifyToken(
                 token,
                 TokenType.ACCESS
         );
 
-        return jwt.getClaim(USERNAME_KEY)
+        return jwt
+                .getClaim(USERNAME_KEY)
                 .asString();
     }
 
-    public String getVerificationEmail(String token) {
+    public String getRefreshUsername(
+            String token
+    ) {
+
+        DecodedJWT jwt = verifyToken(
+                token,
+                TokenType.REFRESH
+        );
+
+        return jwt
+                .getClaim(USERNAME_KEY)
+                .asString();
+    }
+
+    public String getVerificationEmail(
+            String token
+    ) {
+
         DecodedJWT jwt = verifyToken(
                 token,
                 TokenType.EMAIL_VERIFICATION
         );
 
-        return jwt.getClaim(
+        return jwt
+                .getClaim(
                         VERIFICATION_EMAIL_KEY
                 )
                 .asString();
@@ -131,6 +175,7 @@ public class JWTService {
     public PasswordResetTokenData getPasswordResetData(
             String token
     ) {
+
         DecodedJWT jwt = verifyToken(
                 token,
                 TokenType.PASSWORD_RESET
@@ -146,16 +191,49 @@ public class JWTService {
         );
     }
 
-    public String getResetPasswordEmail(String token) {
-        return getPasswordResetData(token).email();
+    public String getResetPasswordEmail(
+            String token
+    ) {
+
+        return getPasswordResetData(token)
+                .email();
+    }
+
+    private String generateUserToken(
+            LocalUser user,
+            TokenType tokenType,
+            long expirySeconds
+    ) {
+
+        return JWT.create()
+                .withClaim(
+                        USERNAME_KEY,
+                        user.getUsername()
+                )
+                .withClaim(
+                        TOKEN_TYPE_KEY,
+                        tokenType.name()
+                )
+                .withIssuer(
+                        jwtProperties.issuer()
+                )
+                .withExpiresAt(
+                        createExpiryDate(
+                                expirySeconds
+                        )
+                )
+                .sign(algorithm);
     }
 
     private DecodedJWT verifyToken(
             String token,
-            TokenType expectedType) {
+            TokenType expectedType
+    ) {
 
         return JWT.require(algorithm)
-                .withIssuer(jwtProperties.issuer())
+                .withIssuer(
+                        jwtProperties.issuer()
+                )
                 .withClaim(
                         TOKEN_TYPE_KEY,
                         expectedType.name()
@@ -164,7 +242,10 @@ public class JWTService {
                 .verify(token);
     }
 
-    private Date createExpiryDate(long expirySeconds) {
+    private Date createExpiryDate(
+            long expirySeconds
+    ) {
+
         return new Date(
                 System.currentTimeMillis()
                         + expirySeconds * 1000L
