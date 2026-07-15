@@ -18,51 +18,149 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class ReviewService {
 
+    private static final String PRODUCT_NOT_FOUND =
+            "Product was not found";
+
+    private static final String REVIEW_NOT_FOUND =
+            "Review was not found";
+
     private final ReviewDao reviewDao;
     private final ProductDao productDao;
 
     @Transactional
-    public ReviewResponse createReview(LocalUser user, Long productId, ReviewRequest request) {
-        Product product = productDao.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException("Product was not found"));
+    public ReviewResponse createReview(
+            LocalUser user,
+            Long productId,
+            ReviewRequest request
+    ) {
 
-        if (!Boolean.TRUE.equals(product.getActive())) {
-            throw new ResourceNotFoundException("Product was not found");
-        }
+        Product product =
+                getActiveProductOrThrow(productId);
 
         Review review = new Review();
+
         review.setProduct(product);
         review.setUser(user);
-        review.setRating(request.getRating());
-        review.setComment(request.getComment());
 
-        Review savedReview = reviewDao.save(review);
+        applyReviewDetails(
+                review,
+                request
+        );
 
-        return new ReviewResponse(savedReview);
+        return saveAndConvert(review);
     }
 
     @Transactional(readOnly = true)
-    public Page<ReviewResponse> getProductReviews(Long productId, Pageable pageable) {
-        Product product = productDao.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException("Product was not found"));
+    public Page<ReviewResponse> getProductReviews(
+            Long productId,
+            Pageable pageable
+    ) {
 
-        if (!Boolean.TRUE.equals(product.getActive())) {
-            throw new ResourceNotFoundException("Product was not found");
-        }
+        Product product =
+                getActiveProductOrThrow(productId);
 
-        return reviewDao.findAllByProduct(product, pageable).map(ReviewResponse::new);
+        Page<Review> reviews =
+                reviewDao.findAllByProduct(
+                        product,
+                        pageable
+                );
+
+        return toReviewResponses(reviews);
     }
 
     @Transactional
-    public ReviewResponse updateMyReview(LocalUser user, Long reviewId, ReviewRequest request) {
-        Review review = reviewDao.findByIdAndUser(reviewId, user)
-                .orElseThrow(() -> new ResourceNotFoundException("Review was not found"));
+    public ReviewResponse updateMyReview(
+            LocalUser user,
+            Long reviewId,
+            ReviewRequest request
+    ) {
 
-        review.setRating(request.getRating());
-        review.setComment(request.getComment());
+        Review review =
+                getUserReviewOrThrow(
+                        reviewId,
+                        user
+                );
 
-        Review savedReview = reviewDao.save(review);
+        applyReviewDetails(
+                review,
+                request
+        );
 
-        return new ReviewResponse(savedReview);
+        return saveAndConvert(review);
+    }
+
+    private Product getActiveProductOrThrow(
+            Long productId
+    ) {
+
+        Product product = productDao
+                .findById(productId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                PRODUCT_NOT_FOUND
+                        )
+                );
+
+        if (!Boolean.TRUE.equals(
+                product.getActive()
+        )) {
+            throw new ResourceNotFoundException(
+                    PRODUCT_NOT_FOUND
+            );
+        }
+
+        return product;
+    }
+
+    private Review getUserReviewOrThrow(
+            Long reviewId,
+            LocalUser user
+    ) {
+
+        return reviewDao
+                .findByIdAndUser(
+                        reviewId,
+                        user
+                )
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                REVIEW_NOT_FOUND
+                        )
+                );
+    }
+
+    private void applyReviewDetails(
+            Review review,
+            ReviewRequest request
+    ) {
+
+        review.setRating(
+                request.getRating()
+        );
+
+        review.setComment(
+                request.getComment()
+        );
+    }
+
+    private ReviewResponse saveAndConvert(
+            Review review
+    ) {
+
+        Review savedReview =
+                reviewDao.save(review);
+
+        return new ReviewResponse(
+                savedReview
+        );
+    }
+
+    private Page<ReviewResponse> toReviewResponses(
+            Page<Review> reviews
+    ) {
+
+        return reviews.map(
+                ReviewResponse::new
+        );
     }
 }
