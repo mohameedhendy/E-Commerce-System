@@ -37,12 +37,14 @@ public interface LocalUserDao
     )
     @Query("""
             UPDATE LocalUser u
-            SET u.password = :encodedPassword,
-                u.passwordResetVersion =
-                    u.passwordResetVersion + 1
-            WHERE u.id = :userId
-              AND u.passwordResetVersion =
-                    :expectedVersion
+                                    SET u.password = :encodedPassword,
+                                        u.passwordResetVersion =
+                                            u.passwordResetVersion + 1,
+                                        u.refreshTokenVersion =
+                                            u.refreshTokenVersion + 1
+                                    WHERE u.id = :userId
+                                      AND u.passwordResetVersion =
+                                            :expectedVersion
             """)
     int updatePasswordIfResetVersionMatches(
             @Param("userId") Long userId,

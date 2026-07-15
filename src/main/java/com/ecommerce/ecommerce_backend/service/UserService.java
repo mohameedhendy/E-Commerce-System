@@ -30,6 +30,9 @@ public class UserService {
     private static final String INVALID_PASSWORD_RESET_TOKEN =
             "Invalid or expired password reset token";
 
+    private static final String INVALID_REFRESH_TOKEN =
+            "Invalid or expired refresh token";
+
     private static final long
             VERIFICATION_EMAIL_RESEND_INTERVAL_MILLIS =
             60L * 60L * 1000L;
@@ -234,6 +237,59 @@ public class UserService {
         verificationTokenDAO.deleteByUser(user);
 
         return true;
+    }
+
+    @Transactional(readOnly = true)
+    public String refreshAccessToken(
+            String refreshToken
+    ) throws InvalidTokenException {
+
+        JWTService.RefreshTokenData tokenData;
+
+        try {
+            tokenData =
+                    jwtService.getRefreshTokenData(
+                            refreshToken
+                    );
+
+        } catch (JWTVerificationException ex) {
+
+            throw new InvalidTokenException(
+                    INVALID_REFRESH_TOKEN
+            );
+        }
+
+        if (tokenData.username() == null
+                || tokenData.version() == null) {
+
+            throw new InvalidTokenException(
+                    INVALID_REFRESH_TOKEN
+            );
+        }
+
+        LocalUser user = userDao
+                .findByUsernameIgnoreCase(
+                        tokenData.username()
+                )
+                .orElseThrow(() ->
+                        new InvalidTokenException(
+                                INVALID_REFRESH_TOKEN
+                        )
+                );
+
+        boolean versionMatches =
+                user.getRefreshTokenVersion()
+                        == tokenData.version();
+
+        if (!user.isEmailVerified()
+                || !versionMatches) {
+
+            throw new InvalidTokenException(
+                    INVALID_REFRESH_TOKEN
+            );
+        }
+
+        return jwtService.generateToken(user);
     }
 
     public void forgotPassword(

@@ -30,6 +30,9 @@ public class JWTService {
     private static final String TOKEN_TYPE_KEY =
             "TOKEN_TYPE";
 
+    private static final String REFRESH_TOKEN_VERSION_KEY =
+            "REFRESH_TOKEN_VERSION";
+
     private static final long PASSWORD_RESET_EXPIRY_SECONDS =
             30L * 60L;
 
@@ -69,11 +72,29 @@ public class JWTService {
             LocalUser user
     ) {
 
-        return generateUserToken(
-                user,
-                TokenType.REFRESH,
-                jwtProperties.refreshExpiryInSeconds()
-        );
+        return JWT.create()
+                .withClaim(
+                        USERNAME_KEY,
+                        user.getUsername()
+                )
+                .withClaim(
+                        REFRESH_TOKEN_VERSION_KEY,
+                        user.getRefreshTokenVersion()
+                )
+                .withClaim(
+                        TOKEN_TYPE_KEY,
+                        TokenType.REFRESH.name()
+                )
+                .withIssuer(
+                        jwtProperties.issuer()
+                )
+                .withExpiresAt(
+                        createExpiryDate(
+                                jwtProperties
+                                        .refreshExpiryInSeconds()
+                        )
+                )
+                .sign(algorithm);
     }
 
     public String generateVerificationJWT(
@@ -146,14 +167,27 @@ public class JWTService {
             String token
     ) {
 
+        return getRefreshTokenData(token)
+                .username();
+    }
+
+    public RefreshTokenData getRefreshTokenData(
+            String token
+    ) {
+
         DecodedJWT jwt = verifyToken(
                 token,
                 TokenType.REFRESH
         );
 
-        return jwt
-                .getClaim(USERNAME_KEY)
-                .asString();
+        return new RefreshTokenData(
+                jwt.getClaim(
+                        USERNAME_KEY
+                ).asString(),
+                jwt.getClaim(
+                        REFRESH_TOKEN_VERSION_KEY
+                ).asLong()
+        );
     }
 
     public String getVerificationEmail(
@@ -250,6 +284,12 @@ public class JWTService {
                 System.currentTimeMillis()
                         + expirySeconds * 1000L
         );
+    }
+
+    public record RefreshTokenData(
+            String username,
+            Long version
+    ) {
     }
 
     public record PasswordResetTokenData(

@@ -485,4 +485,61 @@ public class UserServiceTest {
                 "Login should ignore surrounding username spaces."
         );
     }
+
+    @Test
+    @Transactional
+    public void validRefreshTokenGeneratesAccessToken()
+            throws InvalidTokenException {
+
+        LocalUser user = localUserDao
+                .findByUsernameIgnoreCase("UserA")
+                .orElseThrow();
+
+        String refreshToken =
+                jwtService.generateRefreshToken(user);
+
+        String accessToken =
+                userService.refreshAccessToken(
+                        refreshToken
+                );
+
+        Assertions.assertEquals(
+                user.getUsername(),
+                jwtService.getUsername(
+                        accessToken
+                )
+        );
+    }
+
+    @Test
+    @Transactional
+    public void passwordResetInvalidatesExistingRefreshToken()
+            throws InvalidTokenException {
+
+        LocalUser user = localUserDao
+                .findByUsernameIgnoreCase("UserA")
+                .orElseThrow();
+
+        String refreshToken =
+                jwtService.generateRefreshToken(user);
+
+        String passwordResetToken =
+                jwtService.generatePasswordResetJWT(user);
+
+        PasswordResetBody body =
+                new PasswordResetBody();
+
+        body.setToken(passwordResetToken);
+        body.setPassword("NewPassword123!");
+
+        userService.resetPassword(body);
+
+        Assertions.assertThrows(
+                InvalidTokenException.class,
+                () -> userService.refreshAccessToken(
+                        refreshToken
+                ),
+                "Password reset must invalidate existing refresh tokens."
+        );
+    }
 }

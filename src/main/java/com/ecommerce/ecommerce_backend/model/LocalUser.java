@@ -77,6 +77,12 @@ public class LocalUser implements UserDetails {
     )
     private long passwordResetVersion;
 
+    @Column(
+            name = "refresh_token_version",
+            nullable = false
+    )
+    private long refreshTokenVersion;
+
     @JsonIgnore
     @OneToMany(
             mappedBy = "user",

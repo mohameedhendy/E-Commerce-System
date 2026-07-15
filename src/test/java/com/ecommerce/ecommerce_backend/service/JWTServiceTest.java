@@ -349,4 +349,30 @@ public class JWTServiceTest {
                         + configuredExpirySeconds
         );
     }
+
+    @Test
+    public void refreshTokenContainsCurrentVersion() {
+
+        LocalUser user = localUserDao
+                .findByUsernameIgnoreCase("UserA")
+                .orElseThrow();
+
+        String refreshToken =
+                jwtService.generateRefreshToken(user);
+
+        JWTService.RefreshTokenData tokenData =
+                jwtService.getRefreshTokenData(
+                        refreshToken
+                );
+
+        Assertions.assertEquals(
+                user.getUsername(),
+                tokenData.username()
+        );
+
+        Assertions.assertEquals(
+                user.getRefreshTokenVersion(),
+                tokenData.version()
+        );
+    }
 }

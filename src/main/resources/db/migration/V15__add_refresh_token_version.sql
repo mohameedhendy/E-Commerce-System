@@ -1,0 +1,2 @@
+ALTER TABLE local_user
+    ADD COLUMN IF NOT EXISTS refresh_token_version BIGINT NOT NULL DEFAULT 0;
