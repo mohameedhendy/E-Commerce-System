@@ -6,12 +6,12 @@ import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.exceptions.MissingClaimException;
 import com.auth0.jwt.exceptions.SignatureVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.ecommerce.ecommerce_backend.config.JwtProperties;
 import com.ecommerce.ecommerce_backend.dao.LocalUserDao;
 import com.ecommerce.ecommerce_backend.model.LocalUser;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import com.ecommerce.ecommerce_backend.config.JwtProperties;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
@@ -28,11 +28,13 @@ public class JWTServiceTest {
 
     @Test
     public void testAuthTokenReturnsUsername() {
+
         LocalUser user = localUserDao
                 .findByUsernameIgnoreCase("UserA")
                 .orElseThrow();
 
-        String token = jwtService.generateToken(user);
+        String token =
+                jwtService.generateToken(user);
 
         Assertions.assertEquals(
                 user.getUsername(),
@@ -43,6 +45,7 @@ public class JWTServiceTest {
 
     @Test
     public void testVerificationTokenNotUsableForLogin() {
+
         LocalUser user = localUserDao
                 .findByUsernameIgnoreCase("UserA")
                 .orElseThrow();
@@ -59,6 +62,7 @@ public class JWTServiceTest {
 
     @Test
     public void testPasswordResetTokenNotUsableForLogin() {
+
         LocalUser user = localUserDao
                 .findByUsernameIgnoreCase("UserA")
                 .orElseThrow();
@@ -75,11 +79,13 @@ public class JWTServiceTest {
 
     @Test
     public void testAccessTokenNotUsableForPasswordReset() {
+
         LocalUser user = localUserDao
                 .findByUsernameIgnoreCase("UserA")
                 .orElseThrow();
 
-        String token = jwtService.generateToken(user);
+        String token =
+                jwtService.generateToken(user);
 
         Assertions.assertThrows(
                 JWTVerificationException.class,
@@ -90,11 +96,13 @@ public class JWTServiceTest {
 
     @Test
     public void testAccessTokenNotUsableForEmailVerification() {
+
         LocalUser user = localUserDao
                 .findByUsernameIgnoreCase("UserA")
                 .orElseThrow();
 
-        String token = jwtService.generateToken(user);
+        String token =
+                jwtService.generateToken(user);
 
         Assertions.assertThrows(
                 JWTVerificationException.class,
@@ -105,13 +113,18 @@ public class JWTServiceTest {
 
     @Test
     public void testLoginJWTNotGeneratedByUs() {
-        String token = JWT.create()
-                .withClaim("USERNAME", "UserA")
-                .sign(
-                        Algorithm.HMAC256(
-                                "NotTheRealSecret"
+
+        String token =
+                JWT.create()
+                        .withClaim(
+                                "USERNAME",
+                                "UserA"
                         )
-                );
+                        .sign(
+                                Algorithm.HMAC256(
+                                        "NotTheRealSecret"
+                                )
+                        );
 
         Assertions.assertThrows(
                 SignatureVerificationException.class,
@@ -121,12 +134,24 @@ public class JWTServiceTest {
 
     @Test
     public void testLoginJWTCorrectlySignedNoIssuer() {
-        String token = JWT.create()
-                .withClaim("USERNAME", "UserA")
-                .withClaim("TOKEN_TYPE", "ACCESS")
-                .sign(Algorithm.HMAC256(
-        jwtProperties.algorithm().key()
-));
+
+        String token =
+                JWT.create()
+                        .withClaim(
+                                "USERNAME",
+                                "UserA"
+                        )
+                        .withClaim(
+                                "TOKEN_TYPE",
+                                "ACCESS"
+                        )
+                        .sign(
+                                Algorithm.HMAC256(
+                                        jwtProperties
+                                                .algorithm()
+                                                .key()
+                                )
+                        );
 
         Assertions.assertThrows(
                 MissingClaimException.class,
@@ -136,20 +161,22 @@ public class JWTServiceTest {
 
     @Test
     public void testResetPasswordJWTNotGeneratedByUs() {
-        String token = JWT.create()
-                .withClaim(
-                        "RESET_PASSWORD_EMAIL",
-                        "UserA@junit.com"
-                )
-                .withClaim(
-                        "TOKEN_TYPE",
-                        "PASSWORD_RESET"
-                )
-                .sign(
-                        Algorithm.HMAC256(
-                                "NotTheRealSecret"
+
+        String token =
+                JWT.create()
+                        .withClaim(
+                                "RESET_PASSWORD_EMAIL",
+                                "UserA@junit.com"
                         )
-                );
+                        .withClaim(
+                                "TOKEN_TYPE",
+                                "PASSWORD_RESET"
+                        )
+                        .sign(
+                                Algorithm.HMAC256(
+                                        "NotTheRealSecret"
+                                )
+                        );
 
         Assertions.assertThrows(
                 SignatureVerificationException.class,
@@ -159,18 +186,24 @@ public class JWTServiceTest {
 
     @Test
     public void testResetPasswordJWTCorrectlySignedNoIssuer() {
-        String token = JWT.create()
-                .withClaim(
-                        "RESET_PASSWORD_EMAIL",
-                        "UserA@junit.com"
-                )
-                .withClaim(
-                        "TOKEN_TYPE",
-                        "PASSWORD_RESET"
-                )
-                .sign(Algorithm.HMAC256(
-        jwtProperties.algorithm().key()
-));
+
+        String token =
+                JWT.create()
+                        .withClaim(
+                                "RESET_PASSWORD_EMAIL",
+                                "UserA@junit.com"
+                        )
+                        .withClaim(
+                                "TOKEN_TYPE",
+                                "PASSWORD_RESET"
+                        )
+                        .sign(
+                                Algorithm.HMAC256(
+                                        jwtProperties
+                                                .algorithm()
+                                                .key()
+                                )
+                        );
 
         Assertions.assertThrows(
                 MissingClaimException.class,
@@ -373,6 +406,115 @@ public class JWTServiceTest {
         Assertions.assertEquals(
                 user.getRefreshTokenVersion(),
                 tokenData.version()
+        );
+    }
+
+    @Test
+    public void sessionRefreshTokenContainsSessionData() {
+
+        LocalUser user = localUserDao
+                .findByUsernameIgnoreCase("UserA")
+                .orElseThrow();
+
+        String sessionId =
+                "ee885780-fbd7-4d2a-8055-a30d37966ecf";
+
+        long sessionVersion = 4L;
+
+        String refreshToken =
+                jwtService.generateRefreshToken(
+                        user,
+                        sessionId,
+                        sessionVersion
+                );
+
+        JWTService.RefreshTokenData tokenData =
+                jwtService.getRefreshTokenData(
+                        refreshToken
+                );
+
+        Assertions.assertEquals(
+                user.getUsername(),
+                tokenData.username()
+        );
+
+        Assertions.assertEquals(
+                user.getRefreshTokenVersion(),
+                tokenData.version()
+        );
+
+        Assertions.assertEquals(
+                sessionId,
+                tokenData.sessionId()
+        );
+
+        Assertions.assertEquals(
+                sessionVersion,
+                tokenData.sessionVersion()
+        );
+    }
+
+    @Test
+    public void separateRefreshSessionsKeepIndependentSessionData() {
+
+        LocalUser user = localUserDao
+                .findByUsernameIgnoreCase("UserA")
+                .orElseThrow();
+
+        String firstSessionId =
+                "18aee42d-b379-43e7-9e75-3fe83f31ba43";
+
+        String secondSessionId =
+                "5fe9fc5b-cb12-490c-b250-f37f5a645b32";
+
+        String firstToken =
+                jwtService.generateRefreshToken(
+                        user,
+                        firstSessionId,
+                        0L
+                );
+
+        String secondToken =
+                jwtService.generateRefreshToken(
+                        user,
+                        secondSessionId,
+                        7L
+                );
+
+        JWTService.RefreshTokenData firstTokenData =
+                jwtService.getRefreshTokenData(
+                        firstToken
+                );
+
+        JWTService.RefreshTokenData secondTokenData =
+                jwtService.getRefreshTokenData(
+                        secondToken
+                );
+
+        Assertions.assertEquals(
+                firstSessionId,
+                firstTokenData.sessionId()
+        );
+
+        Assertions.assertEquals(
+                0L,
+                firstTokenData.sessionVersion()
+        );
+
+        Assertions.assertEquals(
+                secondSessionId,
+                secondTokenData.sessionId()
+        );
+
+        Assertions.assertEquals(
+                7L,
+                secondTokenData.sessionVersion()
+        );
+
+        Assertions.assertNotEquals(
+                firstTokenData.sessionId(),
+                secondTokenData.sessionId(),
+                "Different login sessions must retain independent session IDs."
         );
     }
 }

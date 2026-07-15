@@ -1,6 +1,7 @@
 package com.ecommerce.ecommerce_backend.service;
 
 import com.auth0.jwt.JWT;
+import com.auth0.jwt.JWTCreator;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.ecommerce.ecommerce_backend.config.JwtProperties;
@@ -32,6 +33,12 @@ public class JWTService {
 
     private static final String REFRESH_TOKEN_VERSION_KEY =
             "REFRESH_TOKEN_VERSION";
+
+    private static final String REFRESH_SESSION_ID_KEY =
+            "REFRESH_SESSION_ID";
+
+    private static final String REFRESH_SESSION_VERSION_KEY =
+            "REFRESH_SESSION_VERSION";
 
     private static final long PASSWORD_RESET_EXPIRY_SECONDS =
             30L * 60L;
@@ -68,33 +75,48 @@ public class JWTService {
         );
     }
 
+    /**
+     * Temporary compatibility method for the existing refresh-token flow.
+     *
+     * Session-based login will use the overloaded method that receives
+     * sessionId and sessionVersion.
+     */
     public String generateRefreshToken(
             LocalUser user
     ) {
 
-        return JWT.create()
-                .withClaim(
-                        USERNAME_KEY,
-                        user.getUsername()
-                )
-                .withClaim(
-                        REFRESH_TOKEN_VERSION_KEY,
-                        user.getRefreshTokenVersion()
-                )
-                .withClaim(
-                        TOKEN_TYPE_KEY,
-                        TokenType.REFRESH.name()
-                )
-                .withIssuer(
-                        jwtProperties.issuer()
-                )
-                .withExpiresAt(
-                        createExpiryDate(
-                                jwtProperties
-                                        .refreshExpiryInSeconds()
-                        )
-                )
-                .sign(algorithm);
+        return buildRefreshToken(
+                user,
+                null,
+                null
+        );
+    }
+
+    public String generateRefreshToken(
+            LocalUser user,
+            String sessionId,
+            long sessionVersion
+    ) {
+
+        if (sessionId == null
+                || sessionId.isBlank()) {
+
+            throw new IllegalArgumentException(
+                    "Refresh session ID is required"
+            );
+        }
+
+        if (sessionVersion < 0) {
+            throw new IllegalArgumentException(
+                    "Refresh session version cannot be negative"
+            );
+        }
+
+        return buildRefreshToken(
+                user,
+                sessionId,
+                sessionVersion
+        );
     }
 
     public String generateVerificationJWT(
@@ -186,6 +208,12 @@ public class JWTService {
                 ).asString(),
                 jwt.getClaim(
                         REFRESH_TOKEN_VERSION_KEY
+                ).asLong(),
+                jwt.getClaim(
+                        REFRESH_SESSION_ID_KEY
+                ).asString(),
+                jwt.getClaim(
+                        REFRESH_SESSION_VERSION_KEY
                 ).asLong()
         );
     }
@@ -231,6 +259,53 @@ public class JWTService {
 
         return getPasswordResetData(token)
                 .email();
+    }
+
+    private String buildRefreshToken(
+            LocalUser user,
+            String sessionId,
+            Long sessionVersion
+    ) {
+
+        JWTCreator.Builder tokenBuilder =
+                JWT.create()
+                        .withClaim(
+                                USERNAME_KEY,
+                                user.getUsername()
+                        )
+                        .withClaim(
+                                REFRESH_TOKEN_VERSION_KEY,
+                                user.getRefreshTokenVersion()
+                        )
+                        .withClaim(
+                                TOKEN_TYPE_KEY,
+                                TokenType.REFRESH.name()
+                        )
+                        .withIssuer(
+                                jwtProperties.issuer()
+                        )
+                        .withExpiresAt(
+                                createExpiryDate(
+                                        jwtProperties
+                                                .refreshExpiryInSeconds()
+                                )
+                        );
+
+        if (sessionId != null
+                && sessionVersion != null) {
+
+            tokenBuilder
+                    .withClaim(
+                            REFRESH_SESSION_ID_KEY,
+                            sessionId
+                    )
+                    .withClaim(
+                            REFRESH_SESSION_VERSION_KEY,
+                            sessionVersion
+                    );
+        }
+
+        return tokenBuilder.sign(algorithm);
     }
 
     private String generateUserToken(
@@ -288,7 +363,9 @@ public class JWTService {
 
     public record RefreshTokenData(
             String username,
-            Long version
+            Long version,
+            String sessionId,
+            Long sessionVersion
     ) {
     }
 
