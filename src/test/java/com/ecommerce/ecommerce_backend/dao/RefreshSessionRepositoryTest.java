@@ -145,6 +145,83 @@ public class RefreshSessionRepositoryTest {
         );
     }
 
+    @Test
+    public void cleanupDeletesRevokedAndExpiredSessions() {
+
+        LocalUser user = getUserA();
+
+        RefreshSession activeSession =
+                createRefreshSession(
+                        user,
+                        UUID.randomUUID().toString()
+                );
+
+        RefreshSession revokedSession =
+                createRefreshSession(
+                        user,
+                        UUID.randomUUID().toString()
+                );
+
+        revokedSession.setRevoked(true);
+
+        RefreshSession expiredSession =
+                createRefreshSession(
+                        user,
+                        UUID.randomUUID().toString()
+                );
+
+        expiredSession.setExpiresAt(
+                Timestamp.from(
+                        Instant.now()
+                                .minusSeconds(60)
+                )
+        );
+
+        refreshSessionDao.saveAllAndFlush(
+                List.of(
+                        activeSession,
+                        revokedSession,
+                        expiredSession
+                )
+        );
+
+        int deletedSessions =
+                refreshSessionDao
+                        .deleteExpiredOrRevokedSessions(
+                                Timestamp.from(
+                                        Instant.now()
+                                )
+                        );
+
+        Assertions.assertTrue(
+                deletedSessions >= 2
+        );
+
+        Assertions.assertTrue(
+                refreshSessionDao
+                        .findBySessionId(
+                                activeSession.getSessionId()
+                        )
+                        .isPresent()
+        );
+
+        Assertions.assertTrue(
+                refreshSessionDao
+                        .findBySessionId(
+                                revokedSession.getSessionId()
+                        )
+                        .isEmpty()
+        );
+
+        Assertions.assertTrue(
+                refreshSessionDao
+                        .findBySessionId(
+                                expiredSession.getSessionId()
+                        )
+                        .isEmpty()
+        );
+    }
+
     private LocalUser getUserA() {
 
         return localUserDao

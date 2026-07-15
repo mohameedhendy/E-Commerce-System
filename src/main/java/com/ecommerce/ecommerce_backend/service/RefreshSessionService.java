@@ -182,6 +182,17 @@ public class RefreshSessionService {
                 );
     }
 
+    @Transactional
+    public int cleanupExpiredAndRevokedSessions() {
+
+        return refreshSessionDao
+                .deleteExpiredOrRevokedSessions(
+                        Timestamp.from(
+                                Instant.now()
+                        )
+                );
+    }
+
     private void validateSession(
             RefreshSession refreshSession,
             JWTService.RefreshTokenData tokenData

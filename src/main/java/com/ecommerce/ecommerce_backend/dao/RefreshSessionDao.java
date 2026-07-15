@@ -64,4 +64,17 @@ public interface RefreshSessionDao
             Long userId,
             Timestamp currentTime
     );
+
+    @Modifying(
+            clearAutomatically = true,
+            flushAutomatically = true
+    )
+    @Query("""
+        DELETE FROM RefreshSession refreshSession
+        WHERE refreshSession.revoked = true
+           OR refreshSession.expiresAt <= :currentTime
+        """)
+    int deleteExpiredOrRevokedSessions(
+            @Param("currentTime") Timestamp currentTime
+    );
 }
