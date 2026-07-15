@@ -1,12 +1,15 @@
 package com.ecommerce.ecommerce_backend.controller;
 
 import com.ecommerce.ecommerce_backend.dto.AddCartItemRequest;
+import com.ecommerce.ecommerce_backend.dto.CartCheckoutRequest;
 import com.ecommerce.ecommerce_backend.dto.CartResponse;
+import com.ecommerce.ecommerce_backend.dto.OrderResponse;
 import com.ecommerce.ecommerce_backend.dto.UpdateCartItemQuantityRequest;
 import com.ecommerce.ecommerce_backend.model.LocalUser;
 import com.ecommerce.ecommerce_backend.service.CartService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -17,9 +20,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import com.ecommerce.ecommerce_backend.dto.CartCheckoutRequest;
-import com.ecommerce.ecommerce_backend.dto.OrderResponse;
-import org.springframework.http.HttpStatus;
 
 @RestController
 @RequestMapping("/cart")
@@ -32,9 +32,11 @@ public class CartController {
     public ResponseEntity<CartResponse> getCart(
             @AuthenticationPrincipal LocalUser user
     ) {
-        return ResponseEntity.ok(
-                cartService.getCart(user)
-        );
+
+        CartResponse response =
+                cartService.getCart(user);
+
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/items")
@@ -42,9 +44,14 @@ public class CartController {
             @AuthenticationPrincipal LocalUser user,
             @Valid @RequestBody AddCartItemRequest request
     ) {
-        return ResponseEntity.ok(
-                cartService.addItem(user, request)
-        );
+
+        CartResponse response =
+                cartService.addItem(
+                        user,
+                        request
+                );
+
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/items/{itemId}")
@@ -54,13 +61,15 @@ public class CartController {
             @Valid @RequestBody
             UpdateCartItemQuantityRequest request
     ) {
-        return ResponseEntity.ok(
+
+        CartResponse response =
                 cartService.updateItemQuantity(
                         user,
                         itemId,
                         request
-                )
-        );
+                );
+
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/items/{itemId}")
@@ -68,21 +77,25 @@ public class CartController {
             @AuthenticationPrincipal LocalUser user,
             @PathVariable Long itemId
     ) {
-        return ResponseEntity.ok(
+
+        CartResponse response =
                 cartService.removeItem(
                         user,
                         itemId
-                )
-        );
+                );
+
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping
     public ResponseEntity<CartResponse> clearCart(
             @AuthenticationPrincipal LocalUser user
     ) {
-        return ResponseEntity.ok(
-                cartService.clearCart(user)
-        );
+
+        CartResponse response =
+                cartService.clearCart(user);
+
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/checkout")
@@ -92,13 +105,14 @@ public class CartController {
             CartCheckoutRequest request
     ) {
 
+        OrderResponse response =
+                cartService.checkout(
+                        user,
+                        request
+                );
+
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(
-                        cartService.checkout(
-                                user,
-                                request
-                        )
-                );
+                .body(response);
     }
 }
