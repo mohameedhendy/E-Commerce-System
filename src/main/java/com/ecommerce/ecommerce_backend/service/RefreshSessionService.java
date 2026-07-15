@@ -9,7 +9,9 @@ import com.ecommerce.ecommerce_backend.model.RefreshSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.ecommerce.ecommerce_backend.dto.RefreshSessionResponse;
 
+import java.util.List;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.UUID;
@@ -143,6 +145,28 @@ public class RefreshSessionService {
         refreshSessionDao.revokeAllActiveByUserId(
                 userId
         );
+    }
+
+    @Transactional(readOnly = true)
+    public List<RefreshSessionResponse> getActiveSessions(
+            Long userId
+    ) {
+
+        Timestamp currentTime =
+                Timestamp.from(
+                        Instant.now()
+                );
+
+        return refreshSessionDao
+                .findAllByUser_IdAndRevokedFalseAndExpiresAtAfterOrderByCreatedAtDesc(
+                        userId,
+                        currentTime
+                )
+                .stream()
+                .map(
+                        RefreshSessionResponse::from
+                )
+                .toList();
     }
 
     private void validateSession(

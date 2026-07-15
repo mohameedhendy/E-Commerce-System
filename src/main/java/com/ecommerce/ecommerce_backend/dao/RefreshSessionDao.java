@@ -7,7 +7,9 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import java.sql.Timestamp;
 import java.util.Optional;
+import java.util.List;
 
 public interface RefreshSessionDao
         extends JpaRepository<RefreshSession, Long> {
@@ -39,5 +41,11 @@ public interface RefreshSessionDao
         """)
     int revokeAllActiveByUserId(
             @Param("userId") Long userId
+    );
+
+    List<RefreshSession>
+    findAllByUser_IdAndRevokedFalseAndExpiresAtAfterOrderByCreatedAtDesc(
+            Long userId,
+            Timestamp currentTime
     );
 }

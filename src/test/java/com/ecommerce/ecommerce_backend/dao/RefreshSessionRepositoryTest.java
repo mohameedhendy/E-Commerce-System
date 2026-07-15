@@ -8,7 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.transaction.annotation.Transactional;
-
+import java.time.Instant;
+import java.util.List;
 import java.sql.Timestamp;
 import java.util.UUID;
 
@@ -183,5 +184,67 @@ public class RefreshSessionRepositoryTest {
         );
 
         return session;
+    }
+
+    @Test
+    public void activeSessionQueryExcludesRevokedAndExpiredSessions() {
+
+        LocalUser user = getUserA();
+
+        RefreshSession activeSession =
+                createRefreshSession(
+                        user,
+                        UUID.randomUUID().toString()
+                );
+
+        RefreshSession revokedSession =
+                createRefreshSession(
+                        user,
+                        UUID.randomUUID().toString()
+                );
+
+        revokedSession.setRevoked(true);
+
+        RefreshSession expiredSession =
+                createRefreshSession(
+                        user,
+                        UUID.randomUUID().toString()
+                );
+
+        expiredSession.setExpiresAt(
+                Timestamp.from(
+                        Instant.now()
+                                .minusSeconds(60)
+                )
+        );
+
+        refreshSessionDao.saveAllAndFlush(
+                List.of(
+                        activeSession,
+                        revokedSession,
+                        expiredSession
+                )
+        );
+
+        List<RefreshSession> activeSessions =
+                refreshSessionDao
+                        .findAllByUser_IdAndRevokedFalseAndExpiresAtAfterOrderByCreatedAtDesc(
+                                user.getId(),
+                                Timestamp.from(
+                                        Instant.now()
+                                )
+                        );
+
+        Assertions.assertEquals(
+                1,
+                activeSessions.size()
+        );
+
+        Assertions.assertEquals(
+                activeSession.getSessionId(),
+                activeSessions
+                        .getFirst()
+                        .getSessionId()
+        );
     }
 }

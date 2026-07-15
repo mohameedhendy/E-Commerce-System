@@ -23,6 +23,11 @@ import org.junit.jupiter.api.Assertions;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import com.ecommerce.ecommerce_backend.dao.RefreshSessionDao;
+
+import java.sql.Timestamp;
+import java.time.Instant;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -33,6 +38,9 @@ public class AuthenticationControllerTest {
 
     @Autowired
     private LocalUserDao localUserDao;
+
+    @Autowired
+    private RefreshSessionDao refreshSessionDao;
 
     @RegisterExtension
     private static final GreenMailExtension greenMailExtension =
@@ -793,4 +801,75 @@ public class AuthenticationControllerTest {
                 responseBody
         );
     }
+
+    @Test
+    @Transactional
+    public void authenticatedUserCanViewActiveSessions()
+            throws Exception {
+
+        LocalUser user = localUserDao
+                .findByUsernameIgnoreCase("UserA")
+                .orElseThrow();
+
+        int activeSessionsBeforeLogin =
+                refreshSessionDao
+                        .findAllByUser_IdAndRevokedFalseAndExpiresAtAfterOrderByCreatedAtDesc(
+                                user.getId(),
+                                Timestamp.from(
+                                        Instant.now()
+                                )
+                        )
+                        .size();
+
+        JsonNode firstLogin =
+                loginAndGetTokenPair();
+
+        loginAndGetTokenPair();
+
+        mvc.perform(
+                        get("/auth/sessions")
+                                .header(
+                                        "Authorization",
+                                        "Bearer "
+                                                + firstLogin
+                                                .get("accessToken")
+                                                .asText()
+                                )
+                )
+                .andExpect(
+                        status().isOk()
+                )
+                .andExpect(
+                        jsonPath("$.length()")
+                                .value(
+                                        activeSessionsBeforeLogin + 2
+                                )
+                )
+                .andExpect(
+                        jsonPath("$[0].sessionId")
+                                .isNotEmpty()
+                )
+                .andExpect(
+                        jsonPath("$[0].createdAt")
+                                .isNotEmpty()
+                )
+                .andExpect(
+                        jsonPath("$[0].expiresAt")
+                                .isNotEmpty()
+                );
+    }
+
+    @Test
+    public void viewingSessionsRequiresAuthentication()
+            throws Exception {
+
+        mvc.perform(
+                        get("/auth/sessions")
+                )
+                .andExpect(
+                        status().isUnauthorized()
+                );
+    }
+
+
 }

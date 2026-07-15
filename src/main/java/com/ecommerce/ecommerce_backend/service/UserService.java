@@ -20,7 +20,9 @@ import com.ecommerce.ecommerce_backend.model.VerificationToken;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.ecommerce.ecommerce_backend.dto.RefreshSessionResponse;
 
+import java.util.List;
 import java.sql.Timestamp;
 import java.util.Locale;
 import java.util.Optional;
@@ -286,6 +288,17 @@ public class UserService {
         refreshSessionService.revokeAllSessions(
                 user.getId()
         );
+    }
+
+    @Transactional(readOnly = true)
+    public List<RefreshSessionResponse> getActiveSessions(
+            LocalUser user
+    ) {
+
+        return refreshSessionService
+                .getActiveSessions(
+                        user.getId()
+                );
     }
 
     public void forgotPassword(
