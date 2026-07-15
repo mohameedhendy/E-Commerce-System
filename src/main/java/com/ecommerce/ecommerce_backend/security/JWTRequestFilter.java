@@ -10,22 +10,24 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
-public class JWTRequestFilter extends OncePerRequestFilter {
+public class JWTRequestFilter
+        extends OncePerRequestFilter {
 
-    private static final String AUTHORIZATION_HEADER = "Authorization";
-    private static final String BEARER_PREFIX = "Bearer ";
+    private static final String AUTHORIZATION_HEADER =
+            "Authorization";
+
+    private static final String BEARER_PREFIX =
+            "Bearer ";
 
     private final JWTService jwtService;
     private final LocalUserDao userDao;
@@ -34,17 +36,22 @@ public class JWTRequestFilter extends OncePerRequestFilter {
     protected void doFilterInternal(
             HttpServletRequest request,
             HttpServletResponse response,
-            FilterChain filterChain)
-            throws ServletException, IOException {
+            FilterChain filterChain
+    ) throws ServletException, IOException {
 
         Optional<String> tokenOptional =
                 extractBearerToken(request);
 
         if (tokenOptional.isEmpty()
-                || SecurityContextHolder.getContext()
+                || SecurityContextHolder
+                .getContext()
                 .getAuthentication() != null) {
 
-            filterChain.doFilter(request, response);
+            filterChain.doFilter(
+                    request,
+                    response
+            );
+
             return;
         }
 
@@ -53,29 +60,40 @@ public class JWTRequestFilter extends OncePerRequestFilter {
                     tokenOptional.get(),
                     request
             );
-        } catch (JWTVerificationException
-                 | IllegalArgumentException exception) {
-
+        } catch (
+                JWTVerificationException
+                | IllegalArgumentException exception
+        ) {
             SecurityContextHolder.clearContext();
         }
 
-        filterChain.doFilter(request, response);
+        filterChain.doFilter(
+                request,
+                response
+        );
     }
 
     private Optional<String> extractBearerToken(
-            HttpServletRequest request) {
+            HttpServletRequest request
+    ) {
 
         String authorizationHeader =
-                request.getHeader(AUTHORIZATION_HEADER);
+                request.getHeader(
+                        AUTHORIZATION_HEADER
+                );
 
         if (authorizationHeader == null
-                || !authorizationHeader.startsWith(BEARER_PREFIX)) {
+                || !authorizationHeader.startsWith(
+                BEARER_PREFIX
+        )) {
 
             return Optional.empty();
         }
 
         String token = authorizationHeader
-                .substring(BEARER_PREFIX.length())
+                .substring(
+                        BEARER_PREFIX.length()
+                )
                 .trim();
 
         if (token.isBlank()) {
@@ -87,28 +105,26 @@ public class JWTRequestFilter extends OncePerRequestFilter {
 
     private void authenticateRequest(
             String token,
-            HttpServletRequest request) {
+            HttpServletRequest request
+    ) {
 
-        String username = jwtService.getUsername(token);
+        String username =
+                jwtService.getUsername(token);
 
         LocalUser user = userDao
                 .findByUsernameIgnoreCase(username)
                 .orElse(null);
 
-        if (user == null || !user.isEmailVerified()) {
+        if (user == null
+                || !user.isEmailVerified()) {
             return;
         }
-
-        String authority =
-                "ROLE_" + user.getRole().name();
 
         UsernamePasswordAuthenticationToken authentication =
                 new UsernamePasswordAuthenticationToken(
                         user,
                         null,
-                        List.of(
-                                new SimpleGrantedAuthority(authority)
-                        )
+                        user.getAuthorities()
                 );
 
         authentication.setDetails(
@@ -116,7 +132,8 @@ public class JWTRequestFilter extends OncePerRequestFilter {
                         .buildDetails(request)
         );
 
-        SecurityContextHolder.getContext()
+        SecurityContextHolder
+                .getContext()
                 .setAuthentication(authentication);
     }
 }
