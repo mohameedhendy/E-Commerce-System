@@ -4,9 +4,14 @@ import com.ecommerce.ecommerce_backend.dao.CartDao;
 import com.ecommerce.ecommerce_backend.dao.LocalUserDao;
 import com.ecommerce.ecommerce_backend.dao.ProductDao;
 import com.ecommerce.ecommerce_backend.dto.AddCartItemRequest;
+import com.ecommerce.ecommerce_backend.dto.CartCheckoutRequest;
 import com.ecommerce.ecommerce_backend.dto.CartResponse;
+import com.ecommerce.ecommerce_backend.dto.OrderItemRequest;
+import com.ecommerce.ecommerce_backend.dto.OrderRequest;
+import com.ecommerce.ecommerce_backend.dto.OrderResponse;
 import com.ecommerce.ecommerce_backend.dto.UpdateCartItemQuantityRequest;
 import com.ecommerce.ecommerce_backend.exception.InsufficientStockException;
+import com.ecommerce.ecommerce_backend.exception.InvalidOrderStatusException;
 import com.ecommerce.ecommerce_backend.exception.ResourceNotFoundException;
 import com.ecommerce.ecommerce_backend.model.Cart;
 import com.ecommerce.ecommerce_backend.model.CartItem;
@@ -15,18 +20,27 @@ import com.ecommerce.ecommerce_backend.model.Product;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.ecommerce.ecommerce_backend.dto.CartCheckoutRequest;
-import com.ecommerce.ecommerce_backend.dto.OrderItemRequest;
-import com.ecommerce.ecommerce_backend.dto.OrderRequest;
-import com.ecommerce.ecommerce_backend.dto.OrderResponse;
-import com.ecommerce.ecommerce_backend.exception.InvalidOrderStatusException;
+
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class CartService {
 
+    private static final String USER_NOT_FOUND =
+            "User was not found";
+
+    private static final String PRODUCT_NOT_FOUND =
+            "Product was not found";
+
     private static final String CART_ITEM_NOT_FOUND =
             "Cart item was not found";
+
+    private static final String CART_NOT_FOUND =
+            "Cart was not found";
+
+    private static final String CART_EMPTY =
+            "Cart is empty";
 
     private final CartDao cartDao;
     private final LocalUserDao localUserDao;
@@ -34,10 +48,14 @@ public class CartService {
     private final OrderService orderService;
 
     @Transactional(readOnly = true)
-    public CartResponse getCart(LocalUser currentUser) {
+    public CartResponse getCart(
+            LocalUser currentUser
+    ) {
 
         return cartDao
-                .findDetailedByUserId(currentUser.getId())
+                .findDetailedByUserId(
+                        currentUser.getId()
+                )
                 .map(CartResponse::new)
                 .orElseGet(CartResponse::empty);
     }
@@ -48,58 +66,43 @@ public class CartService {
             AddCartItemRequest request
     ) {
 
-        LocalUser user = lockUser(currentUser.getId());
+        LocalUser user =
+                lockUser(currentUser.getId());
 
         Product product =
-                getActiveProduct(request.getProductId());
+                getActiveProduct(
+                        request.getProductId()
+                );
 
-        Cart cart = cartDao
-                .findDetailedByUserId(user.getId())
-                .orElseGet(() -> createCart(user));
+        Cart cart =
+                getOrCreateCart(user);
 
-        CartItem existingItem = cart.getItems()
-                .stream()
-                .filter(item ->
-                        item.getProduct()
-                                .getId()
-                                .equals(product.getId())
-                )
-                .findFirst()
-                .orElse(null);
-
-        int currentQuantity =
-                existingItem == null
-                        ? 0
-                        : existingItem.getQuantity();
+        Optional<CartItem> existingItem =
+                findItemByProductId(
+                        cart,
+                        product.getId()
+                );
 
         long requestedTotalQuantity =
-                (long) currentQuantity
-                        + request.getQuantity();
+                calculateRequestedTotalQuantity(
+                        existingItem,
+                        request.getQuantity()
+                );
 
         validateAvailableStock(
                 product,
                 requestedTotalQuantity
         );
 
-        if (existingItem == null) {
-            CartItem newItem = new CartItem();
+        addOrIncreaseItem(
+                cart,
+                existingItem,
+                product,
+                request.getQuantity(),
+                requestedTotalQuantity
+        );
 
-            newItem.setProduct(product);
-            newItem.setQuantity(request.getQuantity());
-
-            cart.addItem(newItem);
-        } else {
-            existingItem.setQuantity(
-                    Math.toIntExact(
-                            requestedTotalQuantity
-                    )
-            );
-        }
-
-        Cart savedCart =
-                cartDao.saveAndFlush(cart);
-
-        return new CartResponse(savedCart);
+        return saveAndConvert(cart);
     }
 
     @Transactional
@@ -109,34 +112,35 @@ public class CartService {
             UpdateCartItemQuantityRequest request
     ) {
 
-        LocalUser user = lockUser(currentUser.getId());
+        LocalUser user =
+                lockUser(currentUser.getId());
 
-        Cart cart = getCartOrThrow(user.getId());
+        Cart cart =
+                getCartForItemOperationOrThrow(
+                        user.getId()
+                );
 
-        CartItem item = getOwnedItemOrThrow(
-                cart,
-                itemId
-        );
+        CartItem item =
+                getOwnedItemOrThrow(
+                        cart,
+                        itemId
+                );
 
-        Product product = item.getProduct();
+        Product product =
+                item.getProduct();
 
-        if (!Boolean.TRUE.equals(product.getActive())) {
-            throw new ResourceNotFoundException(
-                    "Product was not found"
-            );
-        }
+        validateActiveProduct(product);
 
         validateAvailableStock(
                 product,
                 request.getQuantity()
         );
 
-        item.setQuantity(request.getQuantity());
+        item.setQuantity(
+                request.getQuantity()
+        );
 
-        Cart savedCart =
-                cartDao.saveAndFlush(cart);
-
-        return new CartResponse(savedCart);
+        return saveAndConvert(cart);
     }
 
     @Transactional
@@ -145,41 +149,38 @@ public class CartService {
             Long itemId
     ) {
 
-        LocalUser user = lockUser(currentUser.getId());
+        LocalUser user =
+                lockUser(currentUser.getId());
 
-        Cart cart = getCartOrThrow(user.getId());
+        Cart cart =
+                getCartForItemOperationOrThrow(
+                        user.getId()
+                );
 
-        CartItem item = getOwnedItemOrThrow(
-                cart,
-                itemId
-        );
+        CartItem item =
+                getOwnedItemOrThrow(
+                        cart,
+                        itemId
+                );
 
         cart.removeItem(item);
 
-        Cart savedCart =
-                cartDao.saveAndFlush(cart);
-
-        return new CartResponse(savedCart);
+        return saveAndConvert(cart);
     }
 
     @Transactional
-    public CartResponse clearCart(LocalUser currentUser) {
+    public CartResponse clearCart(
+            LocalUser currentUser
+    ) {
 
-        LocalUser user = lockUser(
-                currentUser.getId()
-        );
+        LocalUser user =
+                lockUser(currentUser.getId());
 
         return cartDao
-                .findDetailedByUserId(user.getId())
-                .map(cart -> {
-
-                    cart.clearItems();
-
-                    Cart savedCart =
-                            cartDao.saveAndFlush(cart);
-
-                    return new CartResponse(savedCart);
-                })
+                .findDetailedByUserId(
+                        user.getId()
+                )
+                .map(this::clearAndConvert)
                 .orElseGet(CartResponse::empty);
     }
 
@@ -189,23 +190,13 @@ public class CartService {
             CartCheckoutRequest request
     ) {
 
-        LocalUser user = lockUser(
-                currentUser.getId()
-        );
+        LocalUser user =
+                lockUser(currentUser.getId());
 
-        Cart cart = cartDao
-                .findDetailedByUserId(user.getId())
-                .orElseThrow(() ->
-                        new InvalidOrderStatusException(
-                                "Cart is empty"
-                        )
+        Cart cart =
+                getNonEmptyCartForCheckout(
+                        user.getId()
                 );
-
-        if (cart.getItems().isEmpty()) {
-            throw new InvalidOrderStatusException(
-                    "Cart is empty"
-            );
-        }
 
         OrderRequest orderRequest =
                 createOrderRequest(
@@ -219,90 +210,82 @@ public class CartService {
                         orderRequest
                 );
 
-        /*
-         * StockDao uses database update queries while creating
-         * the order, so we reload the cart before clearing it.
-         */
-        Cart cartToClear = cartDao
-                .findDetailedByUserId(user.getId())
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Cart was not found"
-                        )
-                );
-
-        cartToClear.clearItems();
-
-        cartDao.saveAndFlush(cartToClear);
+        clearCartAfterCheckout(
+                user.getId()
+        );
 
         return orderResponse;
     }
 
-    private OrderRequest createOrderRequest(
-            Cart cart,
-            Long addressId
+    private LocalUser lockUser(
+            Long userId
     ) {
-
-        OrderRequest orderRequest =
-                new OrderRequest();
-
-        orderRequest.setAddressId(addressId);
-
-        orderRequest.setItems(
-                cart.getItems()
-                        .stream()
-                        .map(item -> {
-
-                            OrderItemRequest itemRequest =
-                                    new OrderItemRequest();
-
-                            itemRequest.setProductId(
-                                    item.getProduct().getId()
-                            );
-
-                            itemRequest.setQuantity(
-                                    item.getQuantity()
-                            );
-
-                            return itemRequest;
-                        })
-                        .toList()
-        );
-
-        return orderRequest;
-    }
-
-    private LocalUser lockUser(Long userId) {
 
         return localUserDao
                 .findByIdForUpdate(userId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
-                                "User was not found"
+                                USER_NOT_FOUND
                         )
                 );
     }
 
-    private Product getActiveProduct(Long productId) {
+    private Product getActiveProduct(
+            Long productId
+    ) {
 
         Product product = productDao
                 .findById(productId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
-                                "Product was not found"
+                                PRODUCT_NOT_FOUND
                         )
                 );
 
-        if (!Boolean.TRUE.equals(product.getActive())) {
-            throw new ResourceNotFoundException(
-                    "Product was not found"
-            );
-        }
+        validateActiveProduct(product);
 
         return product;
     }
 
-    private Cart getCartOrThrow(Long userId) {
+    private void validateActiveProduct(
+            Product product
+    ) {
+
+        if (!Boolean.TRUE.equals(
+                product.getActive()
+        )) {
+            throw new ResourceNotFoundException(
+                    PRODUCT_NOT_FOUND
+            );
+        }
+    }
+
+    private Cart getOrCreateCart(
+            LocalUser user
+    ) {
+
+        return cartDao
+                .findDetailedByUserId(
+                        user.getId()
+                )
+                .orElseGet(() ->
+                        createCart(user)
+                );
+    }
+
+    private Cart createCart(
+            LocalUser user
+    ) {
+
+        Cart cart = new Cart();
+        cart.setUser(user);
+
+        return cart;
+    }
+
+    private Cart getCartForItemOperationOrThrow(
+            Long userId
+    ) {
 
         return cartDao
                 .findDetailedByUserId(userId)
@@ -313,6 +296,42 @@ public class CartService {
                 );
     }
 
+    private Cart getNonEmptyCartForCheckout(
+            Long userId
+    ) {
+
+        Cart cart = cartDao
+                .findDetailedByUserId(userId)
+                .orElseThrow(() ->
+                        new InvalidOrderStatusException(
+                                CART_EMPTY
+                        )
+                );
+
+        if (cart.getItems().isEmpty()) {
+            throw new InvalidOrderStatusException(
+                    CART_EMPTY
+            );
+        }
+
+        return cart;
+    }
+
+    private Optional<CartItem> findItemByProductId(
+            Cart cart,
+            Long productId
+    ) {
+
+        return cart.getItems()
+                .stream()
+                .filter(item ->
+                        item.getProduct()
+                                .getId()
+                                .equals(productId)
+                )
+                .findFirst();
+    }
+
     private CartItem getOwnedItemOrThrow(
             Cart cart,
             Long itemId
@@ -321,7 +340,8 @@ public class CartService {
         return cart.getItems()
                 .stream()
                 .filter(item ->
-                        item.getId().equals(itemId)
+                        item.getId()
+                                .equals(itemId)
                 )
                 .findFirst()
                 .orElseThrow(() ->
@@ -329,6 +349,49 @@ public class CartService {
                                 CART_ITEM_NOT_FOUND
                         )
                 );
+    }
+
+    private long calculateRequestedTotalQuantity(
+            Optional<CartItem> existingItem,
+            Integer quantityToAdd
+    ) {
+
+        int currentQuantity =
+                existingItem
+                        .map(CartItem::getQuantity)
+                        .orElse(0);
+
+        return (long) currentQuantity
+                + quantityToAdd;
+    }
+
+    private void addOrIncreaseItem(
+            Cart cart,
+            Optional<CartItem> existingItem,
+            Product product,
+            Integer quantityToAdd,
+            long requestedTotalQuantity
+    ) {
+
+        if (existingItem.isPresent()) {
+            existingItem
+                    .get()
+                    .setQuantity(
+                            Math.toIntExact(
+                                    requestedTotalQuantity
+                            )
+                    );
+
+            return;
+        }
+
+        CartItem newItem =
+                new CartItem();
+
+        newItem.setProduct(product);
+        newItem.setQuantity(quantityToAdd);
+
+        cart.addItem(newItem);
     }
 
     private void validateAvailableStock(
@@ -352,11 +415,83 @@ public class CartService {
         }
     }
 
-    private Cart createCart(LocalUser user) {
+    private CartResponse saveAndConvert(
+            Cart cart
+    ) {
 
-        Cart cart = new Cart();
-        cart.setUser(user);
+        Cart savedCart =
+                cartDao.saveAndFlush(cart);
 
-        return cart;
+        return new CartResponse(savedCart);
+    }
+
+    private CartResponse clearAndConvert(
+            Cart cart
+    ) {
+
+        cart.clearItems();
+
+        return saveAndConvert(cart);
+    }
+
+    private OrderRequest createOrderRequest(
+            Cart cart,
+            Long addressId
+    ) {
+
+        OrderRequest orderRequest =
+                new OrderRequest();
+
+        orderRequest.setAddressId(addressId);
+
+        orderRequest.setItems(
+                cart.getItems()
+                        .stream()
+                        .map(this::createOrderItemRequest)
+                        .toList()
+        );
+
+        return orderRequest;
+    }
+
+    private OrderItemRequest createOrderItemRequest(
+            CartItem cartItem
+    ) {
+
+        OrderItemRequest itemRequest =
+                new OrderItemRequest();
+
+        itemRequest.setProductId(
+                cartItem.getProduct()
+                        .getId()
+        );
+
+        itemRequest.setQuantity(
+                cartItem.getQuantity()
+        );
+
+        return itemRequest;
+    }
+
+    private void clearCartAfterCheckout(
+            Long userId
+    ) {
+
+        /*
+         * Order creation updates stock using database-level
+         * update queries. Reload the cart before clearing it
+         * to keep the persistence context consistent.
+         */
+        Cart cartToClear = cartDao
+                .findDetailedByUserId(userId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                CART_NOT_FOUND
+                        )
+                );
+
+        cartToClear.clearItems();
+
+        cartDao.saveAndFlush(cartToClear);
     }
 }
