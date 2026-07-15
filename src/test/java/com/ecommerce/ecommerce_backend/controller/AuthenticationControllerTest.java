@@ -6,6 +6,7 @@ import com.ecommerce.ecommerce_backend.dto.RegistrationBody;
 import com.ecommerce.ecommerce_backend.model.LocalUser;
 import com.ecommerce.ecommerce_backend.service.JWTService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.icegreen.greenmail.configuration.GreenMailConfiguration;
 import com.icegreen.greenmail.junit5.GreenMailExtension;
 import com.icegreen.greenmail.util.ServerSetupTest;
@@ -673,7 +674,101 @@ public class AuthenticationControllerTest {
                 );
     }
 
+    @Test
+    @Transactional
+    public void logoutAllInvalidatesEveryLoginSession()
+            throws Exception {
+
+        JsonNode firstLogin =
+                loginAndGetTokenPair();
+
+        JsonNode secondLogin =
+                loginAndGetTokenPair();
+
+        mvc.perform(
+                        post("/auth/logout-all")
+                                .header(
+                                        "Authorization",
+                                        "Bearer "
+                                                + firstLogin
+                                                .get("accessToken")
+                                                .asText()
+                                )
+                )
+                .andExpect(
+                        status().isNoContent()
+                );
+
+        RefreshTokenRequest firstRequest =
+                new RefreshTokenRequest();
+
+        firstRequest.setRefreshToken(
+                firstLogin
+                        .get("refreshToken")
+                        .asText()
+        );
+
+        RefreshTokenRequest secondRequest =
+                new RefreshTokenRequest();
+
+        secondRequest.setRefreshToken(
+                secondLogin
+                        .get("refreshToken")
+                        .asText()
+        );
+
+        mvc.perform(
+                        post("/auth/refresh")
+                                .contentType(
+                                        MediaType.APPLICATION_JSON
+                                )
+                                .content(
+                                        objectMapper.writeValueAsString(
+                                                firstRequest
+                                        )
+                                )
+                )
+                .andExpect(
+                        status().isBadRequest()
+                );
+
+        mvc.perform(
+                        post("/auth/refresh")
+                                .contentType(
+                                        MediaType.APPLICATION_JSON
+                                )
+                                .content(
+                                        objectMapper.writeValueAsString(
+                                                secondRequest
+                                        )
+                                )
+                )
+                .andExpect(
+                        status().isBadRequest()
+                );
+    }
+
+    @Test
+    public void logoutAllRequiresAuthentication()
+            throws Exception {
+
+        mvc.perform(
+                        post("/auth/logout-all")
+                )
+                .andExpect(
+                        status().isUnauthorized()
+                );
+    }
+
     private String loginAndGetRefreshToken()
+            throws Exception {
+
+        return loginAndGetTokenPair()
+                .get("refreshToken")
+                .asText();
+    }
+
+    private JsonNode loginAndGetTokenPair()
             throws Exception {
 
         String responseBody =
@@ -694,9 +789,8 @@ public class AuthenticationControllerTest {
                         .getResponse()
                         .getContentAsString();
 
-        return objectMapper
-                .readTree(responseBody)
-                .get("refreshToken")
-                .asText();
+        return objectMapper.readTree(
+                responseBody
+        );
     }
 }

@@ -1,6 +1,7 @@
 package com.ecommerce.ecommerce_backend.service;
 
 import com.ecommerce.ecommerce_backend.config.JwtProperties;
+import com.ecommerce.ecommerce_backend.dao.LocalUserDao;
 import com.ecommerce.ecommerce_backend.dao.RefreshSessionDao;
 import com.ecommerce.ecommerce_backend.exception.InvalidTokenException;
 import com.ecommerce.ecommerce_backend.model.LocalUser;
@@ -21,6 +22,7 @@ public class RefreshSessionService {
             "Invalid or expired refresh token";
 
     private final RefreshSessionDao refreshSessionDao;
+    private final LocalUserDao localUserDao;
     private final JwtProperties jwtProperties;
 
     @Transactional
@@ -116,6 +118,30 @@ public class RefreshSessionService {
 
         refreshSessionDao.saveAndFlush(
                 refreshSession
+        );
+    }
+
+    @Transactional
+    public void revokeAllSessions(
+            Long userId
+    ) {
+
+        LocalUser user = localUserDao
+                .findByIdForUpdate(userId)
+                .orElseThrow(() ->
+                        new IllegalStateException(
+                                "Authenticated user no longer exists"
+                        )
+                );
+
+        user.setRefreshTokenVersion(
+                user.getRefreshTokenVersion() + 1
+        );
+
+        localUserDao.saveAndFlush(user);
+
+        refreshSessionDao.revokeAllActiveByUserId(
+                userId
         );
     }
 

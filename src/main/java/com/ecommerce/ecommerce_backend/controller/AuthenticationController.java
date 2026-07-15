@@ -94,6 +94,19 @@ public class AuthenticationController {
                 .build();
     }
 
+    @PostMapping("/logout-all")
+    public ResponseEntity<Void> logoutAll(
+            @AuthenticationPrincipal
+            LocalUser user
+    ) {
+
+        userService.logoutAll(user);
+
+        return ResponseEntity
+                .noContent()
+                .build();
+    }
+
     @PostMapping("/verify")
     public ResponseEntity<Void> verifyEmail(
             @RequestParam

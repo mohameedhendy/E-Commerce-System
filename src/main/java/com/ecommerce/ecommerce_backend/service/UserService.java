@@ -278,6 +278,16 @@ public class UserService {
         );
     }
 
+    @Transactional
+    public void logoutAll(
+            LocalUser user
+    ) {
+
+        refreshSessionService.revokeAllSessions(
+                user.getId()
+        );
+    }
+
     public void forgotPassword(
             String email
     ) throws EmailFailureException {

@@ -3,9 +3,11 @@ package com.ecommerce.ecommerce_backend.service;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.ecommerce.ecommerce_backend.dao.RefreshSessionDao;
+import com.ecommerce.ecommerce_backend.dao.LocalUserDao;
 import com.ecommerce.ecommerce_backend.dto.LoginBody;
 import com.ecommerce.ecommerce_backend.dto.LoginResponse;
 import com.ecommerce.ecommerce_backend.exception.InvalidTokenException;
+import com.ecommerce.ecommerce_backend.model.LocalUser;
 import com.ecommerce.ecommerce_backend.model.RefreshSession;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -25,6 +27,9 @@ public class RefreshSessionRefreshIntegrationTest {
 
     @Autowired
     private RefreshSessionDao refreshSessionDao;
+
+    @Autowired
+    private LocalUserDao localUserDao;
 
     @Test
     public void refreshRotatesSessionAndReturnsNewTokenPair()
@@ -334,6 +339,81 @@ public class RefreshSessionRefreshIntegrationTest {
 
         Assertions.assertNotNull(
                 secondSessionResponse.getRefreshToken()
+        );
+    }
+
+    @Test
+    public void logoutAllRevokesEveryRefreshSession()
+            throws Exception {
+
+        LocalUser user = localUserDao
+                .findByUsernameIgnoreCase("UserA")
+                .orElseThrow();
+
+        long originalGlobalVersion =
+                user.getRefreshTokenVersion();
+
+        LoginResponse firstLogin =
+                loginAsUserA();
+
+        LoginResponse secondLogin =
+                loginAsUserA();
+
+        JWTService.RefreshTokenData firstTokenData =
+                jwtService.getRefreshTokenData(
+                        firstLogin.getRefreshToken()
+                );
+
+        JWTService.RefreshTokenData secondTokenData =
+                jwtService.getRefreshTokenData(
+                        secondLogin.getRefreshToken()
+                );
+
+        userService.logoutAll(user);
+
+        RefreshSession firstSession =
+                refreshSessionDao
+                        .findBySessionId(
+                                firstTokenData.sessionId()
+                        )
+                        .orElseThrow();
+
+        RefreshSession secondSession =
+                refreshSessionDao
+                        .findBySessionId(
+                                secondTokenData.sessionId()
+                        )
+                        .orElseThrow();
+
+        Assertions.assertTrue(
+                firstSession.isRevoked()
+        );
+
+        Assertions.assertTrue(
+                secondSession.isRevoked()
+        );
+
+        LocalUser updatedUser = localUserDao
+                .findByUsernameIgnoreCase("UserA")
+                .orElseThrow();
+
+        Assertions.assertEquals(
+                originalGlobalVersion + 1,
+                updatedUser.getRefreshTokenVersion()
+        );
+
+        Assertions.assertThrows(
+                InvalidTokenException.class,
+                () -> userService.refreshAccessToken(
+                        firstLogin.getRefreshToken()
+                )
+        );
+
+        Assertions.assertThrows(
+                InvalidTokenException.class,
+                () -> userService.refreshAccessToken(
+                        secondLogin.getRefreshToken()
+                )
         );
     }
 
