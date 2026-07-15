@@ -91,6 +91,34 @@ public class RefreshSessionService {
         );
     }
 
+    @Transactional
+    public void revokeSession(
+            JWTService.RefreshTokenData tokenData
+    ) throws InvalidTokenException {
+
+        RefreshSession refreshSession =
+                refreshSessionDao
+                        .findBySessionIdForUpdate(
+                                tokenData.sessionId()
+                        )
+                        .orElseThrow(() ->
+                                new InvalidTokenException(
+                                        INVALID_REFRESH_TOKEN
+                                )
+                        );
+
+        validateSession(
+                refreshSession,
+                tokenData
+        );
+
+        refreshSession.setRevoked(true);
+
+        refreshSessionDao.saveAndFlush(
+                refreshSession
+        );
+    }
+
     private void validateSession(
             RefreshSession refreshSession,
             JWTService.RefreshTokenData tokenData

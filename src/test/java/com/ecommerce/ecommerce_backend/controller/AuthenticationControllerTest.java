@@ -609,6 +609,70 @@ public class AuthenticationControllerTest {
                 );
     }
 
+    @Test
+    @Transactional
+    public void logoutDoesNotInvalidateAnotherLoginSession()
+            throws Exception {
+
+        String firstRefreshToken =
+                loginAndGetRefreshToken();
+
+        String secondRefreshToken =
+                loginAndGetRefreshToken();
+
+        RefreshTokenRequest logoutRequest =
+                new RefreshTokenRequest();
+
+        logoutRequest.setRefreshToken(
+                firstRefreshToken
+        );
+
+        mvc.perform(
+                        post("/auth/logout")
+                                .contentType(
+                                        MediaType.APPLICATION_JSON
+                                )
+                                .content(
+                                        objectMapper.writeValueAsString(
+                                                logoutRequest
+                                        )
+                                )
+                )
+                .andExpect(
+                        status().isNoContent()
+                );
+
+        RefreshTokenRequest secondSessionRequest =
+                new RefreshTokenRequest();
+
+        secondSessionRequest.setRefreshToken(
+                secondRefreshToken
+        );
+
+        mvc.perform(
+                        post("/auth/refresh")
+                                .contentType(
+                                        MediaType.APPLICATION_JSON
+                                )
+                                .content(
+                                        objectMapper.writeValueAsString(
+                                                secondSessionRequest
+                                        )
+                                )
+                )
+                .andExpect(
+                        status().isOk()
+                )
+                .andExpect(
+                        jsonPath("$.accessToken")
+                                .isNotEmpty()
+                )
+                .andExpect(
+                        jsonPath("$.refreshToken")
+                                .isNotEmpty()
+                );
+    }
+
     private String loginAndGetRefreshToken()
             throws Exception {
 

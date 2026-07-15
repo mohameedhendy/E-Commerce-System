@@ -262,6 +262,81 @@ public class RefreshSessionRefreshIntegrationTest {
         );
     }
 
+    @Test
+    public void logoutRevokesOnlyCurrentRefreshSession()
+            throws Exception {
+
+        LoginResponse firstLogin =
+                loginAsUserA();
+
+        LoginResponse secondLogin =
+                loginAsUserA();
+
+        String firstRefreshToken =
+                firstLogin.getRefreshToken();
+
+        String secondRefreshToken =
+                secondLogin.getRefreshToken();
+
+        JWTService.RefreshTokenData firstTokenData =
+                jwtService.getRefreshTokenData(
+                        firstRefreshToken
+                );
+
+        JWTService.RefreshTokenData secondTokenData =
+                jwtService.getRefreshTokenData(
+                        secondRefreshToken
+                );
+
+        userService.logout(
+                firstRefreshToken
+        );
+
+        RefreshSession firstSession =
+                refreshSessionDao
+                        .findBySessionId(
+                                firstTokenData.sessionId()
+                        )
+                        .orElseThrow();
+
+        RefreshSession secondSession =
+                refreshSessionDao
+                        .findBySessionId(
+                                secondTokenData.sessionId()
+                        )
+                        .orElseThrow();
+
+        Assertions.assertTrue(
+                firstSession.isRevoked(),
+                "The logged-out session must be revoked."
+        );
+
+        Assertions.assertFalse(
+                secondSession.isRevoked(),
+                "Logging out must not revoke another login session."
+        );
+
+        Assertions.assertThrows(
+                InvalidTokenException.class,
+                () -> userService.refreshAccessToken(
+                        firstRefreshToken
+                )
+        );
+
+        LoginResponse secondSessionResponse =
+                userService.refreshAccessToken(
+                        secondRefreshToken
+                );
+
+        Assertions.assertNotNull(
+                secondSessionResponse.getAccessToken()
+        );
+
+        Assertions.assertNotNull(
+                secondSessionResponse.getRefreshToken()
+        );
+    }
+
     private LoginResponse loginAsUserA()
             throws Exception {
 
