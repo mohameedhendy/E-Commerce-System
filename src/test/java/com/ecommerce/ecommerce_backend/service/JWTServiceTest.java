@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.util.List;
 import java.util.UUID;
 
 @SpringBootTest
@@ -612,6 +613,59 @@ public class JWTServiceTest {
                 tokenExpirySeconds
                         <= afterGeneration
                         + configuredExpirySeconds
+        );
+    }
+
+    @Test
+    public void generatedTokensContainIssuedAtAndUniqueJwtIds() {
+
+        LocalUser user = localUserDao
+                .findByUsernameIgnoreCase("UserA")
+                .orElseThrow();
+
+        List<String> generatedTokens =
+                List.of(
+                        jwtService.generateToken(user),
+                        generateSessionRefreshToken(user),
+                        jwtService.generateVerificationJWT(user),
+                        jwtService.generatePasswordResetJWT(user)
+                );
+
+        List<DecodedJWT> decodedTokens =
+                generatedTokens
+                        .stream()
+                        .map(JWT::decode)
+                        .toList();
+
+        decodedTokens.forEach(token -> {
+
+            Assertions.assertNotNull(
+                    token.getIssuedAt(),
+                    "Every JWT must contain an issued-at value."
+            );
+
+            Assertions.assertNotNull(
+                    token.getId(),
+                    "Every JWT must contain a JWT ID."
+            );
+
+            Assertions.assertFalse(
+                    token.getId().isBlank(),
+                    "JWT ID must not be blank."
+            );
+        });
+
+        long uniqueJwtIds =
+                decodedTokens
+                        .stream()
+                        .map(DecodedJWT::getId)
+                        .distinct()
+                        .count();
+
+        Assertions.assertEquals(
+                generatedTokens.size(),
+                uniqueJwtIds,
+                "Every generated JWT must have a unique ID."
         );
     }
 }

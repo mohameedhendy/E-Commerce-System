@@ -1,6 +1,7 @@
 package com.ecommerce.ecommerce_backend.service;
 
 import com.auth0.jwt.JWT;
+import com.auth0.jwt.JWTCreator;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.ecommerce.ecommerce_backend.config.JwtProperties;
@@ -10,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -113,17 +115,12 @@ public class JWTService {
             LocalUser user
     ) {
 
-        return JWT.create()
+        return createTokenBuilder(
+                TokenType.EMAIL_VERIFICATION
+        )
                 .withClaim(
                         VERIFICATION_EMAIL_KEY,
                         user.getEmail()
-                )
-                .withClaim(
-                        TOKEN_TYPE_KEY,
-                        TokenType.EMAIL_VERIFICATION.name()
-                )
-                .withIssuer(
-                        jwtProperties.issuer()
                 )
                 .withExpiresAt(
                         createExpiryDate(
@@ -137,7 +134,9 @@ public class JWTService {
             LocalUser user
     ) {
 
-        return JWT.create()
+        return createTokenBuilder(
+                TokenType.PASSWORD_RESET
+        )
                 .withClaim(
                         RESET_PASSWORD_EMAIL_KEY,
                         user.getEmail()
@@ -145,13 +144,6 @@ public class JWTService {
                 .withClaim(
                         RESET_PASSWORD_VERSION_KEY,
                         user.getPasswordResetVersion()
-                )
-                .withClaim(
-                        TOKEN_TYPE_KEY,
-                        TokenType.PASSWORD_RESET.name()
-                )
-                .withIssuer(
-                        jwtProperties.issuer()
                 )
                 .withExpiresAt(
                         createExpiryDate(
@@ -258,7 +250,9 @@ public class JWTService {
             Date expiresAt
     ) {
 
-        return JWT.create()
+        return createTokenBuilder(
+                TokenType.REFRESH
+        )
                 .withClaim(
                         USERNAME_KEY,
                         user.getUsername()
@@ -275,13 +269,6 @@ public class JWTService {
                         REFRESH_SESSION_VERSION_KEY,
                         sessionVersion
                 )
-                .withClaim(
-                        TOKEN_TYPE_KEY,
-                        TokenType.REFRESH.name()
-                )
-                .withIssuer(
-                        jwtProperties.issuer()
-                )
                 .withExpiresAt(expiresAt)
                 .sign(algorithm);
     }
@@ -292,17 +279,12 @@ public class JWTService {
             long expirySeconds
     ) {
 
-        return JWT.create()
+        return createTokenBuilder(
+                tokenType
+        )
                 .withClaim(
                         USERNAME_KEY,
                         user.getUsername()
-                )
-                .withClaim(
-                        TOKEN_TYPE_KEY,
-                        tokenType.name()
-                )
-                .withIssuer(
-                        jwtProperties.issuer()
                 )
                 .withExpiresAt(
                         createExpiryDate(
@@ -327,6 +309,27 @@ public class JWTService {
                 )
                 .build()
                 .verify(token);
+    }
+
+    private JWTCreator.Builder createTokenBuilder(
+            TokenType tokenType
+    ) {
+
+        return JWT.create()
+                .withClaim(
+                        TOKEN_TYPE_KEY,
+                        tokenType.name()
+                )
+                .withIssuer(
+                        jwtProperties.issuer()
+                )
+                .withIssuedAt(
+                        new Date()
+                )
+                .withJWTId(
+                        UUID.randomUUID()
+                                .toString()
+                );
     }
 
     private void validateRefreshSessionData(
