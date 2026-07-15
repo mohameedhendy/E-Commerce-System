@@ -76,10 +76,8 @@ public class JWTService {
     }
 
     /**
-     * Temporary compatibility method for the existing refresh-token flow.
-     *
-     * Session-based login will use the overloaded method that receives
-     * sessionId and sessionVersion.
+     * Temporary compatibility method for refresh tokens
+     * created before session-based authentication.
      */
     public String generateRefreshToken(
             LocalUser user
@@ -88,7 +86,11 @@ public class JWTService {
         return buildRefreshToken(
                 user,
                 null,
-                null
+                null,
+                createExpiryDate(
+                        jwtProperties
+                                .refreshExpiryInSeconds()
+                )
         );
     }
 
@@ -98,24 +100,35 @@ public class JWTService {
             long sessionVersion
     ) {
 
-        if (sessionId == null
-                || sessionId.isBlank()) {
+        return generateRefreshToken(
+                user,
+                sessionId,
+                sessionVersion,
+                createExpiryDate(
+                        jwtProperties
+                                .refreshExpiryInSeconds()
+                )
+        );
+    }
 
-            throw new IllegalArgumentException(
-                    "Refresh session ID is required"
-            );
-        }
+    public String generateRefreshToken(
+            LocalUser user,
+            String sessionId,
+            long sessionVersion,
+            Date expiresAt
+    ) {
 
-        if (sessionVersion < 0) {
-            throw new IllegalArgumentException(
-                    "Refresh session version cannot be negative"
-            );
-        }
+        validateRefreshSessionData(
+                sessionId,
+                sessionVersion,
+                expiresAt
+        );
 
         return buildRefreshToken(
                 user,
                 sessionId,
-                sessionVersion
+                sessionVersion,
+                expiresAt
         );
     }
 
@@ -264,7 +277,8 @@ public class JWTService {
     private String buildRefreshToken(
             LocalUser user,
             String sessionId,
-            Long sessionVersion
+            Long sessionVersion,
+            Date expiresAt
     ) {
 
         JWTCreator.Builder tokenBuilder =
@@ -284,12 +298,7 @@ public class JWTService {
                         .withIssuer(
                                 jwtProperties.issuer()
                         )
-                        .withExpiresAt(
-                                createExpiryDate(
-                                        jwtProperties
-                                                .refreshExpiryInSeconds()
-                                )
-                        );
+                        .withExpiresAt(expiresAt);
 
         if (sessionId != null
                 && sessionVersion != null) {
@@ -349,6 +358,35 @@ public class JWTService {
                 )
                 .build()
                 .verify(token);
+    }
+
+    private void validateRefreshSessionData(
+            String sessionId,
+            long sessionVersion,
+            Date expiresAt
+    ) {
+
+        if (sessionId == null
+                || sessionId.isBlank()) {
+
+            throw new IllegalArgumentException(
+                    "Refresh session ID is required"
+            );
+        }
+
+        if (sessionVersion < 0) {
+            throw new IllegalArgumentException(
+                    "Refresh session version cannot be negative"
+            );
+        }
+
+        if (expiresAt == null
+                || !expiresAt.after(new Date())) {
+
+            throw new IllegalArgumentException(
+                    "Refresh session expiry must be in the future"
+            );
+        }
     }
 
     private Date createExpiryDate(

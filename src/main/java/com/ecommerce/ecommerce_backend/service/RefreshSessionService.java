@@ -2,6 +2,7 @@ package com.ecommerce.ecommerce_backend.service;
 
 import com.ecommerce.ecommerce_backend.config.JwtProperties;
 import com.ecommerce.ecommerce_backend.dao.RefreshSessionDao;
+import com.ecommerce.ecommerce_backend.exception.InvalidTokenException;
 import com.ecommerce.ecommerce_backend.model.LocalUser;
 import com.ecommerce.ecommerce_backend.model.RefreshSession;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +16,9 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class RefreshSessionService {
+
+    private static final String INVALID_REFRESH_TOKEN =
+            "Invalid or expired refresh token";
 
     private final RefreshSessionDao refreshSessionDao;
     private final JwtProperties jwtProperties;
@@ -55,5 +59,89 @@ public class RefreshSessionService {
         return refreshSessionDao.save(
                 refreshSession
         );
+    }
+
+    @Transactional
+    public RefreshSession rotateSession(
+            JWTService.RefreshTokenData tokenData
+    ) throws InvalidTokenException {
+
+        RefreshSession refreshSession =
+                refreshSessionDao
+                        .findBySessionIdForUpdate(
+                                tokenData.sessionId()
+                        )
+                        .orElseThrow(() ->
+                                new InvalidTokenException(
+                                        INVALID_REFRESH_TOKEN
+                                )
+                        );
+
+        validateSession(
+                refreshSession,
+                tokenData
+        );
+
+        refreshSession.setTokenVersion(
+                refreshSession.getTokenVersion() + 1
+        );
+
+        return refreshSessionDao.saveAndFlush(
+                refreshSession
+        );
+    }
+
+    private void validateSession(
+            RefreshSession refreshSession,
+            JWTService.RefreshTokenData tokenData
+    ) throws InvalidTokenException {
+
+        LocalUser user =
+                refreshSession.getUser();
+
+        boolean usernameMatches =
+                user.getUsername()
+                        .equalsIgnoreCase(
+                                tokenData.username()
+                        );
+
+        boolean globalVersionMatches =
+                user.getRefreshTokenVersion()
+                        == tokenData
+                        .version()
+                        .longValue();
+
+        boolean sessionVersionMatches =
+                refreshSession.getTokenVersion()
+                        == tokenData
+                        .sessionVersion()
+                        .longValue();
+
+        boolean sessionActive =
+                !refreshSession.isRevoked();
+
+        boolean sessionNotExpired =
+                refreshSession.getExpiresAt() != null
+                        && refreshSession
+                        .getExpiresAt()
+                        .toInstant()
+                        .isAfter(
+                                Instant.now()
+                        );
+
+        boolean userVerified =
+                user.isEmailVerified();
+
+        if (!usernameMatches
+                || !globalVersionMatches
+                || !sessionVersionMatches
+                || !sessionActive
+                || !sessionNotExpired
+                || !userVerified) {
+
+            throw new InvalidTokenException(
+                    INVALID_REFRESH_TOKEN
+            );
+        }
     }
 }
