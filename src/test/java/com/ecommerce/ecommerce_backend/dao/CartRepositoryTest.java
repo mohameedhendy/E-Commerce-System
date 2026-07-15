@@ -46,7 +46,9 @@ public class CartRepositoryTest {
         );
 
         Cart foundCart = cartDao
-                .findByUser_Id(user.getId())
+                .findDetailedByUserId(
+                        user.getId()
+                )
                 .orElseThrow();
 
         Assertions.assertEquals(

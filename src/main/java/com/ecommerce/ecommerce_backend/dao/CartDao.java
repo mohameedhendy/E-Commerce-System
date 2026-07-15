@@ -8,11 +8,12 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
 
-public interface CartDao extends JpaRepository<Cart, Long> {
+public interface CartDao
+        extends JpaRepository<Cart, Long> {
 
-    Optional<Cart> findByUser_Id(Long userId);
-
-    boolean existsByUser_Id(Long userId);
+    boolean existsByUser_Id(
+            Long userId
+    );
 
     @EntityGraph(
             attributePaths = {
