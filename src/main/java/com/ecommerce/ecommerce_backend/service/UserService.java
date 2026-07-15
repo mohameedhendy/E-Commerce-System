@@ -14,6 +14,7 @@ import com.ecommerce.ecommerce_backend.exception.InvalidTokenException;
 import com.ecommerce.ecommerce_backend.exception.UserAlreadyExistException;
 import com.ecommerce.ecommerce_backend.exception.UserNotVerifiedException;
 import com.ecommerce.ecommerce_backend.model.LocalUser;
+import com.ecommerce.ecommerce_backend.model.RefreshSession;
 import com.ecommerce.ecommerce_backend.model.Role;
 import com.ecommerce.ecommerce_backend.model.VerificationToken;
 import lombok.RequiredArgsConstructor;
@@ -41,6 +42,7 @@ public class UserService {
     private final LocalUserDao userDao;
     private final EncryptionService encryptionService;
     private final JWTService jwtService;
+    private final RefreshSessionService refreshSessionService;
     private final EmailService emailService;
     private final VerificationTokenDAO verificationTokenDAO;
     private final ApplicationProperties applicationProperties;
@@ -155,7 +157,9 @@ public class UserService {
         }
 
         if (user.isEmailVerified()) {
-            return createLoginResponse(user);
+            return createSessionBackedLoginResponse(
+                    user
+            );
         }
 
         boolean emailVerificationEnabled =
@@ -304,7 +308,7 @@ public class UserService {
                         )
                 );
 
-        return createLoginResponse(
+        return createLegacyLoginResponse(
                 rotatedUser
         );
     }
@@ -496,7 +500,38 @@ public class UserService {
         return verificationToken;
     }
 
-    private LoginResponse createLoginResponse(
+    private LoginResponse createSessionBackedLoginResponse(
+            LocalUser user
+    ) {
+
+        RefreshSession refreshSession =
+                refreshSessionService.createSession(
+                        user
+                );
+
+        String accessToken =
+                jwtService.generateToken(user);
+
+        String refreshToken =
+                jwtService.generateRefreshToken(
+                        user,
+                        refreshSession.getSessionId(),
+                        refreshSession.getTokenVersion()
+                );
+
+        return new LoginResponse(
+                accessToken,
+                refreshToken
+        );
+    }
+
+    /**
+     * Temporary compatibility method for the existing refresh flow.
+     *
+     * It will be removed when refreshAccessToken is migrated to use
+     * RefreshSession records in the next step.
+     */
+    private LoginResponse createLegacyLoginResponse(
             LocalUser user
     ) {
 
