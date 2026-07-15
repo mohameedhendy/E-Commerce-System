@@ -44,5 +44,17 @@ public class JwtPropertiesTest {
                 2592000L,
                 jwtProperties.refreshExpiryInSeconds()
         );
+
+        Assertions.assertEquals(
+                86400L,
+                jwtProperties
+                        .verificationExpiryInSeconds()
+        );
+
+        Assertions.assertEquals(
+                1800L,
+                jwtProperties
+                        .passwordResetExpiryInSeconds()
+        );
     }
 }

@@ -530,4 +530,88 @@ public class JWTServiceTest {
                 0L
         );
     }
+
+    @Test
+    public void verificationTokenUsesConfiguredExpiryTime() {
+
+        LocalUser user = localUserDao
+                .findByUsernameIgnoreCase("UserA")
+                .orElseThrow();
+
+        long beforeGeneration =
+                System.currentTimeMillis() / 1000L;
+
+        String token =
+                jwtService.generateVerificationJWT(user);
+
+        long afterGeneration =
+                System.currentTimeMillis() / 1000L;
+
+        DecodedJWT decodedJWT =
+                JWT.decode(token);
+
+        long tokenExpirySeconds =
+                decodedJWT
+                        .getExpiresAt()
+                        .getTime()
+                        / 1000L;
+
+        long configuredExpirySeconds =
+                jwtProperties
+                        .verificationExpiryInSeconds();
+
+        Assertions.assertTrue(
+                tokenExpirySeconds
+                        >= beforeGeneration
+                        + configuredExpirySeconds
+        );
+
+        Assertions.assertTrue(
+                tokenExpirySeconds
+                        <= afterGeneration
+                        + configuredExpirySeconds
+        );
+    }
+
+    @Test
+    public void passwordResetTokenUsesConfiguredExpiryTime() {
+
+        LocalUser user = localUserDao
+                .findByUsernameIgnoreCase("UserA")
+                .orElseThrow();
+
+        long beforeGeneration =
+                System.currentTimeMillis() / 1000L;
+
+        String token =
+                jwtService.generatePasswordResetJWT(user);
+
+        long afterGeneration =
+                System.currentTimeMillis() / 1000L;
+
+        DecodedJWT decodedJWT =
+                JWT.decode(token);
+
+        long tokenExpirySeconds =
+                decodedJWT
+                        .getExpiresAt()
+                        .getTime()
+                        / 1000L;
+
+        long configuredExpirySeconds =
+                jwtProperties
+                        .passwordResetExpiryInSeconds();
+
+        Assertions.assertTrue(
+                tokenExpirySeconds
+                        >= beforeGeneration
+                        + configuredExpirySeconds
+        );
+
+        Assertions.assertTrue(
+                tokenExpirySeconds
+                        <= afterGeneration
+                        + configuredExpirySeconds
+        );
+    }
 }

@@ -24,7 +24,9 @@ public record JwtProperties(
 
         @NotNull
         @Positive
-        Long refreshExpiryInSeconds
+        Long refreshExpiryInSeconds,
+        Long verificationExpiryInSeconds,
+        Long passwordResetExpiryInSeconds
 ) {
 
     public record AlgorithmProperties(

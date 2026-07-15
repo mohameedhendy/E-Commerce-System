@@ -39,9 +39,6 @@ public class JWTService {
     private static final String REFRESH_SESSION_VERSION_KEY =
             "REFRESH_SESSION_VERSION";
 
-    private static final long PASSWORD_RESET_EXPIRY_SECONDS =
-            30L * 60L;
-
     private final JwtProperties jwtProperties;
 
     private Algorithm algorithm;
@@ -130,7 +127,7 @@ public class JWTService {
                 )
                 .withExpiresAt(
                         createExpiryDate(
-                                jwtProperties.expiryInSeconds()
+                                jwtProperties.verificationExpiryInSeconds()
                         )
                 )
                 .sign(algorithm);
@@ -158,7 +155,7 @@ public class JWTService {
                 )
                 .withExpiresAt(
                         createExpiryDate(
-                                PASSWORD_RESET_EXPIRY_SECONDS
+                                jwtProperties.passwordResetExpiryInSeconds()
                         )
                 )
                 .sign(algorithm);
