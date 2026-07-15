@@ -5,6 +5,7 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.exceptions.MissingClaimException;
 import com.auth0.jwt.exceptions.SignatureVerificationException;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import com.ecommerce.ecommerce_backend.dao.LocalUserDao;
 import com.ecommerce.ecommerce_backend.model.LocalUser;
 import org.junit.jupiter.api.Assertions;
@@ -200,6 +201,51 @@ public class JWTServiceTest {
                 user.getPasswordResetVersion(),
                 tokenData.version(),
                 "Password reset token should contain the current reset version."
+        );
+    }
+
+    @Test
+    public void accessTokenUsesConfiguredExpiryTime() {
+
+        LocalUser user = localUserDao
+                .findByUsernameIgnoreCase("UserA")
+                .orElseThrow();
+
+        long beforeGeneration =
+                System.currentTimeMillis() / 1000L;
+
+        String token =
+                jwtService.generateToken(user);
+
+        long afterGeneration =
+                System.currentTimeMillis() / 1000L;
+
+        DecodedJWT decodedJWT =
+                JWT.decode(token);
+
+        Assertions.assertNotNull(
+                decodedJWT.getExpiresAt()
+        );
+
+        long tokenExpirySeconds =
+                decodedJWT
+                        .getExpiresAt()
+                        .getTime()
+                        / 1000L;
+
+        long configuredExpirySeconds =
+                jwtProperties.expiryInSeconds();
+
+        Assertions.assertTrue(
+                tokenExpirySeconds
+                        >= beforeGeneration
+                        + configuredExpirySeconds
+        );
+
+        Assertions.assertTrue(
+                tokenExpirySeconds
+                        <= afterGeneration
+                        + configuredExpirySeconds
         );
     }
 }
