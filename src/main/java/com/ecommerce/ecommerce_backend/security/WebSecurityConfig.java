@@ -53,6 +53,7 @@ public class WebSecurityConfig {
                                         "/auth/login",
                                         "/auth/register",
                                         "/auth/refresh",
+                                        "/auth/logout",
                                         "/auth/forgot",
                                         "/auth/reset",
                                         "/auth/verify",

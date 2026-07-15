@@ -78,6 +78,22 @@ public class AuthenticationController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(
+            @Valid
+            @RequestBody
+            RefreshTokenRequest request
+    ) throws InvalidTokenException {
+
+        userService.logout(
+                request.getRefreshToken()
+        );
+
+        return ResponseEntity
+                .noContent()
+                .build();
+    }
+
     @PostMapping("/verify")
     public ResponseEntity<Void> verifyEmail(
             @RequestParam

@@ -607,4 +607,51 @@ public class UserServiceTest {
                 secondResponse.getRefreshToken()
         );
     }
+
+    @Test
+    @Transactional
+    public void logoutInvalidatesRefreshToken()
+            throws InvalidTokenException {
+
+        LocalUser user = localUserDao
+                .findByUsernameIgnoreCase("UserA")
+                .orElseThrow();
+
+        String refreshToken =
+                jwtService.generateRefreshToken(
+                        user
+                );
+
+        userService.logout(
+                refreshToken
+        );
+
+        Assertions.assertThrows(
+                InvalidTokenException.class,
+                () -> userService.refreshAccessToken(
+                        refreshToken
+                ),
+                "Logged-out refresh token must no longer be usable."
+        );
+    }
+
+    @Test
+    @Transactional
+    public void accessTokenCannotBeUsedForLogout() {
+
+        LocalUser user = localUserDao
+                .findByUsernameIgnoreCase("UserA")
+                .orElseThrow();
+
+        String accessToken =
+                jwtService.generateToken(user);
+
+        Assertions.assertThrows(
+                InvalidTokenException.class,
+                () -> userService.logout(
+                        accessToken
+                ),
+                "Access token must not be accepted by logout."
+        );
+    }
 }

@@ -535,4 +535,93 @@ public class AuthenticationControllerTest {
                                 )
                 );
     }
+
+    @Test
+    @Transactional
+    public void validLogoutInvalidatesRefreshToken()
+            throws Exception {
+
+        LocalUser user = localUserDao
+                .findByUsernameIgnoreCase("UserA")
+                .orElseThrow();
+
+        RefreshTokenRequest request =
+                new RefreshTokenRequest();
+
+        request.setRefreshToken(
+                jwtService.generateRefreshToken(
+                        user
+                )
+        );
+
+        String requestBody =
+                objectMapper.writeValueAsString(
+                        request
+                );
+
+        mvc.perform(
+                        post("/auth/logout")
+                                .contentType(
+                                        MediaType.APPLICATION_JSON
+                                )
+                                .content(requestBody)
+                )
+                .andExpect(
+                        status().isNoContent()
+                );
+
+        mvc.perform(
+                        post("/auth/refresh")
+                                .contentType(
+                                        MediaType.APPLICATION_JSON
+                                )
+                                .content(requestBody)
+                )
+                .andExpect(
+                        status().isBadRequest()
+                )
+                .andExpect(
+                        jsonPath("$.message")
+                                .value(
+                                        "Invalid or expired refresh token"
+                                )
+                );
+    }
+
+    @Test
+    public void accessTokenCannotBeUsedForLogout()
+            throws Exception {
+
+        LocalUser user = localUserDao
+                .findByUsernameIgnoreCase("UserA")
+                .orElseThrow();
+
+        RefreshTokenRequest request =
+                new RefreshTokenRequest();
+
+        request.setRefreshToken(
+                jwtService.generateToken(user)
+        );
+
+        mvc.perform(
+                        post("/auth/logout")
+                                .contentType(
+                                        MediaType.APPLICATION_JSON
+                                )
+                                .content(
+                                        objectMapper.writeValueAsString(
+                                                request
+                                        )
+                                )
+                )
+                .andExpect(
+                        status().isBadRequest()
+                )
+                .andExpect(
+                        jsonPath("$.message")
+                                .value(
+                                        "Invalid or expired refresh token"
+                                )
+                );
+    }
 }

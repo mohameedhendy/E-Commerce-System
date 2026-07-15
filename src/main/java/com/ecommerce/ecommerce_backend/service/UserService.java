@@ -309,6 +309,57 @@ public class UserService {
         );
     }
 
+    @Transactional
+    public void logout(
+            String refreshToken
+    ) throws InvalidTokenException {
+
+        JWTService.RefreshTokenData tokenData;
+
+        try {
+            tokenData =
+                    jwtService.getRefreshTokenData(
+                            refreshToken
+                    );
+
+        } catch (JWTVerificationException ex) {
+
+            throw new InvalidTokenException(
+                    INVALID_REFRESH_TOKEN
+            );
+        }
+
+        if (tokenData.username() == null
+                || tokenData.version() == null) {
+
+            throw new InvalidTokenException(
+                    INVALID_REFRESH_TOKEN
+            );
+        }
+
+        LocalUser user = userDao
+                .findByUsernameIgnoreCase(
+                        tokenData.username()
+                )
+                .orElseThrow(() ->
+                        new InvalidTokenException(
+                                INVALID_REFRESH_TOKEN
+                        )
+                );
+
+        int updatedRows =
+                userDao.rotateRefreshTokenVersion(
+                        user.getId(),
+                        tokenData.version()
+                );
+
+        if (updatedRows == 0) {
+            throw new InvalidTokenException(
+                    INVALID_REFRESH_TOKEN
+            );
+        }
+    }
+
     public void forgotPassword(
             String email
     ) throws EmailFailureException {
