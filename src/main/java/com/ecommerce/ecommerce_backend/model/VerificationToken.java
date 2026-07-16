@@ -1,5 +1,6 @@
 package com.ecommerce.ecommerce_backend.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -27,13 +28,14 @@ public class VerificationToken {
     @Column(name = "id")
     private Long id;
 
+    @JsonIgnore
     @Column(
-            name = "token",
+            name = "token_hash",
             nullable = false,
             unique = true,
-            length = 2048
+            length = 64
     )
-    private String token;
+    private String tokenHash;
 
     @Column(
             name = "created_timestamp",
@@ -41,6 +43,7 @@ public class VerificationToken {
     )
     private Timestamp createdTimeStamp;
 
+    @JsonIgnore
     @ManyToOne(
             fetch = FetchType.LAZY,
             optional = false

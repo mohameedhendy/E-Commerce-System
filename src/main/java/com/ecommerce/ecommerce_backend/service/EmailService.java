@@ -4,7 +4,6 @@ import com.ecommerce.ecommerce_backend.config.ApplicationProperties;
 import com.ecommerce.ecommerce_backend.config.EmailProperties;
 import com.ecommerce.ecommerce_backend.exception.EmailFailureException;
 import com.ecommerce.ecommerce_backend.model.LocalUser;
-import com.ecommerce.ecommerce_backend.model.VerificationToken;
 import lombok.RequiredArgsConstructor;
 import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
@@ -27,13 +26,14 @@ public class EmailService {
     private final ApplicationProperties applicationProperties;
 
     public void sendVerificationEmail(
-            VerificationToken verificationToken
+            LocalUser user,
+            String token
     ) throws EmailFailureException {
 
         String verificationUrl =
                 buildFrontendUrl(
                         "/auth/verify",
-                        verificationToken.getToken()
+                        token
                 );
 
         String messageBody =
@@ -42,9 +42,7 @@ public class EmailService {
                         + verificationUrl;
 
         sendEmail(
-                verificationToken
-                        .getUser()
-                        .getEmail(),
+                user.getEmail(),
                 VERIFICATION_EMAIL_SUBJECT,
                 messageBody
         );

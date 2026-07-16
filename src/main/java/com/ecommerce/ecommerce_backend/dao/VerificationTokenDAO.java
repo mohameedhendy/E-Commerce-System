@@ -12,8 +12,8 @@ public interface VerificationTokenDAO
         extends JpaRepository<VerificationToken, Long> {
 
     @EntityGraph(attributePaths = "user")
-    Optional<VerificationToken> findByToken(
-            String token
+    Optional<VerificationToken> findByTokenHash(
+            String tokenHash
     );
 
     Optional<VerificationToken>

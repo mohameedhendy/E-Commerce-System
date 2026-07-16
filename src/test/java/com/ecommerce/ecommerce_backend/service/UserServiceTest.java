@@ -1,4 +1,8 @@
 package com.ecommerce.ecommerce_backend.service;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
+import java.nio.charset.StandardCharsets;
+import java.net.URLDecoder;
 
 import com.ecommerce.ecommerce_backend.dao.LocalUserDao;
 import com.ecommerce.ecommerce_backend.dao.VerificationTokenDAO;
@@ -178,8 +182,7 @@ public class UserServiceTest {
 
     @Test
     @Transactional
-    public void testVerifyUser()
-            throws EmailFailureException {
+    public void testVerifyUser() throws Exception {
 
         Assertions.assertFalse(
                 userService.verifyUser("Bad Token"),
@@ -211,15 +214,49 @@ public class UserServiceTest {
                 "A verification token should be created."
         );
 
-        String token = tokens
-                .getFirst()
-                .getToken();
+        String storedTokenHash =
+                tokens.getFirst()
+                        .getTokenHash();
+
+        String messageContent =
+                greenMailExtension
+                        .getReceivedMessages()[0]
+                        .getContent()
+                        .toString();
+
+        Matcher tokenMatcher =
+                Pattern.compile(
+                        "[?&]token=([^\\s]+)"
+                )
+                        .matcher(messageContent);
+
+        Assertions.assertTrue(
+                tokenMatcher.find(),
+                "Verification email should contain a token."
+        );
+
+        String token =
+                URLDecoder.decode(
+                        tokenMatcher.group(1),
+                        StandardCharsets.UTF_8
+                );
+
+        Assertions.assertNotEquals(
+                token,
+                storedTokenHash,
+                "Raw verification token must not be stored."
+        );
+
+        Assertions.assertEquals(
+                64,
+                storedTokenHash.length(),
+                "Stored verification token should be a SHA-256 hash."
+        );
 
         Assertions.assertTrue(
                 userService.verifyUser(token),
                 "Token should be valid."
         );
-
         LocalUser verifiedUser = localUserDao
                 .findByUsernameIgnoreCase("UserB")
                 .orElseThrow();

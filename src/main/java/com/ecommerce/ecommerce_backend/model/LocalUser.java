@@ -69,18 +69,21 @@ public class LocalUser implements UserDetails {
             nullable = false,
             length = 1000
     )
+    @JsonIgnore
     private String password;
 
     @Column(
             name = "password_reset_version",
             nullable = false
     )
+    @JsonIgnore
     private long passwordResetVersion;
 
     @Column(
             name = "refresh_token_version",
             nullable = false
     )
+    @JsonIgnore
     private long refreshTokenVersion;
 
     @JsonIgnore

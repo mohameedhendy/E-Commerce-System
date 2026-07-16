@@ -47,6 +47,7 @@ public class UserService {
     private final RefreshSessionService refreshSessionService;
     private final EmailService emailService;
     private final VerificationTokenDAO verificationTokenDAO;
+    private final VerificationTokenHasher verificationTokenHasher;
     private final ApplicationProperties applicationProperties;
 
     @Transactional(
@@ -113,11 +114,12 @@ public class UserService {
 
         if (emailVerificationEnabled) {
 
-            VerificationToken verificationToken =
+            IssuedVerificationToken issuedToken =
                     createVerificationToken(user);
 
             emailService.sendVerificationEmail(
-                    verificationToken
+                    user,
+                    issuedToken.rawToken()
             );
 
         } else {
@@ -181,15 +183,16 @@ public class UserService {
 
         if (resendVerificationEmail) {
 
-            VerificationToken verificationToken =
+            IssuedVerificationToken issuedToken =
                     createVerificationToken(user);
 
             verificationTokenDAO.save(
-                    verificationToken
+                    issuedToken.storedToken()
             );
 
             emailService.sendVerificationEmail(
-                    verificationToken
+                    user,
+                    issuedToken.rawToken()
             );
         }
 
@@ -213,9 +216,16 @@ public class UserService {
             return false;
         }
 
+        String tokenHash =
+                verificationTokenHasher.hash(
+                        token
+                );
+
         Optional<VerificationToken> optionalToken =
                 verificationTokenDAO
-                        .findByToken(token);
+                        .findByTokenHash(
+                                tokenHash
+                        );
 
         if (optionalToken.isEmpty()) {
             return false;
@@ -454,16 +464,21 @@ public class UserService {
                 .orElse(true);
     }
 
-    private VerificationToken createVerificationToken(
+    private IssuedVerificationToken createVerificationToken(
             LocalUser user
     ) {
+
+        String rawToken =
+                jwtService.generateVerificationJWT(
+                        user
+                );
 
         VerificationToken verificationToken =
                 new VerificationToken();
 
-        verificationToken.setToken(
-                jwtService.generateVerificationJWT(
-                        user
+        verificationToken.setTokenHash(
+                verificationTokenHasher.hash(
+                        rawToken
                 )
         );
 
@@ -478,7 +493,10 @@ public class UserService {
         user.getVerificationTokens()
                 .add(verificationToken);
 
-        return verificationToken;
+        return new IssuedVerificationToken(
+                verificationToken,
+                rawToken
+        );
     }
 
     private LoginResponse createSessionBackedLoginResponse(
@@ -532,5 +550,11 @@ public class UserService {
         return email
                 .trim()
                 .toLowerCase(Locale.ROOT);
+    }
+
+    private record IssuedVerificationToken(
+            VerificationToken storedToken,
+            String rawToken
+    ) {
     }
 }
