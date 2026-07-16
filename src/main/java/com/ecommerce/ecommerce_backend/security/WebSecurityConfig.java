@@ -10,6 +10,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import static org.springframework.security.config.Customizer.withDefaults;
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 
 @Configuration
 @RequiredArgsConstructor
@@ -28,6 +29,42 @@ public class WebSecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(withDefaults())
+                .headers(headers ->
+                        headers
+                                .contentTypeOptions(
+                                        withDefaults()
+                                )
+                                .frameOptions(
+                                        frameOptions ->
+                                                frameOptions.deny()
+                                )
+                                .referrerPolicy(
+                                        referrerPolicy ->
+                                                referrerPolicy.policy(
+                                                        ReferrerPolicyHeaderWriter
+                                                                .ReferrerPolicy
+                                                                .NO_REFERRER
+                                                )
+                                )
+                                .contentSecurityPolicy(
+                                        contentSecurityPolicy ->
+                                                contentSecurityPolicy
+                                                        .policyDirectives(
+                                                                "default-src 'none'; "
+                                                                        + "frame-ancestors 'none'"
+                                                        )
+                                )
+                                .httpStrictTransportSecurity(
+                                        hsts ->
+                                                hsts
+                                                        .maxAgeInSeconds(
+                                                                31536000
+                                                        )
+                                                        .includeSubDomains(
+                                                                false
+                                                        )
+                                )
+                )
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
