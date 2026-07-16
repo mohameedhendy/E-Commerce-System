@@ -475,49 +475,65 @@ public class AuthenticationControllerTest {
 
     @Test
     @Transactional
-    public void refreshTokenCannotBeUsedTwice()
+    public void refreshTokenReuseRevokesEntireSession()
             throws Exception {
 
-        String refreshToken =
+        String originalRefreshToken =
                 loginAndGetRefreshToken();
 
-        RefreshTokenRequest request =
+        RefreshTokenRequest originalRequest =
                 new RefreshTokenRequest();
 
-        request.setRefreshToken(
-                refreshToken
+        originalRequest.setRefreshToken(
+                originalRefreshToken
         );
 
-        String requestBody =
+        String originalRequestBody =
                 objectMapper.writeValueAsString(
-                        request
+                        originalRequest
                 );
+
+        String firstRefreshResponse =
+                mvc.perform(
+                                post("/auth/refresh")
+                                        .contentType(
+                                                MediaType.APPLICATION_JSON
+                                        )
+                                        .content(
+                                                originalRequestBody
+                                        )
+                        )
+                        .andExpect(
+                                status().isOk()
+                        )
+                        .andExpect(
+                                jsonPath("$.accessToken")
+                                        .isNotEmpty()
+                        )
+                        .andExpect(
+                                jsonPath("$.refreshToken")
+                                        .isNotEmpty()
+                        )
+                        .andReturn()
+                        .getResponse()
+                        .getContentAsString();
+
+        String rotatedRefreshToken =
+                objectMapper
+                        .readTree(
+                                firstRefreshResponse
+                        )
+                        .get("refreshToken")
+                        .asText();
 
         mvc.perform(
                         post("/auth/refresh")
                                 .contentType(
                                         MediaType.APPLICATION_JSON
                                 )
-                                .content(requestBody)
-                )
-                .andExpect(
-                        status().isOk()
-                )
-                .andExpect(
-                        jsonPath("$.accessToken")
-                                .isNotEmpty()
-                )
-                .andExpect(
-                        jsonPath("$.refreshToken")
-                                .isNotEmpty()
-                );
-
-        mvc.perform(
-                        post("/auth/refresh")
-                                .contentType(
-                                        MediaType.APPLICATION_JSON
+                                .content(
+                                        originalRequestBody
                                 )
-                                .content(requestBody)
                 )
                 .andExpect(
                         status().isBadRequest()
@@ -525,6 +541,34 @@ public class AuthenticationControllerTest {
                 .andExpect(
                         jsonPath("$.status")
                                 .value(400)
+                )
+                .andExpect(
+                        jsonPath("$.message")
+                                .value(
+                                        "Invalid or expired refresh token"
+                                )
+                );
+
+        RefreshTokenRequest rotatedRequest =
+                new RefreshTokenRequest();
+
+        rotatedRequest.setRefreshToken(
+                rotatedRefreshToken
+        );
+
+        mvc.perform(
+                        post("/auth/refresh")
+                                .contentType(
+                                        MediaType.APPLICATION_JSON
+                                )
+                                .content(
+                                        objectMapper.writeValueAsString(
+                                                rotatedRequest
+                                        )
+                                )
+                )
+                .andExpect(
+                        status().isBadRequest()
                 )
                 .andExpect(
                         jsonPath("$.message")

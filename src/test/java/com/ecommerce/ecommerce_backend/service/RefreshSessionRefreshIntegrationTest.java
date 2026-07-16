@@ -124,52 +124,6 @@ public class RefreshSessionRefreshIntegrationTest {
     }
 
     @Test
-    public void oldRefreshTokenCannotBeReusedAfterRotation()
-            throws Exception {
-
-        LoginResponse loginResponse =
-                loginAsUserA();
-
-        String originalRefreshToken =
-                loginResponse.getRefreshToken();
-
-        LoginResponse firstRefreshResponse =
-                userService.refreshAccessToken(
-                        originalRefreshToken
-                );
-
-        Assertions.assertNotNull(
-                firstRefreshResponse.getAccessToken()
-        );
-
-        Assertions.assertNotNull(
-                firstRefreshResponse.getRefreshToken()
-        );
-
-        Assertions.assertThrows(
-                InvalidTokenException.class,
-                () -> userService.refreshAccessToken(
-                        originalRefreshToken
-                ),
-                "A rotated refresh token must not be reusable."
-        );
-
-        LoginResponse secondRefreshResponse =
-                userService.refreshAccessToken(
-                        firstRefreshResponse
-                                .getRefreshToken()
-                );
-
-        Assertions.assertNotNull(
-                secondRefreshResponse.getAccessToken()
-        );
-
-        Assertions.assertNotNull(
-                secondRefreshResponse.getRefreshToken()
-        );
-    }
-
-    @Test
     public void refreshingOneLoginDoesNotInvalidateAnotherLogin()
             throws Exception {
 
@@ -496,6 +450,54 @@ public class RefreshSessionRefreshIntegrationTest {
 
         return userService.loginUser(
                 loginBody
+        );
+    }
+
+    @Test
+    public void reusingOldRefreshTokenRevokesEntireSession()
+            throws Exception {
+
+        LoginResponse originalLogin =
+                loginAsUserA();
+
+        String originalRefreshToken =
+                originalLogin.getRefreshToken();
+
+        JWTService.RefreshTokenData tokenData =
+                jwtService.getRefreshTokenData(
+                        originalRefreshToken
+                );
+
+        LoginResponse rotatedLogin =
+                userService.refreshAccessToken(
+                        originalRefreshToken
+                );
+
+        Assertions.assertThrows(
+                InvalidTokenException.class,
+                () -> userService.refreshAccessToken(
+                        originalRefreshToken
+                )
+        );
+
+        RefreshSession storedSession =
+                refreshSessionDao
+                        .findBySessionId(
+                                tokenData.sessionId()
+                        )
+                        .orElseThrow();
+
+        Assertions.assertTrue(
+                storedSession.isRevoked(),
+                "Reusing an old refresh token must revoke its session."
+        );
+
+        Assertions.assertThrows(
+                InvalidTokenException.class,
+                () -> userService.refreshAccessToken(
+                        rotatedLogin.getRefreshToken()
+                ),
+                "The latest token must also become invalid after reuse detection."
         );
     }
 }

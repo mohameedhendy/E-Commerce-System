@@ -65,7 +65,10 @@ public class RefreshSessionService {
         );
     }
 
-    @Transactional
+    @Transactional(
+            noRollbackFor =
+                    InvalidTokenException.class
+    )
     public RefreshSession rotateSession(
             JWTService.RefreshTokenData tokenData
     ) throws InvalidTokenException {
@@ -85,6 +88,20 @@ public class RefreshSessionService {
                 refreshSession,
                 tokenData
         );
+
+        if (refreshSession.getTokenVersion()
+                != tokenData.sessionVersion()) {
+
+            refreshSession.setRevoked(true);
+
+            refreshSessionDao.saveAndFlush(
+                    refreshSession
+            );
+
+            throw new InvalidTokenException(
+                    "Invalid or expired refresh token"
+            );
+        }
 
         refreshSession.setTokenVersion(
                 refreshSession.getTokenVersion() + 1
@@ -213,12 +230,6 @@ public class RefreshSessionService {
                         .version()
                         .longValue();
 
-        boolean sessionVersionMatches =
-                refreshSession.getTokenVersion()
-                        == tokenData
-                        .sessionVersion()
-                        .longValue();
-
         boolean sessionActive =
                 !refreshSession.isRevoked();
 
@@ -236,7 +247,6 @@ public class RefreshSessionService {
 
         if (!usernameMatches
                 || !globalVersionMatches
-                || !sessionVersionMatches
                 || !sessionActive
                 || !sessionNotExpired
                 || !userVerified) {
