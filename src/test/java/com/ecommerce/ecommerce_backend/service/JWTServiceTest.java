@@ -30,7 +30,7 @@ public class JWTServiceTest {
     private JwtProperties jwtProperties;
 
     @Test
-    public void testAuthTokenReturnsUsername() {
+    public void testAuthTokenContainsUsernameAndCurrentVersion() {
 
         LocalUser user = localUserDao
                 .findByUsernameIgnoreCase("UserA")
@@ -39,10 +39,26 @@ public class JWTServiceTest {
         String token =
                 jwtService.generateToken(user);
 
+        JWTService.AccessTokenData tokenData =
+                jwtService.getAccessTokenData(
+                        token
+                );
+
         Assertions.assertEquals(
                 user.getUsername(),
-                jwtService.getUsername(token),
+                tokenData.username(),
                 "Access token should contain the user's username."
+        );
+
+        Assertions.assertEquals(
+                user.getRefreshTokenVersion(),
+                tokenData.version(),
+                "Access token should contain the current authentication version."
+        );
+
+        Assertions.assertEquals(
+                user.getUsername(),
+                jwtService.getUsername(token)
         );
     }
 

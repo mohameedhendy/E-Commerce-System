@@ -124,7 +124,8 @@ public class JWTService {
                 )
                 .withExpiresAt(
                         createExpiryDate(
-                                jwtProperties.verificationExpiryInSeconds()
+                                jwtProperties
+                                        .verificationExpiryInSeconds()
                         )
                 )
                 .sign(algorithm);
@@ -147,7 +148,8 @@ public class JWTService {
                 )
                 .withExpiresAt(
                         createExpiryDate(
-                                jwtProperties.passwordResetExpiryInSeconds()
+                                jwtProperties
+                                        .passwordResetExpiryInSeconds()
                         )
                 )
                 .sign(algorithm);
@@ -157,14 +159,27 @@ public class JWTService {
             String token
     ) {
 
+        return getAccessTokenData(token)
+                .username();
+    }
+
+    public AccessTokenData getAccessTokenData(
+            String token
+    ) {
+
         DecodedJWT jwt = verifyToken(
                 token,
                 TokenType.ACCESS
         );
 
-        return jwt
-                .getClaim(USERNAME_KEY)
-                .asString();
+        return new AccessTokenData(
+                jwt.getClaim(
+                        USERNAME_KEY
+                ).asString(),
+                jwt.getClaim(
+                        REFRESH_TOKEN_VERSION_KEY
+                ).asLong()
+        );
     }
 
     public String getRefreshUsername(
@@ -286,6 +301,10 @@ public class JWTService {
                         USERNAME_KEY,
                         user.getUsername()
                 )
+                .withClaim(
+                        REFRESH_TOKEN_VERSION_KEY,
+                        user.getRefreshTokenVersion()
+                )
                 .withExpiresAt(
                         createExpiryDate(
                                 expirySeconds
@@ -353,6 +372,7 @@ public class JWTService {
         }
 
         if (sessionVersion < 0) {
+
             throw new IllegalArgumentException(
                     "Refresh session version cannot be negative"
             );
@@ -375,6 +395,12 @@ public class JWTService {
                 System.currentTimeMillis()
                         + expirySeconds * 1000L
         );
+    }
+
+    public record AccessTokenData(
+            String username,
+            Long version
+    ) {
     }
 
     public record RefreshTokenData(

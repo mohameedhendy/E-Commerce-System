@@ -728,7 +728,7 @@ public class AuthenticationControllerTest {
 
     @Test
     @Transactional
-    public void logoutAllInvalidatesEveryLoginSession()
+    public void logoutAllInvalidatesEveryAccessAndRefreshToken()
             throws Exception {
 
         JsonNode firstLogin =
@@ -737,18 +737,74 @@ public class AuthenticationControllerTest {
         JsonNode secondLogin =
                 loginAndGetTokenPair();
 
+        String firstAccessToken =
+                firstLogin
+                        .get("accessToken")
+                        .asText();
+
+        String secondAccessToken =
+                secondLogin
+                        .get("accessToken")
+                        .asText();
+
+        mvc.perform(
+                        get("/auth/me")
+                                .header(
+                                        "Authorization",
+                                        "Bearer "
+                                                + firstAccessToken
+                                )
+                )
+                .andExpect(
+                        status().isOk()
+                );
+
+        mvc.perform(
+                        get("/auth/me")
+                                .header(
+                                        "Authorization",
+                                        "Bearer "
+                                                + secondAccessToken
+                                )
+                )
+                .andExpect(
+                        status().isOk()
+                );
+
         mvc.perform(
                         post("/auth/logout-all")
                                 .header(
                                         "Authorization",
                                         "Bearer "
-                                                + firstLogin
-                                                .get("accessToken")
-                                                .asText()
+                                                + firstAccessToken
                                 )
                 )
                 .andExpect(
                         status().isNoContent()
+                );
+
+        mvc.perform(
+                        get("/auth/me")
+                                .header(
+                                        "Authorization",
+                                        "Bearer "
+                                                + firstAccessToken
+                                )
+                )
+                .andExpect(
+                        status().isUnauthorized()
+                );
+
+        mvc.perform(
+                        get("/auth/me")
+                                .header(
+                                        "Authorization",
+                                        "Bearer "
+                                                + secondAccessToken
+                                )
+                )
+                .andExpect(
+                        status().isUnauthorized()
                 );
 
         RefreshTokenRequest firstRequest =

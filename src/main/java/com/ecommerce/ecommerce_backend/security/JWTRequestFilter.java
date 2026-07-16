@@ -56,6 +56,7 @@ public class JWTRequestFilter
         }
 
         try {
+
             authenticateRequest(
                     tokenOptional.get(),
                     request
@@ -66,6 +67,7 @@ public class JWTRequestFilter
                 | UsernameNotFoundException
                 | IllegalArgumentException exception
         ) {
+
             SecurityContextHolder.clearContext();
         }
 
@@ -99,13 +101,15 @@ public class JWTRequestFilter
             return Optional.empty();
         }
 
-        String token = authorizationHeader
-                .substring(
-                        BEARER_PREFIX.length()
-                )
-                .trim();
+        String token =
+                authorizationHeader
+                        .substring(
+                                BEARER_PREFIX.length()
+                        )
+                        .trim();
 
         if (token.isBlank()) {
+
             return Optional.empty();
         }
 
@@ -117,14 +121,28 @@ public class JWTRequestFilter
             HttpServletRequest request
     ) {
 
-        String username =
-                jwtService.getUsername(token);
+        JWTService.AccessTokenData tokenData =
+                jwtService.getAccessTokenData(
+                        token
+                );
 
         LocalUser user =
                 userDetailsService
-                        .loadUserByUsername(username);
+                        .loadUserByUsername(
+                                tokenData.username()
+                        );
 
         if (!user.isEmailVerified()) {
+
+            return;
+        }
+
+        if (tokenData.version() == null
+                || user.getRefreshTokenVersion()
+                != tokenData
+                .version()
+                .longValue()) {
+
             return;
         }
 
