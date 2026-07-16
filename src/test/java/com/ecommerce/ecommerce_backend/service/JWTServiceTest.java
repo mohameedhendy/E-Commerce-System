@@ -668,4 +668,33 @@ public class JWTServiceTest {
                 "Every generated JWT must have a unique ID."
         );
     }
+
+    @Test
+    public void generatedTokensContainConfiguredAudience() {
+
+        LocalUser user = localUserDao
+                .findByUsernameIgnoreCase("UserA")
+                .orElseThrow();
+
+        List<String> generatedTokens =
+                List.of(
+                        jwtService.generateToken(user),
+                        generateSessionRefreshToken(user),
+                        jwtService.generateVerificationJWT(user),
+                        jwtService.generatePasswordResetJWT(user)
+                );
+
+        generatedTokens
+                .stream()
+                .map(JWT::decode)
+                .forEach(decodedToken ->
+                        Assertions.assertEquals(
+                                List.of(
+                                        jwtProperties.audience()
+                                ),
+                                decodedToken.getAudience(),
+                                "Every JWT must target the configured audience."
+                        )
+                );
+    }
 }

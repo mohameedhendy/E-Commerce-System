@@ -303,6 +303,9 @@ public class JWTService {
                 .withIssuer(
                         jwtProperties.issuer()
                 )
+                .withAudience(
+                        jwtProperties.audience()
+                )
                 .withClaim(
                         TOKEN_TYPE_KEY,
                         expectedType.name()
@@ -322,6 +325,9 @@ public class JWTService {
                 )
                 .withIssuer(
                         jwtProperties.issuer()
+                )
+                .withAudience(
+                        jwtProperties.audience()
                 )
                 .withIssuedAt(
                         new Date()

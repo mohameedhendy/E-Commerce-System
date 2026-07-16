@@ -25,6 +25,9 @@ public record JwtProperties(
         @NotBlank
         String issuer,
 
+        @NotBlank
+        String audience,
+
         @NotNull
         @Positive
         Long expiryInSeconds,

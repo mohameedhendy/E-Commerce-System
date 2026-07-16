@@ -1,19 +1,22 @@
 package com.ecommerce.ecommerce_backend.config;
 
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validator;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import jakarta.validation.ConstraintViolation;
-import jakarta.validation.Validator;
 
 import java.util.Set;
 
 @SpringBootTest(properties = {
         "jwt.algorithm.key=JwtPropertiesTestSecretKey12345678901234567890",
         "jwt.issuer=eCommerce-test",
+        "jwt.audience=ecommerce-api",
         "jwt.expiry-in-seconds=604800",
-        "jwt.refresh-expiry-in-seconds=2592000"
+        "jwt.refresh-expiry-in-seconds=2592000",
+        "jwt.verification-expiry-in-seconds=86400",
+        "jwt.password-reset-expiry-in-seconds=1800"
 })
 public class JwtPropertiesTest {
 
@@ -43,6 +46,11 @@ public class JwtPropertiesTest {
         );
 
         Assertions.assertEquals(
+                "ecommerce-api",
+                jwtProperties.audience()
+        );
+
+        Assertions.assertEquals(
                 604800L,
                 jwtProperties.expiryInSeconds()
         );
@@ -54,14 +62,12 @@ public class JwtPropertiesTest {
 
         Assertions.assertEquals(
                 86400L,
-                jwtProperties
-                        .verificationExpiryInSeconds()
+                jwtProperties.verificationExpiryInSeconds()
         );
 
         Assertions.assertEquals(
                 1800L,
-                jwtProperties
-                        .passwordResetExpiryInSeconds()
+                jwtProperties.passwordResetExpiryInSeconds()
         );
     }
 
@@ -88,6 +94,7 @@ public class JwtPropertiesTest {
                                 "short-secret"
                         ),
                         "eCommerce",
+                        "ecommerce-api",
                         3600L,
                         2592000L,
                         86400L,
