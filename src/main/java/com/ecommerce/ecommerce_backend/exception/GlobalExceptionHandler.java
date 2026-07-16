@@ -46,6 +46,22 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
 
+    @ExceptionHandler(ResourceConflictException.class)
+    public ResponseEntity<ApiErrorResponse> handleResourceConflict(
+            ResourceConflictException ex
+    ) {
+
+        ApiErrorResponse response =
+                new ApiErrorResponse(
+                        HttpStatus.CONFLICT.value(),
+                        "Conflict",
+                        ex.getMessage()
+                );
+
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(response);
+    }
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ApiErrorResponse> handleDataIntegrityViolation(
             DataIntegrityViolationException ex

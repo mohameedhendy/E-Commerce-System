@@ -24,4 +24,9 @@ public interface ReviewDao
             Long id,
             LocalUser user
     );
+
+    boolean existsByUserAndProduct(
+            LocalUser user,
+            Product product
+    );
 }

@@ -12,7 +12,8 @@ import org.springframework.data.jpa.repository.Lock;
 
 import java.util.Optional;
 
-public interface OrderDao extends JpaRepository<Order, Long> {
+public interface OrderDao
+        extends JpaRepository<Order, Long> {
 
     Page<Order> findAllByUser(
             LocalUser user,
@@ -30,7 +31,15 @@ public interface OrderDao extends JpaRepository<Order, Long> {
             Pageable pageable
     );
 
-    long countByStatus(OrderStatus status);
+    long countByStatus(
+            OrderStatus status
+    );
+
+    boolean existsByUserAndStatusAndQuantities_Product_Id(
+            LocalUser user,
+            OrderStatus status,
+            Long productId
+    );
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @EntityGraph(
@@ -39,5 +48,7 @@ public interface OrderDao extends JpaRepository<Order, Long> {
                     "quantities.product"
             }
     )
-    Optional<Order> findLockedById(Long id);
+    Optional<Order> findLockedById(
+            Long id
+    );
 }
