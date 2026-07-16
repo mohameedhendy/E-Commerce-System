@@ -26,6 +26,15 @@ services:
       retries: 5
       start_period: 20s
 
+    security_opt:
+      - no-new-privileges:true
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
     networks:
       - ecommerce-network
 
@@ -47,6 +56,15 @@ services:
     volumes:
       - mailpit-data:/data
 
+    security_opt:
+      - no-new-privileges:true
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
     networks:
       - ecommerce-network
 
@@ -58,6 +76,7 @@ services:
     image: ecommerce-backend:local
     container_name: ecommerce-backend
     restart: unless-stopped
+    init: true
 
     depends_on:
       database:
@@ -98,6 +117,17 @@ services:
 
     stop_grace_period: 40s
 
+    read_only: true
+
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+
+    cap_drop:
+      - ALL
+
+    security_opt:
+      - no-new-privileges:true
+
     healthcheck:
       test:
         [
@@ -108,6 +138,12 @@ services:
       timeout: 5s
       retries: 5
       start_period: 40s
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
     networks:
       - ecommerce-network
