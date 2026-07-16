@@ -1,5 +1,12 @@
 package com.ecommerce.ecommerce_backend.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+import com.ecommerce.ecommerce_backend.config.OpenApiConfig;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+
 import com.ecommerce.ecommerce_backend.dto.LoginBody;
 import com.ecommerce.ecommerce_backend.dto.LoginResponse;
 import com.ecommerce.ecommerce_backend.dto.PasswordResetBody;
@@ -27,6 +34,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import java.util.List;
 
+@Tag(name = "Authentication", description = "Registration, login, token lifecycle and account sessions")
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
@@ -34,6 +42,7 @@ public class AuthenticationController {
 
     private final UserService userService;
 
+    @Operation(summary = "Register a new customer account")
     @PostMapping("/register")
     public ResponseEntity<Void> registerUser(
             @Valid
@@ -51,6 +60,7 @@ public class AuthenticationController {
                 .build();
     }
 
+    @Operation(summary = "Authenticate a user")
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> loginUser(
             @Valid
@@ -67,6 +77,7 @@ public class AuthenticationController {
         return ResponseEntity.ok(response);
     }
 
+    @Operation(summary = "Issue new tokens using a refresh token")
     @PostMapping("/refresh")
     public ResponseEntity<LoginResponse> refreshToken(
             @Valid
@@ -82,6 +93,7 @@ public class AuthenticationController {
         return ResponseEntity.ok(response);
     }
 
+    @Operation(summary = "Revoke a refresh token")
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(
             @Valid
@@ -98,6 +110,8 @@ public class AuthenticationController {
                 .build();
     }
 
+    @SecurityRequirement(name = OpenApiConfig.BEARER_AUTH_SCHEME)
+    @Operation(summary = "Revoke all active sessions")
     @PostMapping("/logout-all")
     public ResponseEntity<Void> logoutAll(
             @AuthenticationPrincipal
@@ -111,6 +125,8 @@ public class AuthenticationController {
                 .build();
     }
 
+    @SecurityRequirement(name = OpenApiConfig.BEARER_AUTH_SCHEME)
+    @Operation(summary = "List active authentication sessions")
     @GetMapping("/sessions")
     public ResponseEntity<List<RefreshSessionResponse>>
     getActiveSessions(
@@ -123,6 +139,8 @@ public class AuthenticationController {
         );
     }
 
+    @SecurityRequirement(name = OpenApiConfig.BEARER_AUTH_SCHEME)
+    @Operation(summary = "Revoke a specific authentication session")
     @DeleteMapping("/sessions/{sessionId}")
     public ResponseEntity<Void> revokeSession(
             @AuthenticationPrincipal
@@ -141,6 +159,7 @@ public class AuthenticationController {
                 .build();
     }
 
+    @Operation(summary = "Verify a customer email address")
     @PostMapping("/verify")
     public ResponseEntity<Void> verifyEmail(
             @RequestParam
@@ -161,6 +180,8 @@ public class AuthenticationController {
                 .build();
     }
 
+    @SecurityRequirement(name = OpenApiConfig.BEARER_AUTH_SCHEME)
+    @Operation(summary = "Get the authenticated customer profile")
     @GetMapping("/me")
     public ResponseEntity<UserResponse> getLoggedInUser(
             @AuthenticationPrincipal
@@ -172,6 +193,7 @@ public class AuthenticationController {
         );
     }
 
+    @Operation(summary = "Request a password reset")
     @PostMapping("/forgot")
     public ResponseEntity<Void> forgotPassword(
             @RequestParam
@@ -185,6 +207,7 @@ public class AuthenticationController {
                 .build();
     }
 
+    @Operation(summary = "Reset a customer password")
     @PostMapping("/reset")
     public ResponseEntity<Void> resetPassword(
             @Valid

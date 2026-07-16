@@ -1,5 +1,12 @@
 package com.ecommerce.ecommerce_backend.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+import com.ecommerce.ecommerce_backend.config.OpenApiConfig;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+
 import com.ecommerce.ecommerce_backend.dto.PagedResponse;
 import com.ecommerce.ecommerce_backend.dto.ProductResponse;
 import com.ecommerce.ecommerce_backend.dto.ReviewRequest;
@@ -22,6 +29,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+@Tag(name = "Products", description = "Public product catalogue and product review creation")
 @RestController
 @RequestMapping("/product")
 @Validated
@@ -31,6 +39,7 @@ public class ProductController {
     private final ProductService productService;
     private final ReviewService reviewService;
 
+    @Operation(summary = "List products")
     @GetMapping
     public PagedResponse<ProductResponse> getAllProducts(
             @RequestParam(required = false) String keyword,
@@ -60,11 +69,14 @@ public class ProductController {
         return new PagedResponse<>(products);
     }
 
+    @Operation(summary = "Get a product by ID")
     @GetMapping("/{productId}")
     public ResponseEntity<ProductResponse> getProductById(@PathVariable Long productId) {
         return ResponseEntity.ok(productService.getProductById(productId));
     }
 
+    @SecurityRequirement(name = OpenApiConfig.BEARER_AUTH_SCHEME)
+    @Operation(summary = "Create a review for a purchased product")
     @PostMapping("/{productId}/review")
     public ResponseEntity<ReviewResponse> createReview(@AuthenticationPrincipal LocalUser user,
                                                        @PathVariable Long productId,
@@ -73,6 +85,7 @@ public class ProductController {
                 .body(reviewService.createReview(user, productId, request));
     }
 
+    @Operation(summary = "List reviews for a product")
     @GetMapping("/{productId}/reviews")
     public ResponseEntity<PagedResponse<ReviewResponse>> getProductReviews(
             @PathVariable Long productId,

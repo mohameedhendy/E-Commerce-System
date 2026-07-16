@@ -11,6 +11,9 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import static org.springframework.security.config.Customizer.withDefaults;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.web.header.writers.ContentSecurityPolicyHeaderWriter;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 
 @Configuration
 @RequiredArgsConstructor
@@ -24,7 +27,48 @@ public class WebSecurityConfig {
             customAccessDeniedHandler;
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(
+            HttpSecurity http,
+            @Value("${app.security.content-security-policy}")
+            String contentSecurityPolicy,
+            @Value("${app.security.swagger-content-security-policy}")
+            String swaggerContentSecurityPolicy
+    ) throws Exception {
+
+        RequestMatcher swaggerUiRequestMatcher =
+                request -> {
+
+                    String requestUri =
+                            request.getRequestURI();
+
+                    String contextPath =
+                            request.getContextPath();
+
+                    String requestPath =
+                            contextPath.isEmpty()
+                                    ? requestUri
+                                    : requestUri.substring(
+                                    contextPath.length()
+                            );
+
+                    return "/swagger-ui.html"
+                            .equals(requestPath)
+                            || requestPath.startsWith(
+                            "/swagger-ui/"
+                    );
+                };
+
+        ContentSecurityPolicyHeaderWriter
+                apiContentSecurityPolicyWriter =
+                new ContentSecurityPolicyHeaderWriter(
+                        contentSecurityPolicy
+                );
+
+        ContentSecurityPolicyHeaderWriter
+                swaggerContentSecurityPolicyWriter =
+                new ContentSecurityPolicyHeaderWriter(
+                        swaggerContentSecurityPolicy
+                );
 
         http
                 .csrf(AbstractHttpConfigurer::disable)
@@ -46,13 +90,28 @@ public class WebSecurityConfig {
                                                                 .NO_REFERRER
                                                 )
                                 )
-                                .contentSecurityPolicy(
-                                        contentSecurityPolicy ->
-                                                contentSecurityPolicy
-                                                        .policyDirectives(
-                                                                "default-src 'none'; "
-                                                                        + "frame-ancestors 'none'"
-                                                        )
+                                .addHeaderWriter(
+                                        (request, response) -> {
+
+                                            if (swaggerUiRequestMatcher.matches(
+                                                    request
+                                            )) {
+
+                                                swaggerContentSecurityPolicyWriter
+                                                        .writeHeaders(
+                                                                request,
+                                                                response
+                                                        );
+
+                                                return;
+                                            }
+
+                                            apiContentSecurityPolicyWriter
+                                                    .writeHeaders(
+                                                            request,
+                                                            response
+                                                    );
+                                        }
                                 )
                                 .httpStrictTransportSecurity(
                                         hsts ->
@@ -102,6 +161,13 @@ public class WebSecurityConfig {
                                         "/error"
                                 ).permitAll()
                                 .requestMatchers("/admin/**").hasRole("ADMIN")
+                                .requestMatchers(
+                                        HttpMethod.GET,
+                                        "/v3/api-docs",
+                                        "/v3/api-docs/**",
+                                        "/swagger-ui.html",
+                                        "/swagger-ui/**"
+                                ).permitAll()
                                 .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);

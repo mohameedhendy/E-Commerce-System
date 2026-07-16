@@ -1,5 +1,12 @@
 package com.ecommerce.ecommerce_backend.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+import com.ecommerce.ecommerce_backend.config.OpenApiConfig;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+
 import com.ecommerce.ecommerce_backend.dto.AdminOrderStatusRequest;
 import com.ecommerce.ecommerce_backend.dto.OrderResponse;
 import com.ecommerce.ecommerce_backend.dto.PagedResponse;
@@ -17,7 +24,9 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 
+@Tag(name = "Admin Orders", description = "Administrative order management")
 @RestController
+@SecurityRequirement(name = OpenApiConfig.BEARER_AUTH_SCHEME)
 @RequestMapping("/admin/order")
 @Validated
 @RequiredArgsConstructor
@@ -25,6 +34,7 @@ public class AdminOrderController {
 
     private final OrderService orderService;
 
+    @Operation(summary = "List all orders for administration")
     @GetMapping
     public ResponseEntity<PagedResponse<OrderResponse>> getAllOrders(
             @RequestParam(required = false) String status,
@@ -45,12 +55,14 @@ public class AdminOrderController {
         return ResponseEntity.ok(new PagedResponse<>(orders));
     }
 
+    @Operation(summary = "Update an order status")
     @PatchMapping("/{orderId}/status")
     public ResponseEntity<OrderResponse> updateOrderStatus(@PathVariable Long orderId,
                                                            @Valid @RequestBody AdminOrderStatusRequest request) {
         return ResponseEntity.ok(orderService.updateOrderStatus(orderId, request));
     }
 
+    @Operation(summary = "Get an order for administration")
     @GetMapping("/{orderId}")
     public ResponseEntity<OrderResponse> getOrderByIdForAdmin(@PathVariable Long orderId) {
         return ResponseEntity.ok(orderService.getOrderByIdForAdmin(orderId));

@@ -1,5 +1,12 @@
 package com.ecommerce.ecommerce_backend.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+import com.ecommerce.ecommerce_backend.config.OpenApiConfig;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+
 import com.ecommerce.ecommerce_backend.dto.OrderRequest;
 import com.ecommerce.ecommerce_backend.dto.OrderResponse;
 import com.ecommerce.ecommerce_backend.dto.PagedResponse;
@@ -20,7 +27,9 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 
+@Tag(name = "Orders", description = "Authenticated customer order management")
 @RestController
+@SecurityRequirement(name = OpenApiConfig.BEARER_AUTH_SCHEME)
 @RequestMapping("/order")
 @Validated
 @RequiredArgsConstructor
@@ -28,6 +37,7 @@ public class OrderController {
 
     private final OrderService orderService;
 
+    @Operation(summary = "List the authenticated customer's orders")
     @GetMapping
     public ResponseEntity<PagedResponse<OrderResponse>> getUserOrders(
             @AuthenticationPrincipal LocalUser user,
@@ -50,18 +60,21 @@ public class OrderController {
         return ResponseEntity.ok(new PagedResponse<>(orders));
     }
 
+    @Operation(summary = "Create a new order")
     @PostMapping
     public ResponseEntity<OrderResponse> createOrder(@AuthenticationPrincipal LocalUser user,
                                                      @Valid @RequestBody OrderRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(orderService.createOrder(user, request));
     }
 
+    @Operation(summary = "Cancel an order")
     @PatchMapping("/{orderId}/cancel")
     public ResponseEntity<OrderResponse> cancelOrder(@AuthenticationPrincipal LocalUser user,
                                                      @PathVariable Long orderId) {
         return ResponseEntity.ok(orderService.cancelOrder(user, orderId));
     }
 
+    @Operation(summary = "Get an order by ID")
     @GetMapping("/{orderId}")
     public ResponseEntity<OrderResponse> getOrderById(@AuthenticationPrincipal LocalUser user,
                                                       @PathVariable Long orderId) {
