@@ -18,7 +18,6 @@ Thumbs.db
 
 # Environment files
 .env
-.env.*
 application-local.properties
 
 # Build files
