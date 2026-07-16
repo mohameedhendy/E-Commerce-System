@@ -442,7 +442,7 @@ $env:DB_PASSWORD="your-database-password"
 
 $env:JWT_SECRET="replace-with-a-long-random-secret"
 $env:JWT_ISSUER="eCommerce"
-$env:JWT_EXPIRY_SECONDS="604800"
+$env:JWT_EXPIRY_SECONDS="3600"
 
 $env:MAIL_HOST="localhost"
 $env:MAIL_PORT="1025"
