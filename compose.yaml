@@ -29,6 +29,27 @@ services:
     networks:
       - ecommerce-network
 
+  mailpit:
+    image: axllent/mailpit:v1.30.4
+    container_name: ecommerce-mailpit
+    restart: unless-stopped
+
+    environment:
+      MP_MAX_MESSAGES: 500
+      MP_DATABASE: /data/mailpit.db
+
+    ports:
+      - "${MAILPIT_HTTP_PORT:-8025}:8025"
+
+    expose:
+      - "1025"
+
+    volumes:
+      - mailpit-data:/data
+
+    networks:
+      - ecommerce-network
+
   backend:
     build:
       context: .
@@ -42,6 +63,9 @@ services:
       database:
         condition: service_healthy
         restart: true
+
+      mailpit:
+        condition: service_started
 
     environment:
       SPRING_PROFILES_ACTIVE: prod
@@ -59,6 +83,11 @@ services:
       JWT_PASSWORD_RESET_EXPIRY_SECONDS: ${JWT_PASSWORD_RESET_EXPIRY_SECONDS:-1800}
 
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+
+      EMAIL_VERIFICATION_ENABLED: ${EMAIL_VERIFICATION_ENABLED:-true}
+      MAIL_HOST: ${MAIL_HOST:-mailpit}
+      MAIL_PORT: ${MAIL_PORT:-1025}
+      EMAIL_FROM: ${EMAIL_FROM:-no-reply@ecommerce.local}
 
       AUTH_RATE_LIMIT_ENABLED: ${AUTH_RATE_LIMIT_ENABLED:-true}
       AUTH_RATE_LIMIT_MAX_REQUESTS: ${AUTH_RATE_LIMIT_MAX_REQUESTS:-10}
@@ -85,6 +114,7 @@ services:
 
 volumes:
   postgres-data:
+  mailpit-data:
 
 networks:
   ecommerce-network:
