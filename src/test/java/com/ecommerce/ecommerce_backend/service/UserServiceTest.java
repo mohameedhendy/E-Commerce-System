@@ -563,7 +563,6 @@ public class UserServiceTest {
     }
 
     @Test
-    @Transactional
     public void refreshTokenCannotBeReused()
             throws Exception {
 
@@ -573,17 +572,17 @@ public class UserServiceTest {
         String originalRefreshToken =
                 loginResponse.getRefreshToken();
 
-        LoginResponse firstResponse =
+        LoginResponse rotatedResponse =
                 userService.refreshAccessToken(
                         originalRefreshToken
                 );
 
         Assertions.assertNotNull(
-                firstResponse.getAccessToken()
+                rotatedResponse.getAccessToken()
         );
 
         Assertions.assertNotNull(
-                firstResponse.getRefreshToken()
+                rotatedResponse.getRefreshToken()
         );
 
         Assertions.assertThrows(
@@ -591,20 +590,15 @@ public class UserServiceTest {
                 () -> userService.refreshAccessToken(
                         originalRefreshToken
                 ),
-                "A refresh token must not be reusable after successful rotation."
+                "The original refresh token must not be reusable."
         );
 
-        LoginResponse secondResponse =
-                userService.refreshAccessToken(
-                        firstResponse.getRefreshToken()
-                );
-
-        Assertions.assertNotNull(
-                secondResponse.getAccessToken()
-        );
-
-        Assertions.assertNotNull(
-                secondResponse.getRefreshToken()
+        Assertions.assertThrows(
+                InvalidTokenException.class,
+                () -> userService.refreshAccessToken(
+                        rotatedResponse.getRefreshToken()
+                ),
+                "Refresh token reuse must revoke the entire session."
         );
     }
 
