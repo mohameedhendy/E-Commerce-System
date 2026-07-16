@@ -1,8 +1,8 @@
 # E-Commerce Backend System
 
-A production-oriented RESTful backend for an E-Commerce application built with **Java 21**, **Spring Boot**, **Spring Security**, **JWT**, **PostgreSQL**, and **Flyway**.
+A production-oriented REST API for an e-commerce platform built with **Java 21**, **Spring Boot**, **Spring Security**, **JWT**, **PostgreSQL**, and **Flyway**.
 
-The project focuses on secure authentication, product and stock management, order processing, administration, reviews, database integrity, and automated testing.
+The project demonstrates secure authentication, refresh-token session management, persistent shopping carts, product and inventory management, order processing, administration, database migrations, OpenAPI documentation, containerization, and automated CI testing.
 
 ---
 
@@ -10,18 +10,25 @@ The project focuses on secure authentication, product and stock management, orde
 
 - Java 21
 - Spring Boot 3
+- Spring Web
 - Spring Security
 - JWT Authentication
 - Spring Data JPA
 - Hibernate
 - PostgreSQL
 - Flyway
-- Maven
+- Maven Wrapper
 - Bean Validation
 - Lombok
+- Spring Boot Actuator
+- Springdoc OpenAPI / Swagger UI
+- Docker and Docker Compose
+- GitHub Actions
+- GitHub Container Registry
 - GreenMail
 - H2 for automated tests
 - JUnit 5
+- Mockito
 - MockMvc
 
 ---
@@ -30,42 +37,47 @@ The project focuses on secure authentication, product and stock management, orde
 
 ### Authentication and Security
 
-- User registration
-- User login using JWT Bearer tokens
-- Stateless authentication
-- Role-based authorization
-- `USER` and `ADMIN` roles
+- User registration and login
+- JWT Bearer access tokens
+- Refresh-token authentication flow
+- Persistent authentication sessions
+- Refresh-token rotation
+- Logout from the current session
+- Logout from all sessions
+- List active sessions
+- Revoke a specific session
+- Stateless Spring Security configuration
+- Role-based authorization using `USER` and `ADMIN`
 - Current authenticated user endpoint
 - Email verification support
 - Password reset flow
 - Single-use password reset tokens
-- Separate JWT token types for:
+- Separate token types for:
   - Access tokens
   - Email verification tokens
   - Password reset tokens
-- Generic forgot-password response to prevent email enumeration
+- Generic forgot-password responses to prevent email enumeration
 - Case-insensitive username and email uniqueness
 - Username and email normalization
-- Password hashing using BCrypt
+- BCrypt password hashing
 - Configurable BCrypt cost
 - Trusted frontend CORS configuration
-- Consistent `401`, `403`, and validation responses
+- Consistent JSON responses for validation and security errors
+- Security headers and Content Security Policy
+- Swagger UI security policy separated from the API policy
 
 ---
 
-### Product Management
+### Product and Inventory Management
 
 Public users can:
 
 - List active products
 - Search products by keyword
-- Sort by:
-  - ID
-  - Name
-  - Price
+- Sort products by ID, name, or price
 - Use pagination
 - Get product details
-- View product stock quantity
+- View available stock
 - View product reviews
 
 Administrators can:
@@ -75,24 +87,38 @@ Administrators can:
 - Soft-delete products
 - Restore inactive products
 - View active and inactive products
+- Filter products by active status
 - Update stock quantity
 - View low-stock products
-- Filter products by active status
+
+Inventory protection includes:
+
+- Atomic stock updates
+- Automatic stock decrease during ordering
+- Automatic stock restoration after cancellation
+- Protection against overselling
+- Optimistic locking
+- A database constraint preventing negative stock
+- Concurrent order tests
 
 Inactive products cannot be ordered.
 
 ---
 
-### Stock Management
+### Persistent Shopping Cart
 
-- Stock quantity stored separately from product details
-- Automatic stock decrease during order creation
-- Automatic stock restoration after cancellation
-- Atomic stock update queries
-- Protection against overselling
-- Optimistic locking support
-- Database constraint preventing negative stock
-- Concurrent order tests
+Authenticated users can:
+
+- Get their shopping cart
+- Add products to the cart
+- Update cart item quantities
+- Remove individual cart items
+- Clear the cart
+- Validate product activity and available stock
+- Checkout the cart into an order
+- Automatically clear the cart after successful checkout
+
+Cart totals are calculated from current product prices and validated before checkout.
 
 ---
 
@@ -104,7 +130,7 @@ Authenticated users can:
 - Update addresses
 - View their addresses
 
-Security checks prevent users from accessing or modifying addresses belonging to other users.
+Ownership checks prevent users from accessing or modifying addresses that belong to other users.
 
 Address data is validated before reaching the database.
 
@@ -114,7 +140,8 @@ Address data is validated before reaching the database.
 
 Authenticated users can:
 
-- Create orders
+- Create orders directly
+- Create orders through cart checkout
 - View their orders
 - Filter orders by status
 - Use pagination
@@ -158,25 +185,26 @@ All monetary values use `BigDecimal`.
 
 Authenticated users can:
 
-- Create product reviews
+- Create reviews for eligible products
 - Update their own reviews
 
 Public users can:
 
 - View product reviews with pagination
 
-Review validation includes:
+Validation includes:
 
 - Rating between 1 and 5
 - Required comment
-- Comment length limit
+- Comment length limits
 - Pagination limits
+- Ownership checks
 
 ---
 
 ### Admin Dashboard
 
-The admin dashboard summary includes:
+The administrative dashboard provides:
 
 - Total products
 - Active products
@@ -189,18 +217,58 @@ The admin dashboard summary includes:
 
 ---
 
+## API Documentation
+
+Interactive API documentation is available during local and development runs.
+
+Swagger UI:
+
+```text
+http://localhost:8080/swagger-ui/index.html
+```
+
+OpenAPI JSON:
+
+```text
+http://localhost:8080/v3/api-docs
+```
+
+The OpenAPI document includes:
+
+- Endpoint summaries and tags
+- Request and response schemas
+- JSON media types
+- JWT Bearer authentication
+- Protected-operation security requirements
+- Reusable error responses for:
+  - `400 Bad Request`
+  - `401 Unauthorized`
+  - `403 Forbidden`
+  - `404 Not Found`
+  - `409 Conflict`
+  - `500 Internal Server Error`
+
+Swagger UI and OpenAPI endpoints are disabled by the production profile.
+
+---
+
 ## API Endpoints
 
 ### Authentication
 
-| Method | Endpoint | Description |
-|---|---|---|
-| POST | `/auth/register` | Register a new user |
-| POST | `/auth/login` | Authenticate and receive an access token |
-| GET | `/auth/me` | Get the authenticated user |
-| POST | `/auth/verify` | Verify an email address |
-| POST | `/auth/forgot` | Request a password reset |
-| POST | `/auth/reset` | Reset a password |
+| Method | Endpoint | Description | Access |
+|---|---|---|---|
+| POST | `/auth/register` | Register a new user | Public |
+| POST | `/auth/login` | Authenticate and receive access and refresh tokens | Public |
+| POST | `/auth/refresh` | Issue new tokens using a refresh token | Public |
+| POST | `/auth/logout` | Revoke a refresh token | Public |
+| POST | `/auth/logout-all` | Revoke all active sessions | Authenticated |
+| GET | `/auth/sessions` | List active authentication sessions | Authenticated |
+| DELETE | `/auth/sessions/{sessionId}` | Revoke a specific session | Authenticated |
+| GET | `/auth/me` | Get the authenticated user | Authenticated |
+| POST | `/auth/verify` | Verify an email address | Public |
+| POST | `/auth/forgot` | Request a password reset | Public |
+| POST | `/auth/reset` | Reset a password | Public |
 
 The forgot-password endpoint returns the same response whether the email exists or not.
 
@@ -241,12 +309,25 @@ GET /product?keyword=phone&page=0&size=10&sortBy=price&sortDir=desc
 
 ---
 
+### Shopping Cart
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/cart` | Get the authenticated user's cart |
+| POST | `/cart/items` | Add an item to the cart |
+| PUT | `/cart/items/{itemId}` | Update a cart item quantity |
+| DELETE | `/cart/items/{itemId}` | Remove a cart item |
+| DELETE | `/cart` | Clear the cart |
+| POST | `/cart/checkout` | Convert the cart into an order |
+
+---
+
 ### Orders
 
 | Method | Endpoint | Description |
 |---|---|---|
 | POST | `/order` | Create an order |
-| GET | `/order` | Get authenticated user's orders |
+| GET | `/order` | Get the authenticated user's orders |
 | GET | `/order/{orderId}` | Get an order |
 | PATCH | `/order/{orderId}/cancel` | Cancel an eligible order |
 
@@ -305,47 +386,49 @@ All `/admin/**` endpoints require the `ADMIN` role.
 
 ---
 
-## Database Management
+## Authentication Example
 
-The project uses **Flyway** to manage PostgreSQL schema changes.
+Request:
 
-Hibernate is configured to validate the schema:
-
-```properties
-spring.jpa.hibernate.ddl-auto=validate
+```http
+POST /auth/login
+Content-Type: application/json
 ```
 
-Flyway handles:
+```json
+{
+  "username": "UserA",
+  "password": "PasswordA123"
+}
+```
 
-- Initial database schema
-- Order status constraints
-- Stock constraints
-- Optimistic locking columns
-- Product price precision
-- Product and shipping snapshots
-- Order total snapshots
-- Password reset versioning
-- User role integrity
-- Case-insensitive username and email uniqueness
+Response:
 
-Never modify an already-applied migration. New database changes must use a new migration version.
+```json
+{
+  "accessToken": "ACCESS_TOKEN",
+  "refreshToken": "REFRESH_TOKEN"
+}
+```
 
----
+Use the access token on protected endpoints:
 
-## Security Highlights
+```http
+Authorization: Bearer ACCESS_TOKEN
+```
 
-- Stateless JWT authentication
-- Bearer token validation
-- Explicit token-type validation
-- BCrypt password hashing
-- Single-use password reset tokens
-- Email-enumeration protection
-- Case-insensitive unique database indexes
-- Role constraints at database level
-- Ownership checks for addresses, orders, and reviews
-- Soft-deleted products excluded from public ordering
-- Trusted-origin CORS policy
-- Secure generic authentication errors
+Refresh the authentication session:
+
+```http
+POST /auth/refresh
+Content-Type: application/json
+```
+
+```json
+{
+  "refreshToken": "REFRESH_TOKEN"
+}
+```
 
 ---
 
@@ -384,14 +467,45 @@ Handled cases include:
 
 ---
 
+## Database Management
+
+The project uses **Flyway** to manage PostgreSQL schema changes.
+
+Hibernate validates the database schema:
+
+```properties
+spring.jpa.hibernate.ddl-auto=validate
+```
+
+Flyway manages:
+
+- Initial database schema
+- User roles and integrity constraints
+- Case-insensitive username and email uniqueness
+- Product price precision
+- Product activation and stock fields
+- Stock constraints and optimistic locking
+- Order status constraints
+- Product and shipping snapshots
+- Order totals
+- Password reset versioning
+- Refresh-token session storage
+- Persistent shopping carts
+
+Never modify an already-applied migration. Every database change must use a new migration version.
+
+---
+
 ## Automated Testing
 
-The project includes tests for:
+The test suite covers:
 
-- Authentication
+- Authentication and authorization
 - Registration validation
 - Password policy
+- Access and refresh token flows
 - JWT token types
+- Active session management
 - Single-use password reset tokens
 - Email verification
 - Forgot-password privacy
@@ -399,13 +513,18 @@ The project includes tests for:
 - Product validation
 - Review validation
 - Pagination validation
+- Shopping cart operations
+- Cart checkout
 - Order price snapshots
 - Order total snapshots
 - Shipping address snapshots
 - Stock concurrency
 - Product status restrictions
-- Security authorization
+- Security responses
 - CORS configuration
+- Security headers
+- OpenAPI documentation
+- Production profile configuration
 - Service transactions
 
 Run all tests:
@@ -417,6 +536,14 @@ Run all tests:
 ---
 
 ## Running Locally
+
+### Prerequisites
+
+- Java 21
+- PostgreSQL
+- Git
+
+The project includes the Maven Wrapper, so a global Maven installation is not required.
 
 ### 1. Clone the repository
 
@@ -431,7 +558,7 @@ cd E-Commerce-System
 CREATE DATABASE ecommerce_db;
 ```
 
-### 3. Configure environment variables
+### 3. Configure Environment Variables
 
 PowerShell example:
 
@@ -440,7 +567,7 @@ $env:DB_URL="jdbc:postgresql://localhost:5432/ecommerce_db"
 $env:DB_USERNAME="postgres"
 $env:DB_PASSWORD="your-database-password"
 
-$env:JWT_SECRET="replace-with-a-long-random-secret"
+$env:JWT_SECRET="replace-with-a-random-secret-that-has-at-least-32-characters"
 $env:JWT_ISSUER="eCommerce"
 $env:JWT_EXPIRY_SECONDS="3600"
 
@@ -454,13 +581,13 @@ $env:FRONTEND_URL="http://localhost:3000"
 
 Do not commit real passwords or JWT secrets.
 
-### 4. Run the application
+### 4. Run the Application
 
 ```powershell
 .\mvnw.cmd spring-boot:run
 ```
 
-The API will run at:
+The API runs at:
 
 ```text
 http://localhost:8080
@@ -468,70 +595,143 @@ http://localhost:8080
 
 ---
 
-## Authentication Example
+## Docker
 
-Request:
+Copy the environment template:
 
-```http
-POST /auth/login
-Content-Type: application/json
+```powershell
+Copy-Item .env.example .env
 ```
 
-```json
-{
-  "username": "UserA",
-  "password": "PasswordA123"
-}
+Update `.env` with local development values, then start the configured Docker Compose services:
+
+```powershell
+docker compose up --build -d
 ```
 
-Response:
+Check service status:
 
-```json
-{
-  "token": "JWT_TOKEN"
-}
+```powershell
+docker compose ps
 ```
 
-Use the token on protected endpoints:
+View backend logs:
 
-```http
-Authorization: Bearer JWT_TOKEN
+```powershell
+docker compose logs -f backend
 ```
+
+Stop the stack:
+
+```powershell
+docker compose down
+```
+
+Do not commit the real `.env` file.
+
+---
+
+## Production Profile
+
+Activate the production profile using:
+
+```text
+SPRING_PROFILES_ACTIVE=prod
+```
+
+The production configuration includes:
+
+- Externalized secrets and environment variables
+- Database schema validation
+- Disabled Swagger UI and OpenAPI endpoints
+- Restricted error details
+- Production security headers
+- Actuator health probes
+- Docker health checks
+
+Health endpoint:
+
+```text
+/actuator/health
+```
+
+Probe endpoints:
+
+```text
+/actuator/health/liveness
+/actuator/health/readiness
+```
+
+---
+
+## CI/CD
+
+GitHub Actions workflows provide:
+
+### Backend CI
+
+Runs on pushes and pull requests and performs:
+
+```powershell
+.\mvnw.cmd clean verify
+```
+
+This validates compilation, automated tests, and production configuration.
+
+### Container Publishing
+
+The container workflow:
+
+- Builds the backend Docker image
+- Publishes images to GitHub Container Registry
+- Uses repository-scoped GitHub authentication
+- Runs according to the workflow's configured push, tag, or manual triggers
 
 ---
 
 ## Project Structure
 
 ```text
-src
-├── main
-│   ├── java
-│   │   └── com.ecommerce.ecommerce_backend
-│   │       ├── config
-│   │       ├── controller
-│   │       ├── dao
-│   │       ├── dto
-│   │       ├── exception
-│   │       ├── model
-│   │       ├── security
-│   │       └── service
-│   └── resources
-│       ├── db
-│       │   └── migration
-│       └── application.properties
-└── test
-    ├── java
-    └── resources
+src/
+|-- main/
+|   |-- java/
+|   |   `-- com/ecommerce/ecommerce_backend/
+|   |       |-- config/
+|   |       |-- controller/
+|   |       |-- dao/
+|   |       |-- dto/
+|   |       |-- exception/
+|   |       |-- model/
+|   |       |-- security/
+|   |       `-- service/
+|   `-- resources/
+|       |-- db/
+|       |   `-- migration/
+|       |-- application.properties
+|       `-- application-prod.properties
+`-- test/
+    |-- java/
+    `-- resources/
+```
+
+Additional root-level infrastructure:
+
+```text
+.github/workflows/   GitHub Actions workflows
+Dockerfile           Backend container image
+compose.yaml         Local multi-container stack
+.env.example         Environment variable template
+mvnw / mvnw.cmd      Maven Wrapper
 ```
 
 ---
 
-## Next Planned Feature
+## Security Notes
 
-- Persistent Shopping Cart
-- Add products to cart
-- Update cart item quantities
-- Remove cart items
-- Validate stock
-- Convert cart into an order
-- Clear cart after successful checkout
+- Never commit real secrets.
+- Use a random JWT secret with at least 32 characters.
+- Use HTTPS in production.
+- Restrict `FRONTEND_URL` to trusted origins.
+- Keep production Swagger endpoints disabled.
+- Rotate production credentials when necessary.
+- Use the production profile outside local development.
