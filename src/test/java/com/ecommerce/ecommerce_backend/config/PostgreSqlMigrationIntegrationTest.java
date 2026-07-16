@@ -56,7 +56,7 @@ class PostgreSqlMigrationIntegrationTest {
                         """
                         SELECT COUNT(*)
                         FROM flyway_schema_history
-                        WHERE version = '17'
+                        WHERE version = '18'
                           AND success = TRUE
                         """,
                         Integer.class

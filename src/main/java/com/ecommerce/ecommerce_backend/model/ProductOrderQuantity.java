@@ -10,6 +10,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -18,11 +19,25 @@ import java.math.BigDecimal;
 @Getter
 @Setter
 @Entity
-@Table(name = "product_order_quantity")
+@Table(
+        name = "product_order_quantity",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name =
+                                "uk_order_item_order_product",
+                        columnNames = {
+                                "order_id",
+                                "product_id"
+                        }
+                )
+        }
+)
 public class ProductOrderQuantity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(
+            strategy = GenerationType.IDENTITY
+    )
     @Column(name = "id")
     private Long id;
 
