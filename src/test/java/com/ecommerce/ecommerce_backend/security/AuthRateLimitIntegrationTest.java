@@ -92,10 +92,24 @@ public class AuthRateLimitIntegrationTest {
                                 .value(429)
                 )
                 .andExpect(
+                        jsonPath("$.error")
+                                .value(
+                                        "Too Many Requests"
+                                )
+                )
+                .andExpect(
                         jsonPath("$.message")
                                 .value(
                                         "Too many requests. Please try again later."
                                 )
+                )
+                .andExpect(
+                        jsonPath("$.timestamp")
+                                .exists()
+                )
+                .andExpect(
+                        jsonPath("$.validationErrors")
+                                .isEmpty()
                 );
     }
 }

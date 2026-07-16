@@ -41,6 +41,9 @@ public class OpenApiConfig {
     public static final String CONFLICT_RESPONSE =
             "Conflict";
 
+    public static final String TOO_MANY_REQUESTS_RESPONSE =
+            "TooManyRequests";
+
     public static final String INTERNAL_SERVER_ERROR_RESPONSE =
             "InternalServerError";
 
@@ -49,6 +52,16 @@ public class OpenApiConfig {
 
     private static final String API_ERROR_SCHEMA_REFERENCE =
             "#/components/schemas/" + API_ERROR_SCHEMA;
+
+    private static final Set<String> RATE_LIMITED_OPERATION_IDS =
+            Set.of(
+                    "registerUser",
+                    "loginUser",
+                    "refreshToken",
+                    "verifyEmail",
+                    "forgotPassword",
+                    "resetPassword"
+            );
 
     private static final Set<String> NOT_FOUND_OPERATION_IDS =
             Set.of(
@@ -214,6 +227,15 @@ public class OpenApiConfig {
             );
         }
 
+        if (RATE_LIMITED_OPERATION_IDS.contains(
+                operationId
+        )) {
+            addResponseIfAbsent(
+                    operation,
+                    "429",
+                    TOO_MANY_REQUESTS_RESPONSE
+            );
+        }
         addResponseIfAbsent(
                 operation,
                 "500",
@@ -310,6 +332,11 @@ public class OpenApiConfig {
                         )
                 )
                 .addResponses(
+                        TOO_MANY_REQUESTS_RESPONSE,
+                        createErrorResponse(
+                                "The authentication request rate limit was exceeded"
+                        )
+                )                .addResponses(
                         INTERNAL_SERVER_ERROR_RESPONSE,
                         createErrorResponse(
                                 "An unexpected server error occurred"

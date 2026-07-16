@@ -1,6 +1,7 @@
 package com.ecommerce.ecommerce_backend.security;
 
 import com.ecommerce.ecommerce_backend.config.AuthRateLimitProperties;
+import com.ecommerce.ecommerce_backend.dto.ApiErrorResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -11,10 +12,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
@@ -24,8 +24,12 @@ public class AuthRateLimitInterceptor
     private static final String RATE_LIMIT_MESSAGE =
             "Too many requests. Please try again later.";
 
-    private final AuthRateLimitService authRateLimitService;
-    private final AuthRateLimitProperties properties;
+    private final AuthRateLimitService
+            authRateLimitService;
+
+    private final AuthRateLimitProperties
+            properties;
+
     private final ObjectMapper objectMapper;
 
     @Override
@@ -55,7 +59,8 @@ public class AuthRateLimitInterceptor
                         + "|"
                         + request.getRequestURI();
 
-        AuthRateLimitService.RateLimitDecision decision =
+        AuthRateLimitService.RateLimitDecision
+                decision =
                 authRateLimitService.tryAcquire(
                         clientKey
                 );
@@ -83,31 +88,17 @@ public class AuthRateLimitInterceptor
                 )
         );
 
-        Map<String, Object> responseBody =
-                new LinkedHashMap<>();
-
-        responseBody.put(
-                "status",
-                HttpStatus.TOO_MANY_REQUESTS.value()
-        );
-
-        responseBody.put(
-                "error",
-                "Too Many Requests"
-        );
-
-        responseBody.put(
-                "message",
-                RATE_LIMIT_MESSAGE
-        );
-
-        responseBody.put(
-                "validationErrors",
-                null
-        );
+        ApiErrorResponse responseBody =
+                new ApiErrorResponse(
+                        HttpStatus.TOO_MANY_REQUESTS
+                                .value(),
+                        HttpStatus.TOO_MANY_REQUESTS
+                                .getReasonPhrase(),
+                        RATE_LIMIT_MESSAGE
+                );
 
         objectMapper.writeValue(
-                response.getWriter(),
+                response.getOutputStream(),
                 responseBody
         );
 

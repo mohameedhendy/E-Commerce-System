@@ -724,6 +724,77 @@ public class OpenApiDocumentationIntegrationTest {
         );
     }
 
+    @Test
+    public void rateLimitedAuthenticationOperationsDocumentTooManyRequests()
+            throws Exception {
+
+        JsonNode documentation =
+                getOpenApiDocumentation();
+
+        JsonNode paths =
+                documentation.path("paths");
+
+        assertReusableErrorResponse(
+                documentation,
+                OpenApiConfig.TOO_MANY_REQUESTS_RESPONSE
+        );
+
+        assertResponseReference(
+                paths,
+                "/auth/register",
+                "post",
+                "429",
+                OpenApiConfig.TOO_MANY_REQUESTS_RESPONSE
+        );
+
+        assertResponseReference(
+                paths,
+                "/auth/login",
+                "post",
+                "429",
+                OpenApiConfig.TOO_MANY_REQUESTS_RESPONSE
+        );
+
+        assertResponseReference(
+                paths,
+                "/auth/refresh",
+                "post",
+                "429",
+                OpenApiConfig.TOO_MANY_REQUESTS_RESPONSE
+        );
+
+        assertResponseReference(
+                paths,
+                "/auth/verify",
+                "post",
+                "429",
+                OpenApiConfig.TOO_MANY_REQUESTS_RESPONSE
+        );
+
+        assertResponseReference(
+                paths,
+                "/auth/forgot",
+                "post",
+                "429",
+                OpenApiConfig.TOO_MANY_REQUESTS_RESPONSE
+        );
+
+        assertResponseReference(
+                paths,
+                "/auth/reset",
+                "post",
+                "429",
+                OpenApiConfig.TOO_MANY_REQUESTS_RESPONSE
+        );
+
+        assertResponseMissing(
+                paths,
+                "/auth/logout",
+                "post",
+                "429"
+        );
+    }
+
     private JsonNode getOpenApiDocumentation()
             throws Exception {
 
