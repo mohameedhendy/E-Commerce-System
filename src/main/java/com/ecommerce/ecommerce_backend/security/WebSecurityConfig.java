@@ -87,6 +87,11 @@ public class WebSecurityConfig {
                                         "/product/**"
                                 ).permitAll()
                                 .requestMatchers(
+                                        HttpMethod.GET,
+                                        "/actuator/health",
+                                        "/actuator/health/**"
+                                ).permitAll()
+                                .requestMatchers(
                                         "/auth/login",
                                         "/auth/register",
                                         "/auth/refresh",

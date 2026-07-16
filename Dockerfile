@@ -22,6 +22,10 @@ FROM eclipse-temurin:21-jre-jammy
 
 WORKDIR /app
 
+RUN apt-get update \
+    && apt-get install --yes --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
+
 RUN groupadd --system spring \
     && useradd \
         --system \
