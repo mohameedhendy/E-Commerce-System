@@ -136,9 +136,9 @@ public class JWTServiceTest {
     }
 
     @Test
-    public void testLoginJWTCorrectlySignedNoIssuer() {
+    public void testLoginJWTRequiresIssuerAndAudience() {
 
-        String token =
+        String tokenWithoutIssuer =
                 JWT.create()
                         .withClaim(
                                 "USERNAME",
@@ -147,6 +147,9 @@ public class JWTServiceTest {
                         .withClaim(
                                 "TOKEN_TYPE",
                                 "ACCESS"
+                        )
+                        .withAudience(
+                                jwtProperties.audience()
                         )
                         .sign(
                                 Algorithm.HMAC256(
@@ -158,7 +161,42 @@ public class JWTServiceTest {
 
         Assertions.assertThrows(
                 MissingClaimException.class,
-                () -> jwtService.getUsername(token)
+                () -> jwtService.getUsername(
+                        tokenWithoutIssuer
+                ),
+                "Access token must contain the configured issuer."
+        );
+
+        String tokenWithWrongAudience =
+                JWT.create()
+                        .withClaim(
+                                "USERNAME",
+                                "UserA"
+                        )
+                        .withClaim(
+                                "TOKEN_TYPE",
+                                "ACCESS"
+                        )
+                        .withIssuer(
+                                jwtProperties.issuer()
+                        )
+                        .withAudience(
+                                "different-service"
+                        )
+                        .sign(
+                                Algorithm.HMAC256(
+                                        jwtProperties
+                                                .algorithm()
+                                                .key()
+                                )
+                        );
+
+        Assertions.assertThrows(
+                JWTVerificationException.class,
+                () -> jwtService.getUsername(
+                        tokenWithWrongAudience
+                ),
+                "Access token must target the configured audience."
         );
     }
 
@@ -199,6 +237,9 @@ public class JWTServiceTest {
                         .withClaim(
                                 "TOKEN_TYPE",
                                 "PASSWORD_RESET"
+                        )
+                        .withAudience(
+                                jwtProperties.audience()
                         )
                         .sign(
                                 Algorithm.HMAC256(
@@ -521,17 +562,6 @@ public class JWTServiceTest {
         );
     }
 
-    private String generateSessionRefreshToken(
-            LocalUser user
-    ) {
-
-        return jwtService.generateRefreshToken(
-                user,
-                UUID.randomUUID().toString(),
-                0L
-        );
-    }
-
     @Test
     public void verificationTokenUsesConfiguredExpiryTime() {
 
@@ -617,7 +647,7 @@ public class JWTServiceTest {
     }
 
     @Test
-    public void generatedTokensContainIssuedAtAndUniqueJwtIds() {
+    public void generatedTokensContainRequiredClaimsAndUniqueJwtIds() {
 
         LocalUser user = localUserDao
                 .findByUsernameIgnoreCase("UserA")
@@ -653,6 +683,14 @@ public class JWTServiceTest {
                     token.getId().isBlank(),
                     "JWT ID must not be blank."
             );
+
+            Assertions.assertEquals(
+                    List.of(
+                            jwtProperties.audience()
+                    ),
+                    token.getAudience(),
+                    "Every JWT must target the configured audience."
+            );
         });
 
         long uniqueJwtIds =
@@ -669,32 +707,14 @@ public class JWTServiceTest {
         );
     }
 
-    @Test
-    public void generatedTokensContainConfiguredAudience() {
+    private String generateSessionRefreshToken(
+            LocalUser user
+    ) {
 
-        LocalUser user = localUserDao
-                .findByUsernameIgnoreCase("UserA")
-                .orElseThrow();
-
-        List<String> generatedTokens =
-                List.of(
-                        jwtService.generateToken(user),
-                        generateSessionRefreshToken(user),
-                        jwtService.generateVerificationJWT(user),
-                        jwtService.generatePasswordResetJWT(user)
-                );
-
-        generatedTokens
-                .stream()
-                .map(JWT::decode)
-                .forEach(decodedToken ->
-                        Assertions.assertEquals(
-                                List.of(
-                                        jwtProperties.audience()
-                                ),
-                                decodedToken.getAudience(),
-                                "Every JWT must target the configured audience."
-                        )
-                );
+        return jwtService.generateRefreshToken(
+                user,
+                UUID.randomUUID().toString(),
+                0L
+        );
     }
 }
