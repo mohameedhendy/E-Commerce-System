@@ -3,11 +3,17 @@ package com.ecommerce.ecommerce_backend.config;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import java.net.URI;
 
-@SpringBootTest(properties = {
+@SpringJUnitConfig(
+        EmailApplicationPropertiesTest
+                .PropertiesTestConfiguration.class
+)
+@TestPropertySource(properties = {
         "email.from=test-email@ecommerce-test.com",
         "app.frontend.url=http://localhost:4200",
         "app.email.verification.enabled=true"
@@ -38,5 +44,13 @@ public class EmailApplicationPropertiesTest {
                         .verification()
                         .enabled()
         );
+    }
+
+    @Configuration(proxyBeanMethods = false)
+    @EnableConfigurationProperties({
+            EmailProperties.class,
+            ApplicationProperties.class
+    })
+    static class PropertiesTestConfiguration {
     }
 }
