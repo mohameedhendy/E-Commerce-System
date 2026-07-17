@@ -9,6 +9,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
 
 public class AdminProductRequestValidationTest {
 
@@ -29,14 +30,33 @@ public class AdminProductRequestValidationTest {
     }
 
     @Test
-    public void validProductRequestPassesValidation() {
+    public void validProductDetailsRequestPassesValidation() {
 
         AdminProductRequest request =
                 createValidRequest();
 
         Assertions.assertTrue(
                 validator.validate(request).isEmpty(),
-                "Valid product request should pass validation."
+                "Valid product details should pass validation."
+        );
+    }
+
+    @Test
+    public void productDetailsRequestDoesNotContainStockQuantity() {
+
+        boolean containsStockQuantity =
+                Arrays.stream(
+                                AdminProductRequest.class
+                                        .getDeclaredFields()
+                        )
+                        .anyMatch(field ->
+                                field.getName()
+                                        .equals("stockQuantity")
+                        );
+
+        Assertions.assertFalse(
+                containsStockQuantity,
+                "Product details request must not expose stock quantity."
         );
     }
 
@@ -112,16 +132,18 @@ public class AdminProductRequestValidationTest {
                 new AdminProductRequest();
 
         request.setName("Test Product");
+
         request.setShortDescription(
                 "Short product description"
         );
+
         request.setLongDescription(
                 "Long product description"
         );
+
         request.setPrice(
                 new BigDecimal("99.99")
         );
-        request.setStockQuantity(10);
 
         return request;
     }

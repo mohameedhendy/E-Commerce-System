@@ -1,6 +1,7 @@
 package com.ecommerce.ecommerce_backend.service;
 
 import com.ecommerce.ecommerce_backend.dao.ProductDao;
+import com.ecommerce.ecommerce_backend.dto.AdminProductCreateRequest;
 import com.ecommerce.ecommerce_backend.dto.AdminProductRequest;
 import com.ecommerce.ecommerce_backend.dto.AdminProductStockRequest;
 import com.ecommerce.ecommerce_backend.dto.ProductResponse;
@@ -58,7 +59,7 @@ public class ProductService {
 
     @Transactional
     public ProductResponse createProduct(
-            AdminProductRequest request
+            AdminProductCreateRequest request
     ) {
 
         Product product = new Product();
@@ -92,13 +93,6 @@ public class ProductService {
         applyProductDetails(
                 product,
                 request
-        );
-
-        Stock stock =
-                getOrCreateStock(product);
-
-        stock.setQuantity(
-                request.getStockQuantity()
         );
 
         return saveAndConvert(product);

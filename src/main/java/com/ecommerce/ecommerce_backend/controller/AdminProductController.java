@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import com.ecommerce.ecommerce_backend.config.OpenApiConfig;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
+import com.ecommerce.ecommerce_backend.dto.AdminProductCreateRequest;
 import com.ecommerce.ecommerce_backend.dto.AdminProductRequest;
 import com.ecommerce.ecommerce_backend.dto.AdminProductStockRequest;
 import com.ecommerce.ecommerce_backend.dto.PagedResponse;
@@ -35,14 +36,16 @@ public class AdminProductController {
 
     private final ProductService productService;
 
-    @Operation(summary = "Create a product")
+    @Operation(summary = "Create a product with initial stock")
     @PostMapping
-    public ResponseEntity<ProductResponse> createProduct(@Valid @RequestBody AdminProductRequest request) {
+    public ResponseEntity<ProductResponse> createProduct(
+            @Valid @RequestBody AdminProductCreateRequest request
+    ) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(productService.createProduct(request));
     }
 
-    @Operation(summary = "Update a product")
+    @Operation(summary = "Update product details without changing stock")
     @PutMapping("/{productId}")
     public ResponseEntity<ProductResponse> updateProduct(@PathVariable Long productId,
                                                          @Valid @RequestBody AdminProductRequest request) {
@@ -112,7 +115,7 @@ public class AdminProductController {
         return ResponseEntity.ok(productService.getProductByIdForAdmin(productId));
     }
 
-    @Operation(summary = "Update product stock")
+    @Operation(summary = "Set product stock quantity")
     @PatchMapping("/{productId}/stock")
     public ResponseEntity<ProductResponse> updateProductStock(@PathVariable Long productId,
                                                               @Valid @RequestBody AdminProductStockRequest request) {

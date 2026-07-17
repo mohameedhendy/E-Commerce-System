@@ -357,13 +357,13 @@ All `/admin/**` endpoints require the `ADMIN` role.
 
 | Method | Endpoint | Description |
 |---|---|---|
-| POST | `/admin/product` | Create a product |
+| POST | `/admin/product` | Create a product with initial stock |
 | GET | `/admin/product` | List active and inactive products |
 | GET | `/admin/product/{productId}` | Get a product |
-| PUT | `/admin/product/{productId}` | Update a product |
+| PUT | `/admin/product/{productId}` | Update product details without changing stock |
 | DELETE | `/admin/product/{productId}` | Soft-delete a product |
 | PATCH | `/admin/product/{productId}/restore` | Restore a product |
-| PATCH | `/admin/product/{productId}/stock` | Update stock quantity |
+| PATCH | `/admin/product/{productId}/stock` | Set stock quantity through the dedicated inventory endpoint |
 | GET | `/admin/product/low-stock` | Get low-stock products |
 
 ---
