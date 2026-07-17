@@ -1,44 +1,19 @@
 # E-Commerce Backend System
 
-A production-oriented REST API for an e-commerce platform built with **Java 21**, **Spring Boot**, **Spring Security**, **JWT**, **PostgreSQL**, and **Flyway**.
+A production-oriented e-commerce REST API built with **Java 21**, **Spring Boot**, **Spring Security**, **JWT**, **PostgreSQL**, and **Flyway**.
 
-The project demonstrates secure authentication, refresh-token session management, persistent shopping carts, product and inventory management, order processing, administration, database migrations, OpenAPI documentation, containerization, and automated CI testing.
+This project was developed with support from **AI tools** during code review, testing, and documentation.
 
----
-
-## Tech Stack
-
-- Java 21
-- Spring Boot 3
-- Spring Web
-- Spring Security
-- JWT Authentication
-- Spring Data JPA
-- Hibernate
-- PostgreSQL
-- Flyway
-- Maven Wrapper
-- Bean Validation
-- Lombok
-- Spring Boot Actuator
-- Springdoc OpenAPI / Swagger UI
-- Docker and Docker Compose
-- GitHub Actions
-- GitHub Container Registry
-- GreenMail
-- H2 for automated tests
-- JUnit 5
-- Mockito
-- MockMvc
+The system provides secure authentication, refresh-token session management, persistent shopping carts, product and inventory management, order processing, reviews, administration, database migrations, API documentation, containerization, and automated testing.
 
 ---
 
-## Main Features
+## Features
 
 ### Authentication and Security
 
 - User registration and login
-- JWT Bearer access tokens
+- JWT access-token authentication
 - Refresh-token authentication flow
 - Persistent authentication sessions
 - Refresh-token rotation
@@ -46,29 +21,26 @@ The project demonstrates secure authentication, refresh-token session management
 - Logout from all sessions
 - List active sessions
 - Revoke a specific session
-- Stateless Spring Security configuration
-- Role-based authorization using `USER` and `ADMIN`
-- Current authenticated user endpoint
-- Email verification support
-- Password reset flow
-- Single-use password reset tokens
-- Separate token types for:
+- Email verification
+- Password reset
+- Single-use password-reset tokens
+- Separate JWT token types for:
   - Access tokens
-  - Email verification tokens
-  - Password reset tokens
-- Generic forgot-password responses to prevent email enumeration
+  - Email verification
+  - Password reset
+- Role-based authorization using `USER` and `ADMIN`
+- BCrypt password hashing
+- Configurable BCrypt strength
 - Case-insensitive username and email uniqueness
 - Username and email normalization
-- BCrypt password hashing
-- Configurable BCrypt cost
+- Generic forgot-password responses to prevent email enumeration
 - Trusted frontend CORS configuration
-- Consistent JSON responses for validation and security errors
 - Security headers and Content Security Policy
-- Swagger UI security policy separated from the API policy
+- Unified JSON responses for authentication and authorization errors
 
 ---
 
-### Product and Inventory Management
+### Product Management
 
 Public users can:
 
@@ -76,49 +48,57 @@ Public users can:
 - Search products by keyword
 - Sort products by ID, name, or price
 - Use pagination
-- Get product details
+- View product details
 - View available stock
 - View product reviews
 
 Administrators can:
 
 - Create products
-- Update products
+- Update product details
 - Soft-delete products
 - Restore inactive products
-- View active and inactive products
+- List active and inactive products
 - Filter products by active status
-- Update stock quantity
+- Update stock through a dedicated endpoint
 - View low-stock products
-
-Inventory protection includes:
-
-- Atomic stock updates
-- Automatic stock decrease during ordering
-- Automatic stock restoration after cancellation
-- Protection against overselling
-- Optimistic locking
-- A database constraint preventing negative stock
-- Concurrent order tests
 
 Inactive products cannot be ordered.
 
 ---
 
-### Persistent Shopping Cart
+### Inventory Management
+
+Inventory protection includes:
+
+- Atomic stock updates
+- Automatic stock reduction when an order is created
+- Automatic stock restoration when an order is cancelled
+- Protection against overselling
+- Optimistic locking
+- Database constraints preventing negative stock
+- Concurrent order and cancellation tests
+- Separation between product details and stock updates
+
+---
+
+### Shopping Cart
 
 Authenticated users can:
 
-- Get their shopping cart
+- View their cart
 - Add products to the cart
-- Update cart item quantities
-- Remove individual cart items
+- Update item quantities
+- Remove individual items
 - Clear the cart
-- Validate product activity and available stock
 - Checkout the cart into an order
-- Automatically clear the cart after successful checkout
 
-Cart totals are calculated from current product prices and validated before checkout.
+Cart checkout includes:
+
+- Product activity validation
+- Available-stock validation
+- Current-price validation
+- Automatic cart clearing after successful checkout
 
 ---
 
@@ -132,7 +112,7 @@ Authenticated users can:
 
 Ownership checks prevent users from accessing or modifying addresses that belong to other users.
 
-Address data is validated before reaching the database.
+Address data is validated before it reaches the database.
 
 ---
 
@@ -192,13 +172,14 @@ Public users can:
 
 - View product reviews with pagination
 
-Validation includes:
+Review validation includes:
 
 - Rating between 1 and 5
 - Required comment
 - Comment length limits
-- Pagination limits
 - Ownership checks
+- Duplicate-review protection
+- Purchase eligibility checks
 
 ---
 
@@ -217,17 +198,106 @@ The administrative dashboard provides:
 
 ---
 
+## Tech Stack
+
+### Backend
+
+- Java 21
+- Spring Boot 3
+- Spring Web
+- Spring Security
+- Spring Data JPA
+- Hibernate
+- Bean Validation
+- Lombok
+
+### Security
+
+- JWT authentication
+- BCrypt password hashing
+- Role-based authorization
+- Refresh-token sessions
+- Rate limiting
+- Security headers
+- Content Security Policy
+
+### Database
+
+- PostgreSQL
+- Flyway
+- H2 for selected automated tests
+
+### Documentation and Monitoring
+
+- Springdoc OpenAPI
+- Swagger UI
+- Spring Boot Actuator
+
+### Testing
+
+- JUnit 5
+- Mockito
+- MockMvc
+- GreenMail
+- Testcontainers
+
+### DevOps and Automation
+
+- Maven Wrapper
+- Docker
+- Docker Compose
+- GitHub Actions
+- GitHub Container Registry
+- Dependabot
+- Trivy
+- JaCoCo
+- SpotBugs
+- Maven Enforcer
+
+---
+
+## Architecture
+
+The project follows a layered backend architecture:
+
+```text
+Controller
+    ↓
+Service
+    ↓
+Repository
+    ↓
+Database
+```
+
+Main packages:
+
+```text
+config       Application configuration
+controller   REST API endpoints
+dao          Spring Data repositories
+dto          Request and response objects
+exception    Custom exceptions and global error handling
+model        JPA entities
+security     Authentication and authorization
+service      Business logic and transactions
+```
+
+DTOs are used to prevent exposing persistence entities directly through the API.
+
+---
+
 ## API Documentation
 
 Interactive API documentation is available during local and development runs.
 
-Swagger UI:
+### Swagger UI
 
 ```text
 http://localhost:8080/swagger-ui/index.html
 ```
 
-OpenAPI JSON:
+### OpenAPI JSON
 
 ```text
 http://localhost:8080/v3/api-docs
@@ -235,9 +305,10 @@ http://localhost:8080/v3/api-docs
 
 The OpenAPI document includes:
 
-- Endpoint summaries and tags
-- Request and response schemas
-- JSON media types
+- Endpoint summaries
+- Endpoint tags
+- Request schemas
+- Response schemas
 - JWT Bearer authentication
 - Protected-operation security requirements
 - Reusable error responses for:
@@ -248,7 +319,7 @@ The OpenAPI document includes:
   - `409 Conflict`
   - `500 Internal Server Error`
 
-Swagger UI and OpenAPI endpoints are disabled by the production profile.
+Swagger UI and OpenAPI endpoints are disabled in the production profile.
 
 ---
 
@@ -274,13 +345,13 @@ The forgot-password endpoint returns the same response whether the email exists 
 
 ---
 
-### Public Products
+### Products
 
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/product` | Search, sort, and paginate active products |
-| GET | `/product/{productId}` | Get an active product |
-| GET | `/product/{productId}/reviews` | Get product reviews |
+| Method | Endpoint | Description | Access |
+|---|---|---|---|
+| GET | `/product` | Search, sort, and paginate active products | Public |
+| GET | `/product/{productId}` | Get an active product | Public |
+| GET | `/product/{productId}/reviews` | Get product reviews | Public |
 
 Example:
 
@@ -292,46 +363,46 @@ GET /product?keyword=phone&page=0&size=10&sortBy=price&sortDir=desc
 
 ### Reviews
 
-| Method | Endpoint | Description |
-|---|---|---|
-| POST | `/product/{productId}/review` | Create a product review |
-| PUT | `/reviews/{reviewId}` | Update the authenticated user's review |
+| Method | Endpoint | Description | Access |
+|---|---|---|---|
+| POST | `/product/{productId}/review` | Create a product review | Authenticated |
+| PUT | `/reviews/{reviewId}` | Update the authenticated user's review | Authenticated |
 
 ---
 
 ### Addresses
 
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/user/{userId}/address` | Get user addresses |
-| POST | `/user/{userId}/address` | Add an address |
-| PUT | `/user/{userId}/address/{addressId}` | Update an address |
+| Method | Endpoint | Description | Access |
+|---|---|---|---|
+| GET | `/user/{userId}/address` | Get user addresses | Authenticated |
+| POST | `/user/{userId}/address` | Add an address | Authenticated |
+| PUT | `/user/{userId}/address/{addressId}` | Update an address | Authenticated |
 
 ---
 
 ### Shopping Cart
 
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/cart` | Get the authenticated user's cart |
-| POST | `/cart/items` | Add an item to the cart |
-| PUT | `/cart/items/{itemId}` | Update a cart item quantity |
-| DELETE | `/cart/items/{itemId}` | Remove a cart item |
-| DELETE | `/cart` | Clear the cart |
-| POST | `/cart/checkout` | Convert the cart into an order |
+| Method | Endpoint | Description | Access |
+|---|---|---|---|
+| GET | `/cart` | Get the authenticated user's cart | Authenticated |
+| POST | `/cart/items` | Add an item to the cart | Authenticated |
+| PUT | `/cart/items/{itemId}` | Update a cart item quantity | Authenticated |
+| DELETE | `/cart/items/{itemId}` | Remove a cart item | Authenticated |
+| DELETE | `/cart` | Clear the cart | Authenticated |
+| POST | `/cart/checkout` | Convert the cart into an order | Authenticated |
 
 ---
 
 ### Orders
 
-| Method | Endpoint | Description |
-|---|---|---|
-| POST | `/order` | Create an order |
-| GET | `/order` | Get the authenticated user's orders |
-| GET | `/order/{orderId}` | Get an order |
-| PATCH | `/order/{orderId}/cancel` | Cancel an eligible order |
+| Method | Endpoint | Description | Access |
+|---|---|---|---|
+| POST | `/order` | Create an order | Authenticated |
+| GET | `/order` | Get the authenticated user's orders | Authenticated |
+| GET | `/order/{orderId}` | Get an order | Authenticated |
+| PATCH | `/order/{orderId}/cancel` | Cancel an eligible order | Authenticated |
 
-Example create-order request:
+Example request:
 
 ```json
 {
@@ -360,10 +431,10 @@ All `/admin/**` endpoints require the `ADMIN` role.
 | POST | `/admin/product` | Create a product with initial stock |
 | GET | `/admin/product` | List active and inactive products |
 | GET | `/admin/product/{productId}` | Get a product |
-| PUT | `/admin/product/{productId}` | Update product details without changing stock |
+| PUT | `/admin/product/{productId}` | Update product details |
 | DELETE | `/admin/product/{productId}` | Soft-delete a product |
 | PATCH | `/admin/product/{productId}/restore` | Restore a product |
-| PATCH | `/admin/product/{productId}/stock` | Set stock quantity through the dedicated inventory endpoint |
+| PATCH | `/admin/product/{productId}/stock` | Update stock quantity |
 | GET | `/admin/product/low-stock` | Get low-stock products |
 
 ---
@@ -388,7 +459,7 @@ All `/admin/**` endpoints require the `ADMIN` role.
 
 ## Authentication Example
 
-Request:
+### Login Request
 
 ```http
 POST /auth/login
@@ -402,7 +473,7 @@ Content-Type: application/json
 }
 ```
 
-Response:
+### Login Response
 
 ```json
 {
@@ -417,7 +488,7 @@ Use the access token on protected endpoints:
 Authorization: Bearer ACCESS_TOKEN
 ```
 
-Refresh the authentication session:
+### Refresh Request
 
 ```http
 POST /auth/refresh
@@ -444,6 +515,7 @@ Example validation response:
   "status": 400,
   "error": "Bad Request",
   "message": "Validation failed",
+  "path": "/auth/register",
   "validationErrors": {
     "password": "Password must contain at least one letter and one number",
     "username": "Username is required"
@@ -461,9 +533,11 @@ Handled cases include:
 - Missing resources
 - Forbidden actions
 - Insufficient stock
-- Invalid order status transitions
 - Invalid product status
+- Invalid order status transitions
 - Optimistic locking conflicts
+- Rate-limit violations
+- Unexpected application errors
 
 ---
 
@@ -480,58 +554,69 @@ spring.jpa.hibernate.ddl-auto=validate
 Flyway manages:
 
 - Initial database schema
-- User roles and integrity constraints
+- User roles
+- Integrity constraints
 - Case-insensitive username and email uniqueness
+- Product activation
 - Product price precision
-- Product activation and stock fields
-- Stock constraints and optimistic locking
+- Stock fields and constraints
+- Optimistic locking
 - Order status constraints
-- Product and shipping snapshots
+- Product snapshots
+- Shipping-address snapshots
 - Order totals
-- Password reset versioning
+- Password-reset versioning
 - Refresh-token session storage
 - Persistent shopping carts
 
-Never modify an already-applied migration. Every database change must use a new migration version.
+Every database change must be added through a new migration.
+
+Already-applied migrations must not be modified because Flyway validates migration checksums.
 
 ---
 
 ## Automated Testing
 
-The test suite covers:
+The project includes unit, integration, security, database, migration, and concurrency tests.
 
+Covered areas include:
+
+- Registration and login
 - Authentication and authorization
-- Registration validation
-- Password policy
-- Access and refresh token flows
-- JWT token types
-- Active session management
-- Single-use password reset tokens
+- Password validation
 - Email verification
-- Forgot-password privacy
-- User identifier normalization
+- Password reset
+- Access-token behavior
+- Refresh-token behavior
+- Active-session management
+- User normalization
 - Product validation
-- Review validation
-- Pagination validation
-- Shopping cart operations
-- Cart checkout
-- Order price snapshots
-- Order total snapshots
-- Shipping address snapshots
-- Stock concurrency
 - Product status restrictions
-- Security responses
+- Shopping-cart operations
+- Cart checkout
+- Order creation
+- Order cancellation
+- Product price snapshots
+- Shipping-address snapshots
+- Order-total snapshots
+- Stock concurrency
+- Review validation
+- Security error responses
 - CORS configuration
 - Security headers
 - OpenAPI documentation
 - Production profile configuration
+- PostgreSQL migrations
 - Service transactions
+- Health endpoints
 
-Run all tests:
+Run the complete verification process:
 
 ```powershell
-.\mvnw.cmd clean verify
+.\mvnw.cmd verify
 ```
+
+A global Maven installation is not required because the repository includes the Maven Wrapper.
 
 ---
 
@@ -543,16 +628,14 @@ Run all tests:
 - PostgreSQL
 - Git
 
-The project includes the Maven Wrapper, so a global Maven installation is not required.
-
-### 1. Clone the repository
+### 1. Clone the Repository
 
 ```bash
 git clone https://github.com/mohameedhendy/E-Commerce-System.git
 cd E-Commerce-System
 ```
 
-### 2. Create the PostgreSQL database
+### 2. Create the Database
 
 ```sql
 CREATE DATABASE ecommerce_db;
@@ -576,12 +659,14 @@ $env:MAIL_PORT="1025"
 $env:EMAIL_FROM="no-reply@ecommerce.com"
 
 $env:EMAIL_VERIFICATION_ENABLED="true"
-
-Email verification is enabled by default. Set `EMAIL_VERIFICATION_ENABLED=false` only as an explicit local or automated-test override.
 $env:FRONTEND_URL="http://localhost:3000"
 ```
 
-Do not commit real passwords or JWT secrets.
+Email verification is enabled by default.
+
+Set `EMAIL_VERIFICATION_ENABLED=false` only as an explicit local or automated-test override.
+
+Never commit real database passwords, JWT secrets, or production credentials.
 
 ### 4. Run the Application
 
@@ -597,7 +682,7 @@ http://localhost:8080
 
 ---
 
-## Docker
+## Running with Docker
 
 Copy the environment template:
 
@@ -605,13 +690,15 @@ Copy the environment template:
 Copy-Item .env.example .env
 ```
 
-Update `.env` with local development values, then start the configured Docker Compose services:
+Update `.env` with local values.
+
+Build and start the services:
 
 ```powershell
 docker compose up --build -d
 ```
 
-Check service status:
+Check the service status:
 
 ```powershell
 docker compose ps
@@ -623,11 +710,17 @@ View backend logs:
 docker compose logs -f backend
 ```
 
-Stop the stack:
+Stop the services:
 
 ```powershell
 docker compose down
 ```
+
+The Docker Compose environment includes:
+
+- PostgreSQL
+- Backend application
+- Mailpit for local email testing
 
 Do not commit the real `.env` file.
 
@@ -641,11 +734,12 @@ Activate the production profile using:
 SPRING_PROFILES_ACTIVE=prod
 ```
 
-The production configuration includes:
+The production profile includes:
 
-- Externalized secrets and environment variables
+- Externalized secrets
 - Database schema validation
-- Disabled Swagger UI and OpenAPI endpoints
+- Disabled Swagger UI
+- Disabled OpenAPI endpoints
 - Restricted error details
 - Production security headers
 - Actuator health probes
@@ -666,28 +760,44 @@ Probe endpoints:
 
 ---
 
-## CI/CD
-
-GitHub Actions workflows provide:
+## CI and Automation
 
 ### Backend CI
 
-Runs on pushes and pull requests and performs:
+The backend workflow runs on pushes and pull requests.
+
+It executes:
 
 ```powershell
-.\mvnw.cmd clean verify
+.\mvnw.cmd verify
 ```
 
-This validates compilation, automated tests, and production configuration.
+The workflow validates:
+
+- Compilation
+- Automated tests
+- Code-quality rules
+- Database migrations
+- Production configuration
 
 ### Container Publishing
 
 The container workflow:
 
 - Builds the backend Docker image
-- Publishes images to GitHub Container Registry
+- Publishes the image to GitHub Container Registry
 - Uses repository-scoped GitHub authentication
-- Runs according to the workflow's configured push, tag, or manual triggers
+- Runs according to the configured push, tag, or manual triggers
+
+### Security and Quality Checks
+
+The repository includes:
+
+- Dependency updates through Dependabot
+- Container scanning with Trivy
+- Code coverage reporting with JaCoCo
+- Static analysis with SpotBugs
+- Java and Maven version enforcement
 
 ---
 
@@ -716,24 +826,32 @@ src/
     `-- resources/
 ```
 
-Additional root-level infrastructure:
+Root-level infrastructure:
 
 ```text
 .github/workflows/   GitHub Actions workflows
 Dockerfile           Backend container image
-compose.yaml         Local multi-container stack
+compose.yaml         Local multi-container environment
 .env.example         Environment variable template
 mvnw / mvnw.cmd      Maven Wrapper
+pom.xml              Maven project configuration
 ```
 
 ---
 
 ## Security Notes
 
-- Never commit real secrets.
-- Use a random JWT secret with at least 32 characters.
-- Use HTTPS in production.
-- Restrict `FRONTEND_URL` to trusted origins.
-- Keep production Swagger endpoints disabled.
-- Rotate production credentials when necessary.
-- Use the production profile outside local development.
+- Secrets and credentials are managed through environment variables and must not be committed to the repository.
+- Production environments should use HTTPS and trusted frontend origins.
+- Swagger UI and OpenAPI endpoints are disabled in the production profile.
+- Production credentials should be rotated and stored using a secure secrets-management solution.
+
+---
+
+## Repository
+
+GitHub:
+
+```text
+https://github.com/mohameedhendy/E-Commerce-System
+```
