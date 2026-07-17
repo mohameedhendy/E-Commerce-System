@@ -1,15 +1,17 @@
 package com.ecommerce.ecommerce_backend.controller;
 
 import com.ecommerce.ecommerce_backend.dao.LocalUserDao;
+import com.ecommerce.ecommerce_backend.dao.RefreshSessionDao;
 import com.ecommerce.ecommerce_backend.dto.RefreshTokenRequest;
 import com.ecommerce.ecommerce_backend.dto.RegistrationBody;
 import com.ecommerce.ecommerce_backend.model.LocalUser;
 import com.ecommerce.ecommerce_backend.service.JWTService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.icegreen.greenmail.configuration.GreenMailConfiguration;
 import com.icegreen.greenmail.junit5.GreenMailExtension;
 import com.icegreen.greenmail.util.ServerSetupTest;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,28 +21,17 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.transaction.annotation.Transactional;
-import org.junit.jupiter.api.Assertions;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import com.ecommerce.ecommerce_backend.dao.RefreshSessionDao;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+
 import java.sql.Timestamp;
 import java.time.Instant;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 public class AuthenticationControllerTest {
-
-    @Autowired
-    private JWTService jwtService;
-
-    @Autowired
-    private LocalUserDao localUserDao;
-
-    @Autowired
-    private RefreshSessionDao refreshSessionDao;
 
     @RegisterExtension
     private static final GreenMailExtension greenMailExtension =
@@ -51,7 +42,12 @@ public class AuthenticationControllerTest {
                                     .withUser("springboot", "secret")
                     )
                     .withPerMethodLifecycle(true);
-
+    @Autowired
+    private JWTService jwtService;
+    @Autowired
+    private LocalUserDao localUserDao;
+    @Autowired
+    private RefreshSessionDao refreshSessionDao;
     @Autowired
     private MockMvc mvc;
 
@@ -228,11 +224,11 @@ public class AuthenticationControllerTest {
                         post("/auth/login")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
-                                    {
-                                      "username": "UserA",
-                                      "password": "legacy-password"
-                                    }
-                                    """)
+                                        {
+                                          "username": "UserA",
+                                          "password": "legacy-password"
+                                        }
+                                        """)
                 )
                 .andExpect(status().isUnauthorized());
     }
@@ -266,11 +262,11 @@ public class AuthenticationControllerTest {
                         post("/auth/login")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
-                                    {
-                                      "username": "UserA",
-                                      "password": ""
-                                    }
-                                    """)
+                                        {
+                                          "username": "UserA",
+                                          "password": ""
+                                        }
+                                        """)
                 )
                 .andExpect(status().isBadRequest());
     }
@@ -354,11 +350,11 @@ public class AuthenticationControllerTest {
                                         MediaType.APPLICATION_JSON
                                 )
                                 .content("""
-                                    {
-                                      "username": "UserA",
-                                      "password": "PasswordA123"
-                                    }
-                                    """)
+                                        {
+                                          "username": "UserA",
+                                          "password": "PasswordA123"
+                                        }
+                                        """)
                 )
                 .andExpect(
                         status().isOk()
@@ -456,10 +452,10 @@ public class AuthenticationControllerTest {
                                         MediaType.APPLICATION_JSON
                                 )
                                 .content("""
-                                    {
-                                      "refreshToken": ""
-                                    }
-                                    """)
+                                        {
+                                          "refreshToken": ""
+                                        }
+                                        """)
                 )
                 .andExpect(
                         status().isBadRequest()
@@ -886,11 +882,11 @@ public class AuthenticationControllerTest {
                                                 MediaType.APPLICATION_JSON
                                         )
                                         .content("""
-                                            {
-                                              "username": "UserA",
-                                              "password": "PasswordA123"
-                                            }
-                                            """)
+                                                {
+                                                  "username": "UserA",
+                                                  "password": "PasswordA123"
+                                                }
+                                                """)
                         )
                         .andExpect(status().isOk())
                         .andReturn()

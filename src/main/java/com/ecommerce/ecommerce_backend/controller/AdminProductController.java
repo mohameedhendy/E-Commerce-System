@@ -1,18 +1,11 @@
 package com.ecommerce.ecommerce_backend.controller;
 
-import io.swagger.v3.oas.annotations.Operation;
-
-import io.swagger.v3.oas.annotations.tags.Tag;
-
 import com.ecommerce.ecommerce_backend.config.OpenApiConfig;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-
-import com.ecommerce.ecommerce_backend.dto.AdminProductCreateRequest;
-import com.ecommerce.ecommerce_backend.dto.AdminProductRequest;
-import com.ecommerce.ecommerce_backend.dto.AdminProductStockRequest;
-import com.ecommerce.ecommerce_backend.dto.PagedResponse;
-import com.ecommerce.ecommerce_backend.dto.ProductResponse;
+import com.ecommerce.ecommerce_backend.dto.*;
 import com.ecommerce.ecommerce_backend.service.ProductService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;

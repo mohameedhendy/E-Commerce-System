@@ -12,13 +12,8 @@ import com.ecommerce.ecommerce_backend.exception.ForbiddenActionException;
 import com.ecommerce.ecommerce_backend.exception.InsufficientStockException;
 import com.ecommerce.ecommerce_backend.exception.InvalidOrderStatusException;
 import com.ecommerce.ecommerce_backend.exception.ResourceNotFoundException;
-import com.ecommerce.ecommerce_backend.model.Address;
-import com.ecommerce.ecommerce_backend.model.LocalUser;
-import com.ecommerce.ecommerce_backend.model.Order;
-import com.ecommerce.ecommerce_backend.model.OrderStatus;
-import com.ecommerce.ecommerce_backend.model.Product;
-import com.ecommerce.ecommerce_backend.model.ProductOrderQuantity;
-import com.ecommerce.ecommerce_backend.model.ShippingAddress;
+import com.ecommerce.ecommerce_backend.model.*;
+import com.ecommerce.ecommerce_backend.util.MoneyUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -26,7 +21,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import com.ecommerce.ecommerce_backend.util.MoneyUtils;
 import java.util.Locale;
 
 @Service

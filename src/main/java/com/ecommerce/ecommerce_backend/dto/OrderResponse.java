@@ -12,12 +12,12 @@ import java.util.List;
 @Getter
 public class OrderResponse {
 
-    private Long id;
-    private AddressResponse address;
-    private List<OrderItemResponse> items;
-    private BigDecimal orderTotal;
-    private String status;
-    private LocalDateTime createdAt;
+    private final Long id;
+    private final AddressResponse address;
+    private final List<OrderItemResponse> items;
+    private final BigDecimal orderTotal;
+    private final String status;
+    private final LocalDateTime createdAt;
 
     public OrderResponse(Order order) {
 

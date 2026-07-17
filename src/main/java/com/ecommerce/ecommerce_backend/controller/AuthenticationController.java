@@ -1,37 +1,22 @@
 package com.ecommerce.ecommerce_backend.controller;
 
-import io.swagger.v3.oas.annotations.Operation;
-
-import io.swagger.v3.oas.annotations.tags.Tag;
-
 import com.ecommerce.ecommerce_backend.config.OpenApiConfig;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-
-import com.ecommerce.ecommerce_backend.dto.LoginBody;
-import com.ecommerce.ecommerce_backend.dto.LoginResponse;
-import com.ecommerce.ecommerce_backend.dto.PasswordResetBody;
-import com.ecommerce.ecommerce_backend.dto.RefreshTokenRequest;
-import com.ecommerce.ecommerce_backend.dto.RegistrationBody;
-import com.ecommerce.ecommerce_backend.dto.UserResponse;
+import com.ecommerce.ecommerce_backend.dto.*;
 import com.ecommerce.ecommerce_backend.exception.EmailFailureException;
 import com.ecommerce.ecommerce_backend.exception.InvalidTokenException;
 import com.ecommerce.ecommerce_backend.exception.UserAlreadyExistException;
 import com.ecommerce.ecommerce_backend.exception.UserNotVerifiedException;
 import com.ecommerce.ecommerce_backend.model.LocalUser;
 import com.ecommerce.ecommerce_backend.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-import com.ecommerce.ecommerce_backend.dto.RefreshSessionResponse;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 @Tag(name = "Authentication", description = "Registration, login, token lifecycle and account sessions")

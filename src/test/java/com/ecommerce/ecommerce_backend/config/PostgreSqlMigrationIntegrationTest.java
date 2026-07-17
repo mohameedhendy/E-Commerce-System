@@ -54,43 +54,43 @@ class PostgreSqlMigrationIntegrationTest {
         Integer successfulMigration =
                 jdbcTemplate.queryForObject(
                         """
-                        SELECT COUNT(*)
-                        FROM flyway_schema_history
-                        WHERE version = '19'
-                          AND success = TRUE
-                        """,
+                                SELECT COUNT(*)
+                                FROM flyway_schema_history
+                                WHERE version = '19'
+                                  AND success = TRUE
+                                """,
                         Integer.class
                 );
 
         Integer failedMigrations =
                 jdbcTemplate.queryForObject(
                         """
-                        SELECT COUNT(*)
-                        FROM flyway_schema_history
-                        WHERE success = FALSE
-                        """,
+                                SELECT COUNT(*)
+                                FROM flyway_schema_history
+                                WHERE success = FALSE
+                                """,
                         Integer.class
                 );
 
         List<String> requiredTables =
                 jdbcTemplate.queryForList(
                         """
-                        SELECT table_name
-                        FROM information_schema.tables
-                        WHERE table_schema = 'public'
-                          AND table_name IN (
-                              'local_user',
-                              'product',
-                              'stock',
-                              'web_order',
-                              'product_order_quantity',
-                              'review',
-                              'shopping_cart',
-                              'shopping_cart_item',
-                              'refresh_session'
-                          )
-                        ORDER BY table_name
-                        """,
+                                SELECT table_name
+                                FROM information_schema.tables
+                                WHERE table_schema = 'public'
+                                  AND table_name IN (
+                                      'local_user',
+                                      'product',
+                                      'stock',
+                                      'web_order',
+                                      'product_order_quantity',
+                                      'review',
+                                      'shopping_cart',
+                                      'shopping_cart_item',
+                                      'refresh_session'
+                                  )
+                                ORDER BY table_name
+                                """,
                         String.class
                 );
 
@@ -120,37 +120,37 @@ class PostgreSqlMigrationIntegrationTest {
         List<String> constraints =
                 jdbcTemplate.queryForList(
                         """
-                        SELECT conname
-                        FROM pg_constraint
-                        WHERE conrelid = 'public.review'::regclass
-                        """,
+                                SELECT conname
+                                FROM pg_constraint
+                                WHERE conrelid = 'public.review'::regclass
+                                """,
                         String.class
                 );
 
         List<String> indexes =
                 jdbcTemplate.queryForList(
                         """
-                        SELECT indexname
-                        FROM pg_indexes
-                        WHERE schemaname = 'public'
-                          AND tablename = 'review'
-                        """,
+                                SELECT indexname
+                                FROM pg_indexes
+                                WHERE schemaname = 'public'
+                                  AND tablename = 'review'
+                                """,
                         String.class
                 );
 
         Map<String, String> nullability =
                 jdbcTemplate.query(
                         """
-                        SELECT column_name, is_nullable
-                        FROM information_schema.columns
-                        WHERE table_schema = 'public'
-                          AND table_name = 'review'
-                          AND column_name IN (
-                              'rating',
-                              'comment',
-                              'created_at'
-                          )
-                        """,
+                                SELECT column_name, is_nullable
+                                FROM information_schema.columns
+                                WHERE table_schema = 'public'
+                                  AND table_name = 'review'
+                                  AND column_name IN (
+                                      'rating',
+                                      'comment',
+                                      'created_at'
+                                  )
+                                """,
                         resultSet -> {
 
                             java.util.HashMap<String, String>

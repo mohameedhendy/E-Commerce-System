@@ -10,13 +10,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import static org.hamcrest.Matchers.containsString;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -48,35 +44,23 @@ public class OpenApiDocumentationIntegrationTest {
 
         JsonNode documentation = getOpenApiDocumentation();
 
-        assertTrue(
-                documentation.path("info")
-                        .path("title")
-                        .asText()
-                        .equals("E-Commerce Backend API")
-        );
+        assertEquals("E-Commerce Backend API", documentation.path("info")
+                .path("title")
+                .asText());
 
         JsonNode bearerScheme = documentation
                 .path("components")
                 .path("securitySchemes")
                 .path(OpenApiConfig.BEARER_AUTH_SCHEME);
 
-        assertTrue(
-                bearerScheme.path("type")
-                        .asText()
-                        .equals("http")
-        );
+        assertEquals("http", bearerScheme.path("type")
+                .asText());
 
-        assertTrue(
-                bearerScheme.path("scheme")
-                        .asText()
-                        .equals("bearer")
-        );
+        assertEquals("bearer", bearerScheme.path("scheme")
+                .asText());
 
-        assertTrue(
-                bearerScheme.path("bearerFormat")
-                        .asText()
-                        .equals("JWT")
-        );
+        assertEquals("JWT", bearerScheme.path("bearerFormat")
+                .asText());
 
         mvc.perform(
                         get("/swagger-ui.html")
@@ -811,10 +795,6 @@ public class OpenApiDocumentationIntegrationTest {
                         .getContentAsString()
         );
     }
-
-
-
-
 
 
     private void assertResponseReference(

@@ -2,8 +2,8 @@ package com.ecommerce.ecommerce_backend.service;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.ecommerce.ecommerce_backend.dao.RefreshSessionDao;
 import com.ecommerce.ecommerce_backend.dao.LocalUserDao;
+import com.ecommerce.ecommerce_backend.dao.RefreshSessionDao;
 import com.ecommerce.ecommerce_backend.dto.LoginBody;
 import com.ecommerce.ecommerce_backend.dto.LoginResponse;
 import com.ecommerce.ecommerce_backend.exception.InvalidTokenException;
@@ -40,7 +40,7 @@ public class RefreshSessionRefreshIntegrationTest {
 
         JWTService.RefreshTokenData originalTokenData =
                 jwtService.getRefreshTokenData(
-                        loginResponse.getRefreshToken()
+                        loginResponse.refreshToken()
                 );
 
         Assertions.assertEquals(
@@ -50,12 +50,12 @@ public class RefreshSessionRefreshIntegrationTest {
 
         LoginResponse refreshedResponse =
                 userService.refreshAccessToken(
-                        loginResponse.getRefreshToken()
+                        loginResponse.refreshToken()
                 );
 
         JWTService.RefreshTokenData rotatedTokenData =
                 jwtService.getRefreshTokenData(
-                        refreshedResponse.getRefreshToken()
+                        refreshedResponse.refreshToken()
                 );
 
         Assertions.assertEquals(
@@ -101,13 +101,13 @@ public class RefreshSessionRefreshIntegrationTest {
         Assertions.assertEquals(
                 originalTokenData.username(),
                 jwtService.getUsername(
-                        refreshedResponse.getAccessToken()
+                        refreshedResponse.accessToken()
                 )
         );
 
         DecodedJWT decodedRefreshToken =
                 JWT.decode(
-                        refreshedResponse.getRefreshToken()
+                        refreshedResponse.refreshToken()
                 );
 
         Assertions.assertEquals(
@@ -135,12 +135,12 @@ public class RefreshSessionRefreshIntegrationTest {
 
         JWTService.RefreshTokenData firstLoginTokenData =
                 jwtService.getRefreshTokenData(
-                        firstLogin.getRefreshToken()
+                        firstLogin.refreshToken()
                 );
 
         JWTService.RefreshTokenData secondLoginTokenData =
                 jwtService.getRefreshTokenData(
-                        secondLogin.getRefreshToken()
+                        secondLogin.refreshToken()
                 );
 
         Assertions.assertNotEquals(
@@ -150,22 +150,22 @@ public class RefreshSessionRefreshIntegrationTest {
 
         LoginResponse firstRefreshed =
                 userService.refreshAccessToken(
-                        firstLogin.getRefreshToken()
+                        firstLogin.refreshToken()
                 );
 
         LoginResponse secondRefreshed =
                 userService.refreshAccessToken(
-                        secondLogin.getRefreshToken()
+                        secondLogin.refreshToken()
                 );
 
         JWTService.RefreshTokenData firstRefreshedData =
                 jwtService.getRefreshTokenData(
-                        firstRefreshed.getRefreshToken()
+                        firstRefreshed.refreshToken()
                 );
 
         JWTService.RefreshTokenData secondRefreshedData =
                 jwtService.getRefreshTokenData(
-                        secondRefreshed.getRefreshToken()
+                        secondRefreshed.refreshToken()
                 );
 
         Assertions.assertEquals(
@@ -232,10 +232,10 @@ public class RefreshSessionRefreshIntegrationTest {
                 loginAsUserA();
 
         String firstRefreshToken =
-                firstLogin.getRefreshToken();
+                firstLogin.refreshToken();
 
         String secondRefreshToken =
-                secondLogin.getRefreshToken();
+                secondLogin.refreshToken();
 
         JWTService.RefreshTokenData firstTokenData =
                 jwtService.getRefreshTokenData(
@@ -288,11 +288,11 @@ public class RefreshSessionRefreshIntegrationTest {
                 );
 
         Assertions.assertNotNull(
-                secondSessionResponse.getAccessToken()
+                secondSessionResponse.accessToken()
         );
 
         Assertions.assertNotNull(
-                secondSessionResponse.getRefreshToken()
+                secondSessionResponse.refreshToken()
         );
     }
 
@@ -315,12 +315,12 @@ public class RefreshSessionRefreshIntegrationTest {
 
         JWTService.RefreshTokenData firstTokenData =
                 jwtService.getRefreshTokenData(
-                        firstLogin.getRefreshToken()
+                        firstLogin.refreshToken()
                 );
 
         JWTService.RefreshTokenData secondTokenData =
                 jwtService.getRefreshTokenData(
-                        secondLogin.getRefreshToken()
+                        secondLogin.refreshToken()
                 );
 
         userService.logoutAll(user);
@@ -359,14 +359,14 @@ public class RefreshSessionRefreshIntegrationTest {
         Assertions.assertThrows(
                 InvalidTokenException.class,
                 () -> userService.refreshAccessToken(
-                        firstLogin.getRefreshToken()
+                        firstLogin.refreshToken()
                 )
         );
 
         Assertions.assertThrows(
                 InvalidTokenException.class,
                 () -> userService.refreshAccessToken(
-                        secondLogin.getRefreshToken()
+                        secondLogin.refreshToken()
                 )
         );
     }
@@ -387,12 +387,12 @@ public class RefreshSessionRefreshIntegrationTest {
 
         JWTService.RefreshTokenData firstTokenData =
                 jwtService.getRefreshTokenData(
-                        firstLogin.getRefreshToken()
+                        firstLogin.refreshToken()
                 );
 
         JWTService.RefreshTokenData secondTokenData =
                 jwtService.getRefreshTokenData(
-                        secondLogin.getRefreshToken()
+                        secondLogin.refreshToken()
                 );
 
         userService.revokeSession(
@@ -424,17 +424,17 @@ public class RefreshSessionRefreshIntegrationTest {
 
         LoginResponse firstRefresh =
                 userService.refreshAccessToken(
-                        firstLogin.getRefreshToken()
+                        firstLogin.refreshToken()
                 );
 
         Assertions.assertNotNull(
-                firstRefresh.getAccessToken()
+                firstRefresh.accessToken()
         );
 
         Assertions.assertThrows(
                 InvalidTokenException.class,
                 () -> userService.refreshAccessToken(
-                        secondLogin.getRefreshToken()
+                        secondLogin.refreshToken()
                 )
         );
     }
@@ -461,7 +461,7 @@ public class RefreshSessionRefreshIntegrationTest {
                 loginAsUserA();
 
         String originalRefreshToken =
-                originalLogin.getRefreshToken();
+                originalLogin.refreshToken();
 
         JWTService.RefreshTokenData tokenData =
                 jwtService.getRefreshTokenData(
@@ -495,7 +495,7 @@ public class RefreshSessionRefreshIntegrationTest {
         Assertions.assertThrows(
                 InvalidTokenException.class,
                 () -> userService.refreshAccessToken(
-                        rotatedLogin.getRefreshToken()
+                        rotatedLogin.refreshToken()
                 ),
                 "The latest token must also become invalid after reuse detection."
         );

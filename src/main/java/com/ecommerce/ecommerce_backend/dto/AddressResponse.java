@@ -6,11 +6,11 @@ import lombok.Getter;
 @Getter
 public class AddressResponse {
 
-    private Long id;
-    private String addressLine1;
-    private String addressLine2;
-    private String country;
-    private String city;
+    private final Long id;
+    private final String addressLine1;
+    private final String addressLine2;
+    private final String country;
+    private final String city;
 
     public AddressResponse(Address address) {
         this.id = address.getId();

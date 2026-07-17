@@ -3,13 +3,14 @@ package com.ecommerce.ecommerce_backend.dao;
 import com.ecommerce.ecommerce_backend.model.RefreshSession;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+
 import java.sql.Timestamp;
-import java.util.Optional;
 import java.util.List;
+import java.util.Optional;
 
 public interface RefreshSessionDao
         extends JpaRepository<RefreshSession, Long> {
@@ -34,11 +35,11 @@ public interface RefreshSessionDao
             flushAutomatically = true
     )
     @Query("""
-        UPDATE RefreshSession refreshSession
-        SET refreshSession.revoked = true
-        WHERE refreshSession.user.id = :userId
-          AND refreshSession.revoked = false
-        """)
+            UPDATE RefreshSession refreshSession
+            SET refreshSession.revoked = true
+            WHERE refreshSession.user.id = :userId
+              AND refreshSession.revoked = false
+            """)
     int revokeAllActiveByUserId(
             @Param("userId") Long userId
     );
@@ -48,12 +49,12 @@ public interface RefreshSessionDao
             flushAutomatically = true
     )
     @Query("""
-        UPDATE RefreshSession refreshSession
-        SET refreshSession.revoked = true
-        WHERE refreshSession.sessionId = :sessionId
-          AND refreshSession.user.id = :userId
-          AND refreshSession.revoked = false
-        """)
+            UPDATE RefreshSession refreshSession
+            SET refreshSession.revoked = true
+            WHERE refreshSession.sessionId = :sessionId
+              AND refreshSession.user.id = :userId
+              AND refreshSession.revoked = false
+            """)
     int revokeBySessionIdAndUserId(
             @Param("sessionId") String sessionId,
             @Param("userId") Long userId
@@ -70,10 +71,10 @@ public interface RefreshSessionDao
             flushAutomatically = true
     )
     @Query("""
-        DELETE FROM RefreshSession refreshSession
-        WHERE refreshSession.revoked = true
-           OR refreshSession.expiresAt <= :currentTime
-        """)
+            DELETE FROM RefreshSession refreshSession
+            WHERE refreshSession.revoked = true
+               OR refreshSession.expiresAt <= :currentTime
+            """)
     int deleteExpiredOrRevokedSessions(
             @Param("currentTime") Timestamp currentTime
     );

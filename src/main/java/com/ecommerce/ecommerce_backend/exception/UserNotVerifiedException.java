@@ -2,7 +2,7 @@ package com.ecommerce.ecommerce_backend.exception;
 
 public class UserNotVerifiedException extends Exception {
 
-    private boolean NewEmailSend;
+    private final boolean NewEmailSend;
 
     public UserNotVerifiedException(boolean NewEmailSend) {
         this.NewEmailSend = NewEmailSend;

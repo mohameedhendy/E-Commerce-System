@@ -45,13 +45,6 @@ public class JWTService {
 
     private Algorithm algorithm;
 
-    private enum TokenType {
-        ACCESS,
-        REFRESH,
-        EMAIL_VERIFICATION,
-        PASSWORD_RESET
-    }
-
     @PostConstruct
     void initializeAlgorithm() {
 
@@ -395,6 +388,13 @@ public class JWTService {
                 System.currentTimeMillis()
                         + expirySeconds * 1000L
         );
+    }
+
+    private enum TokenType {
+        ACCESS,
+        REFRESH,
+        EMAIL_VERIFICATION,
+        PASSWORD_RESET
     }
 
     public record AccessTokenData(

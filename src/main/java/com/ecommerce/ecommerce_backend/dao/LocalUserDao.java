@@ -57,13 +57,13 @@ public interface LocalUserDao
             flushAutomatically = true
     )
     @Query("""
-        UPDATE LocalUser u
-        SET u.refreshTokenVersion =
-                u.refreshTokenVersion + 1
-        WHERE u.id = :userId
-          AND u.refreshTokenVersion =
-                :expectedVersion
-        """)
+            UPDATE LocalUser u
+            SET u.refreshTokenVersion =
+                    u.refreshTokenVersion + 1
+            WHERE u.id = :userId
+              AND u.refreshTokenVersion =
+                    :expectedVersion
+            """)
     int rotateRefreshTokenVersion(
             @Param("userId") Long userId,
             @Param("expectedVersion") long expectedVersion

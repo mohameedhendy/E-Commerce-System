@@ -8,12 +8,12 @@ import java.util.List;
 @Getter
 public class PagedResponse<T> {
 
-    private List<T> content;
-    private int page;
-    private int size;
-    private long totalElements;
-    private int totalPages;
-    private boolean last;
+    private final List<T> content;
+    private final int page;
+    private final int size;
+    private final long totalElements;
+    private final int totalPages;
+    private final boolean last;
 
     public PagedResponse(Page<T> pageData) {
         this.content = pageData.getContent();

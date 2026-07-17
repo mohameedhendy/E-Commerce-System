@@ -1,8 +1,4 @@
 package com.ecommerce.ecommerce_backend.service;
-import java.util.regex.Pattern;
-import java.util.regex.Matcher;
-import java.nio.charset.StandardCharsets;
-import java.net.URLDecoder;
 
 import com.ecommerce.ecommerce_backend.dao.LocalUserDao;
 import com.ecommerce.ecommerce_backend.dao.VerificationTokenDAO;
@@ -10,11 +6,7 @@ import com.ecommerce.ecommerce_backend.dto.LoginBody;
 import com.ecommerce.ecommerce_backend.dto.LoginResponse;
 import com.ecommerce.ecommerce_backend.dto.PasswordResetBody;
 import com.ecommerce.ecommerce_backend.dto.RegistrationBody;
-import com.ecommerce.ecommerce_backend.exception.EmailFailureException;
-import com.ecommerce.ecommerce_backend.exception.InvalidCredentialsException;
-import com.ecommerce.ecommerce_backend.exception.InvalidTokenException;
-import com.ecommerce.ecommerce_backend.exception.UserAlreadyExistException;
-import com.ecommerce.ecommerce_backend.exception.UserNotVerifiedException;
+import com.ecommerce.ecommerce_backend.exception.*;
 import com.ecommerce.ecommerce_backend.model.LocalUser;
 import com.ecommerce.ecommerce_backend.model.VerificationToken;
 import com.icegreen.greenmail.configuration.GreenMailConfiguration;
@@ -30,7 +22,11 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -226,8 +222,8 @@ public class UserServiceTest {
 
         Matcher tokenMatcher =
                 Pattern.compile(
-                        "[?&]token=([^\\s]+)"
-                )
+                                "[?&]token=([^\\s]+)"
+                        )
                         .matcher(messageContent);
 
         Assertions.assertTrue(
@@ -538,28 +534,28 @@ public class UserServiceTest {
 
         LoginResponse response =
                 userService.refreshAccessToken(
-                        loginResponse.getRefreshToken()
+                        loginResponse.refreshToken()
                 );
 
         Assertions.assertNotNull(
-                response.getAccessToken()
+                response.accessToken()
         );
 
         Assertions.assertNotNull(
-                response.getRefreshToken()
+                response.refreshToken()
         );
 
         Assertions.assertEquals(
                 user.getUsername(),
                 jwtService.getUsername(
-                        response.getAccessToken()
+                        response.accessToken()
                 )
         );
 
         Assertions.assertEquals(
                 user.getUsername(),
                 jwtService.getRefreshUsername(
-                        response.getRefreshToken()
+                        response.refreshToken()
                 )
         );
     }
@@ -577,7 +573,7 @@ public class UserServiceTest {
                 loginAsUserA();
 
         String refreshToken =
-                loginResponse.getRefreshToken();
+                loginResponse.refreshToken();
 
         String passwordResetToken =
                 jwtService.generatePasswordResetJWT(user);
@@ -607,7 +603,7 @@ public class UserServiceTest {
                 loginAsUserA();
 
         String originalRefreshToken =
-                loginResponse.getRefreshToken();
+                loginResponse.refreshToken();
 
         LoginResponse rotatedResponse =
                 userService.refreshAccessToken(
@@ -615,11 +611,11 @@ public class UserServiceTest {
                 );
 
         Assertions.assertNotNull(
-                rotatedResponse.getAccessToken()
+                rotatedResponse.accessToken()
         );
 
         Assertions.assertNotNull(
-                rotatedResponse.getRefreshToken()
+                rotatedResponse.refreshToken()
         );
 
         Assertions.assertThrows(
@@ -633,7 +629,7 @@ public class UserServiceTest {
         Assertions.assertThrows(
                 InvalidTokenException.class,
                 () -> userService.refreshAccessToken(
-                        rotatedResponse.getRefreshToken()
+                        rotatedResponse.refreshToken()
                 ),
                 "Refresh token reuse must revoke the entire session."
         );
@@ -648,7 +644,7 @@ public class UserServiceTest {
                 loginAsUserA();
 
         String refreshToken =
-                loginResponse.getRefreshToken();
+                loginResponse.refreshToken();
 
         userService.logout(
                 refreshToken

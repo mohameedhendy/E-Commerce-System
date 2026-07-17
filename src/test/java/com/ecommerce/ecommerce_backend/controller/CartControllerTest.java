@@ -12,10 +12,7 @@ import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -289,10 +286,10 @@ public class CartControllerTest {
                                         MediaType.APPLICATION_JSON
                                 )
                                 .content("""
-                                    {
-                                      "addressId": 1
-                                    }
-                                    """)
+                                        {
+                                          "addressId": 1
+                                        }
+                                        """)
                 )
                 .andExpect(status().isCreated())
                 .andExpect(

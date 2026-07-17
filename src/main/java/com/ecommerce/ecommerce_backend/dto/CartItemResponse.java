@@ -10,14 +10,14 @@ import java.math.BigDecimal;
 @Getter
 public class CartItemResponse {
 
-    private Long id;
-    private Long productId;
-    private String productName;
-    private BigDecimal unitPrice;
-    private Integer quantity;
-    private BigDecimal itemTotal;
-    private Integer availableStock;
-    private boolean active;
+    private final Long id;
+    private final Long productId;
+    private final String productName;
+    private final BigDecimal unitPrice;
+    private final Integer quantity;
+    private final BigDecimal itemTotal;
+    private final Integer availableStock;
+    private final boolean active;
 
     public CartItemResponse(
             CartItem item

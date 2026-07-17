@@ -6,12 +6,12 @@ import lombok.Getter;
 @Getter
 public class UserResponse {
 
-    private Long id;
-    private String username;
-    private String firstName;
-    private String lastName;
-    private String email;
-    private boolean emailVerified;
+    private final Long id;
+    private final String username;
+    private final String firstName;
+    private final String lastName;
+    private final String email;
+    private final boolean emailVerified;
 
     public UserResponse(LocalUser user) {
         this.id = user.getId();

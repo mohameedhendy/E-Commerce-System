@@ -3,8 +3,11 @@ package com.ecommerce.ecommerce_backend.service;
 import com.ecommerce.ecommerce_backend.dao.CartDao;
 import com.ecommerce.ecommerce_backend.dao.LocalUserDao;
 import com.ecommerce.ecommerce_backend.dao.ProductDao;
+import com.ecommerce.ecommerce_backend.dto.AddCartItemRequest;
 import com.ecommerce.ecommerce_backend.dto.CartResponse;
 import com.ecommerce.ecommerce_backend.dto.UpdateCartItemQuantityRequest;
+import com.ecommerce.ecommerce_backend.exception.InsufficientStockException;
+import com.ecommerce.ecommerce_backend.exception.ResourceNotFoundException;
 import com.ecommerce.ecommerce_backend.model.Cart;
 import com.ecommerce.ecommerce_backend.model.CartItem;
 import com.ecommerce.ecommerce_backend.model.LocalUser;
@@ -14,9 +17,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
-import com.ecommerce.ecommerce_backend.dto.AddCartItemRequest;
-import com.ecommerce.ecommerce_backend.exception.InsufficientStockException;
-import com.ecommerce.ecommerce_backend.exception.ResourceNotFoundException;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 

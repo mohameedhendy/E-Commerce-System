@@ -91,12 +91,12 @@ public class UserServiceEmailVerificationDisabledTest {
                 );
 
         Assertions.assertNotNull(
-                loginResponse.getAccessToken(),
+                loginResponse.accessToken(),
                 "Explicit disabled mode should allow login after registration."
         );
 
         Assertions.assertNotNull(
-                loginResponse.getRefreshToken(),
+                loginResponse.refreshToken(),
                 "Login should still create a refresh session."
         );
     }

@@ -31,20 +31,20 @@ public class OrderRequestValidationIntegrationTest {
                                 )
                                 .content(
                                         """
-                                        {
-                                          "addressId": 1,
-                                          "items": [
-                                            {
-                                              "productId": 1,
-                                              "quantity": 2
-                                            },
-                                            {
-                                              "productId": 1,
-                                              "quantity": 3
-                                            }
-                                          ]
-                                        }
-                                        """
+                                                {
+                                                  "addressId": 1,
+                                                  "items": [
+                                                    {
+                                                      "productId": 1,
+                                                      "quantity": 2
+                                                    },
+                                                    {
+                                                      "productId": 1,
+                                                      "quantity": 3
+                                                    }
+                                                  ]
+                                                }
+                                                """
                                 )
                 )
                 .andExpect(

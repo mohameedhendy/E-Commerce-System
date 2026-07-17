@@ -8,13 +8,13 @@ import java.math.BigDecimal;
 @Getter
 public class ProductResponse {
 
-    private Long id;
-    private String name;
-    private String shortDescription;
-    private String longDescription;
-    private BigDecimal price;
+    private final Long id;
+    private final String name;
+    private final String shortDescription;
+    private final String longDescription;
+    private final BigDecimal price;
     private Integer stockQuantity;
-    private Boolean active;
+    private final Boolean active;
 
     public ProductResponse(Product product) {
         this.id = product.getId();

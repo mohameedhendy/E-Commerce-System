@@ -266,7 +266,7 @@ public class GlobalExceptionHandler {
         String message =
                 ex.isNewEmailSend()
                         ? "User email is not verified. "
-                        + "A new verification email has been sent."
+                          + "A new verification email has been sent."
                         : "User email is not verified.";
 
         return createResponse(

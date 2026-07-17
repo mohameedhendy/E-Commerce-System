@@ -43,7 +43,7 @@ public class LoginRefreshSessionIntegrationTest {
 
         JWTService.RefreshTokenData tokenData =
                 jwtService.getRefreshTokenData(
-                        response.getRefreshToken()
+                        response.refreshToken()
                 );
 
         Assertions.assertEquals(
@@ -140,12 +140,12 @@ public class LoginRefreshSessionIntegrationTest {
 
         JWTService.RefreshTokenData firstTokenData =
                 jwtService.getRefreshTokenData(
-                        firstLogin.getRefreshToken()
+                        firstLogin.refreshToken()
                 );
 
         JWTService.RefreshTokenData secondTokenData =
                 jwtService.getRefreshTokenData(
-                        secondLogin.getRefreshToken()
+                        secondLogin.refreshToken()
                 );
 
         Assertions.assertNotEquals(

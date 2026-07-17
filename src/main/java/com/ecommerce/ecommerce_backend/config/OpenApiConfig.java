@@ -5,12 +5,7 @@ import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.Info;
-import io.swagger.v3.oas.models.media.Content;
-import io.swagger.v3.oas.models.media.IntegerSchema;
-import io.swagger.v3.oas.models.media.MediaType;
-import io.swagger.v3.oas.models.media.ObjectSchema;
-import io.swagger.v3.oas.models.media.Schema;
-import io.swagger.v3.oas.models.media.StringSchema;
+import io.swagger.v3.oas.models.media.*;
 import io.swagger.v3.oas.models.responses.ApiResponse;
 import io.swagger.v3.oas.models.responses.ApiResponses;
 import io.swagger.v3.oas.models.security.SecurityScheme;
@@ -113,10 +108,10 @@ public class OpenApiConfig {
                                 )
                                 .description(
                                         """
-                                        REST API for authentication, products,
-                                        shopping cart, orders, reviews,
-                                        addresses and administration.
-                                        """
+                                                REST API for authentication, products,
+                                                shopping cart, orders, reviews,
+                                                addresses and administration.
+                                                """
                                 )
                                 .version(
                                         "0.0.1-SNAPSHOT"
@@ -336,7 +331,7 @@ public class OpenApiConfig {
                         createErrorResponse(
                                 "The authentication request rate limit was exceeded"
                         )
-                )                .addResponses(
+                ).addResponses(
                         INTERNAL_SERVER_ERROR_RESPONSE,
                         createErrorResponse(
                                 "An unexpected server error occurred"

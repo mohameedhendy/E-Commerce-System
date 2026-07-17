@@ -8,11 +8,11 @@ import java.time.LocalDateTime;
 @Getter
 public class ReviewResponse {
 
-    private Long id;
-    private Integer rating;
-    private String comment;
-    private LocalDateTime createdAt;
-    private String customerName;
+    private final Long id;
+    private final Integer rating;
+    private final String comment;
+    private final LocalDateTime createdAt;
+    private final String customerName;
 
     public ReviewResponse(Review review) {
         this.id = review.getId();
