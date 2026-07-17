@@ -471,11 +471,6 @@ public class CartService {
             Long userId
     ) {
 
-        /*
-         * Order creation updates stock using database-level
-         * update queries. Reload the cart before clearing it
-         * to keep the persistence context consistent.
-         */
         Cart cartToClear = cartDao
                 .findDetailedByUserId(userId)
                 .orElseThrow(() ->

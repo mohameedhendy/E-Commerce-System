@@ -237,10 +237,6 @@ public class AuthenticationControllerTest {
     public void loginWithInvalidCredentialsReturnsUnauthorized()
             throws Exception {
 
-        /*
-         * The password format is valid, but the value is incorrect.
-         * Therefore validation passes and authentication returns 401.
-         */
         mvc.perform(
                         post("/auth/login")
                                 .contentType(MediaType.APPLICATION_JSON)

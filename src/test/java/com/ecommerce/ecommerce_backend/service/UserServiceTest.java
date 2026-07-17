@@ -32,9 +32,6 @@ import java.util.regex.Pattern;
 @AutoConfigureMockMvc
 public class UserServiceTest {
 
-    /**
-     * Extension for mocking email sending.
-     */
     @RegisterExtension
     private static final GreenMailExtension greenMailExtension =
             new GreenMailExtension(ServerSetupTest.SMTP)
