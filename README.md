@@ -575,7 +575,9 @@ $env:MAIL_HOST="localhost"
 $env:MAIL_PORT="1025"
 $env:EMAIL_FROM="no-reply@ecommerce.com"
 
-$env:EMAIL_VERIFICATION_ENABLED="false"
+$env:EMAIL_VERIFICATION_ENABLED="true"
+
+Email verification is enabled by default. Set `EMAIL_VERIFICATION_ENABLED=false` only as an explicit local or automated-test override.
 $env:FRONTEND_URL="http://localhost:3000"
 ```
 
